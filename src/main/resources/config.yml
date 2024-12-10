@@ -1,0 +1,133 @@
+pvp:
+  # If hitting a player from behind should deal more damage
+  # similar to a critical hit. Can't stack with critical hits.
+  # (This has nothing to do with the combat tests and was just something I added for fun)
+  # Default: false
+  backShotsPlus: false
+
+  # If wind charges should send you forwards instead of up.
+  # This is only here because it happened as the result of a bug, and it was kind of fun.
+  # Default: false
+  wackyWindCharges: false
+
+  # If only certain weapons should be able to get extra reach from charged hits.
+  # Only exists due to testing during development, should remain false.
+  # Default: false
+  limitedChargedWeapons: false
+
+  # If hitting an entity should reduce the players current velocity. Similar to
+  # 1.8 combat, this allows for players to reduce their knockback by hitting an entity.
+  # this will not be as impactful as in 1.8 as there is a limit to attack speed,
+  # and only valid attacks will reduce velocity.
+  # Default: false
+  hitsReduceVelocity: false
+
+  # If the player should be able to block with a sword, similar to 1.8 combat.
+  # This will reduce damage taken by 3 when blocking, but will also reduce
+  # the players movement speed.
+  # Not a part of cts, just something I wanted to see if I could do.
+  # Default: false
+  swordBlocking: false
+
+  # If critical hits should do less damage on non-charged hits.
+  # This was implemented in combat test 8a to reduce the effectiveness of spam hitting.
+  # Default: false
+  weakerSpamCrits: false
+
+  # If potions should stack to 16
+  # Default: true
+  stackablePotions: true
+
+  # If weapon cooldowns/ attack speeds should be updated to more accurately show
+  # the cooldown of the weapon.
+  # Default: true
+  visualCooldownChanges: true
+
+  # If the cooldown of a weapon should show when a charged attack is ready.
+  # If false, cooldown will show when a weapon can make any attack.
+  # When true, cooldowns will show when you can make a charged attack,
+  # and non-charged attack can be made at half cooldown.
+  # (Cooldowns are based on time, visual cooldowns won't be accurate if you attack faster than the cooldown or miss)
+  # This is how it is displayed in the original snapshot.
+  # Default: true
+  cooldownShowsFullCharge: true
+
+  # If the weapon attributes shown on the weapon should be updated to show
+  # the changed attack speed, damage, as well as reach.
+  # Default: true
+  updateLore: true
+
+  # If tridents which have loyalty should return when they hit the void.
+  # While not a significant part of combat, this is a feature in CTS.
+  # Default: true
+  tridentsReturnFromVoid: true
+
+  # If the weapons should hold attribute modifiers for reach, to lessen the impact of ping on
+  # non-charged attacks. (Only a config option due to testing / development, should remain true)
+  # Default: true
+  optimizations: true
+
+  # If the animations server side should be improved to more accurately match CTS.
+  # Makes it so arm swing animations only play when a player can attack, so attacks
+  # made before the cooldown is up won't show the arm swing.
+  # This will not change client side animations, as that would require a client mod.
+  # But it will make it so other players animations reflect their actual attack speed.
+  # Default: true
+  improvedAnimations: true
+
+  # If reach charging should use ping to more accurately update players reach.
+  # This will make it so players with higher ping don't have to wait longer before being able
+  # to perform a charged attack.
+  # Default: true
+  improvedChargedHits: true
+
+  # If enabled, players with higher ping will take more accurate knockback.
+  # Based off of the Knockback Sync plugin.
+  # Default: true
+  pingImprovements: true
+
+  # If there should be a limit on how quickly a player can attack. This prevents spam clicking from being
+  # as effective, and encourages proper timing of attacks.
+  # Default: true
+  rateLimit: true
+
+  # If the hit grace period should be enabled. This allows players to hit
+  # slightly before their weapon is charged, and delays the hit to when their weapon would be charged.
+  # This allows for more consistent pvp, allowing people to compensate for ping, and also reducing
+  # the advantages of spam clicking.
+  # Default: true
+  gracePeriod: true
+
+  # If swapping weapons the same tick you attack, should act as it does in vanilla.
+  # This plugin modified how damage calculations work, in vanilla swapping weapons the same tick you attack
+  # results in the attack speed, reach, and damage of the first weapon, and the enchantments of the second weapon.
+  # This being enabled will return the vanilla functionality. If disabled, calculations are done only based on the
+  # weapon which was swapped to.
+  # Default: true
+  swapAccuracy: true
+
+  # If the time to consume a liquid item should be reduced. This is part of CTS, and it reduces all liquids
+  # consume times to one second, or 20 ticks. This makes potions more useful after the implementation of eating
+  # interruptions.
+  # Default: true
+  fasterLiquidDrinking: true
+
+  # The number of ticks between regen ticks. (20 ticks = 1 second)
+  # 39 by default, meaning regen ticks every 40 ticks, or 2 seconds.
+  # In vanilla, this is 79 ticks, or 4 seconds, but in CTS, it is 39 ticks.
+  # This increased regen speed is to make up for the lack of boosted
+  # regen at high saturation.
+  # Default: 39
+  regenTickDelay: 39
+
+  # The amount of time a player should wait before being able to send consecutive attacks.
+  # This is to prevent spam clicking from being as effective, and to encourage proper timing of attacks.
+  # Essentially, this acts to limit the players max clicks per second, to 20 divided by this number.
+  # Can be set to 0 to disable the rate limit, or disabled by setting rateLimit to false.
+  # Default: 3
+  rateLimitTicks: 3
+
+  # The cooldown, in ticks, that a player should have after missing an attack.
+  # Can be set to 0 to disable the cooldown (This is not recommended).
+  # Default: 4
+  missTime: 4

@@ -1,27 +1,48 @@
 package com.combatium.listeners;
 
 import com.combatium.CombatiumLite;
-import com.github.retrooper.packetevents.event.PacketListener;
-import com.github.retrooper.packetevents.event.PacketReceiveEvent;
-import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPluginMessage;
+import com.combatium.util.active.ReachUtil;
+import com.combatium.util.active.SweepingEdgeUtil;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRegisterChannelEvent;
+import org.bukkit.plugin.messaging.PluginMessageListener;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class CombatifyListener implements PacketListener {
+public class CombatifyListener implements Listener, PluginMessageListener {
     public static final List<UUID> combatifyPlayers = new ArrayList<>();
 
+    @EventHandler
+    public void onPlayerRegisterChannel(PlayerRegisterChannelEvent event) {
+        if (event.getChannel().equals("combatify:remaining_use_ticks")) {
+            Player player = event.getPlayer();
+            CombatiumLite.logger.info(player.getName() + " has joined with Combatify");
+            combatifyPlayers.add(player.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onPlayerLeave(PlayerQuitEvent event) {
+        combatifyPlayers.remove(event.getPlayer().getUniqueId());
+    }
+
     @Override
-    public void onPacketReceive(PacketReceiveEvent event) {
-        if (event.getPacketType() == PacketType.Play.Client.PLUGIN_MESSAGE) {
-            WrapperPlayClientPluginMessage packet = new WrapperPlayClientPluginMessage(event);
-            if (packet.getChannelName().equals("minecraft:register") && new String(packet.getData()).contains("combatify:remaining_use_ticks")) {
-                Player player = event.getPlayer();
-                CombatiumLite.logger.info(player.getName() + " has joined with Combatify");
-                combatifyPlayers.add(player.getUniqueId());
+    public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] bytes) {
+        if (channel.equals("combatify:miss_attack")) {
+            CombatiumLite.logger.info(player.getName() + " has missed");
+
+            ReachUtil.resetCooldown(player, true, Material.AIR);
+
+            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand().getType(), ReachUtil.getHaste(player))
+                    && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
+                SweepingEdgeUtil.Sweep(player, null);
             }
         }
     }

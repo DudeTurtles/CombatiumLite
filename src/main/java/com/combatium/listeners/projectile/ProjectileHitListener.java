@@ -6,6 +6,7 @@ import com.combatium.util.calculations.PlayerHitUtil;
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftProjectile;
 import org.bukkit.entity.*;
@@ -44,7 +45,7 @@ public class ProjectileHitListener implements Listener {
                 if (isSwordBlocked) isBlocked = false;
 
                 if (isBlocked) {
-                    event.getEntity().getWorld().playSound(event.getEntity().getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
+                    event.getEntity().getWorld().playSound(event.getEntity().getLocation(), Sound.ITEM_SHIELD_BLOCK, 1, 1);
                     event.setCancelled(true);
                     return;
                 }
@@ -53,7 +54,7 @@ public class ProjectileHitListener implements Listener {
                 double d = -doubleDoubleImmutablePair.leftDouble();
                 double d1 = -doubleDoubleImmutablePair.rightDouble();
 
-                nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().customEventDamager(attacker), 0.000000001f);
+                nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
                 KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, false, isSwordBlocked, true);
                 if (event.getEntity().getShooter() instanceof LivingEntity attacker1) PlayerHitUtil.thornsCheck(entity, attacker1);
             }

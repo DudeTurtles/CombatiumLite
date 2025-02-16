@@ -24,6 +24,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -115,7 +116,6 @@ public final class CombatiumLite extends JavaPlugin {
             );
 
             PacketEvents.getAPI().getEventManager().registerListener(new AirSwingListener(), PacketListenerPriority.LOWEST);
-            PacketEvents.getAPI().getEventManager().registerListener(new CombatifyListener(), PacketListenerPriority.LOWEST);
             pluginManager.registerEvents(new JoinQuitListener(), this);
             PacketEvents.getAPI().getSettings()
                     .checkForUpdates(false)
@@ -150,6 +150,16 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new VehicleDamageListener(), this);
         pluginManager.registerEvents(new ItemDropListener(), this);
         pluginManager.registerEvents(new PlayerDeathListener(), this);
+
+        CombatifyListener combatifyListener = new CombatifyListener();
+        pluginManager.registerEvents(combatifyListener, this);
+        getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
+    }
+
+    @Override
+    public void onDisable() {
+        HandlerList.unregisterAll(this);
+        getServer().getMessenger().unregisterIncomingPluginChannel(this);
     }
 
     private static void printConfig() {

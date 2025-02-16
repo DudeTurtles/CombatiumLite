@@ -1,6 +1,7 @@
 package com.combatium;
 
 import com.combatium.enchants.CustomEnchants;
+import com.combatium.listeners.CombatifyListener;
 import com.combatium.listeners.damage.*;
 import com.combatium.listeners.itemFixers.*;
 import com.combatium.listeners.projectile.DispenseTridentListener;
@@ -26,6 +27,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+
 import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
@@ -113,6 +115,7 @@ public final class CombatiumLite extends JavaPlugin {
             );
 
             PacketEvents.getAPI().getEventManager().registerListener(new AirSwingListener(), PacketListenerPriority.LOWEST);
+            PacketEvents.getAPI().getEventManager().registerListener(new CombatifyListener(), PacketListenerPriority.LOWEST);
             pluginManager.registerEvents(new JoinQuitListener(), this);
             PacketEvents.getAPI().getSettings()
                     .checkForUpdates(false)

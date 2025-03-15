@@ -1,6 +1,5 @@
 package com.combatium;
 
-import com.combatium.enchants.CustomEnchants;
 import com.combatium.listeners.snapshot.CombatifyListener;
 import com.combatium.listeners.damage.*;
 import com.combatium.listeners.itemFixers.*;
@@ -69,8 +68,6 @@ public final class CombatiumLite extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        CustomEnchants.registerEnchants();
-
         INSTANCE = this;
         pluginManager = getServer().getPluginManager();
         logger = getLogger();

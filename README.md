@@ -15,27 +15,23 @@ This plugin is configurable through the config.yml file, but it is recommended t
 That being said, the config options which are disabled by default are generally jokes, and are not included in this statement, as the inclusion of these options is entirely for fun, and up to individual preference, and aren't in any way related to the original combat snapshots.
 
 ### Plans
-- [ ] Add bedrock support
-- [ ] Add 8c support
 
 ### Known Issues
 
 #### Implementation ideas for plans
  - N/A all significant plans have been implemented
 
-
 ### Additions
- - The mace has been updated to fit the updated combat
-   - Mace has updated visual cooldown to match the new combat system
-   - Mace enchants aren't boosted from strength potions and critical hits
+- The mace has been updated to fit the updated combat
+    - Mace has updated visual cooldown to match the new combat system
+    - Mace enchants aren't boosted from strength potions and critical hits
 
 ### Notes
 - While this aims to replicate Combat Test Snapshot 8c in vanilla minecraft, certain things may not function as they do in the original snapshot. This may include:
-- - Attacks still visually go through when the cooldown is not finished.
-- - There is no shield hitting.
-- - Shields do not activate on crouch.
-- - Some enchantment changes such as Fire Aspect on axes.
-- - Changes to bow mechanics.
+  - Attacks still visually go through when the cooldown is not finished.
+  - There is no shield hitting.
+  - Shields do not activate on crouch.
+  - Changes to bow mechanics.
 
 #### Requirements
 - Java 21

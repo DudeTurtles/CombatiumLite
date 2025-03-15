@@ -1,6 +1,7 @@
 package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
+import com.destroystokyo.paper.MaterialSetTag;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
@@ -40,6 +41,7 @@ public class DisableShieldUtil {
 
     public static boolean isAxe(@Nullable ItemStack weapon) {
         if (weapon == null) return false;
+        MaterialSetTag.ITEMS_AXES.isTagged(weapon.getType());
         return weapon.getType() == Material.WOODEN_AXE || weapon.getType() == Material.STONE_AXE ||
                 weapon.getType() == Material.GOLDEN_AXE || weapon.getType() == Material.IRON_AXE ||
                 weapon.getType() == Material.DIAMOND_AXE || weapon.getType() == Material.NETHERITE_AXE;

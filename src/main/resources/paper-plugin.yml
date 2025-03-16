@@ -7,3 +7,7 @@ authors:
   - DudeTurtles
   - Inf1nityy
 load: STARTUP
+dependencies:
+  server:
+    ViaVersion:
+      required: false

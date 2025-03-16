@@ -66,7 +66,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         }
 
         /*
-         * The reason why fire aspect isn't in the loop is because you can enchant maces with fire aspect too
+         * The reason why fire aspect isn't in the loop is that you can enchant maces with fire aspect too
          * but the tag enchantable/sharp_weapon doesn't include maces
          */
         context.getLifecycleManager().registerEventHandler(RegistryEvents.ENCHANTMENT.entryAdd()

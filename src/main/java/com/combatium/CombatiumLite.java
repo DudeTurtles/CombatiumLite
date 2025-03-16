@@ -8,6 +8,7 @@ import com.combatium.listeners.projectile.ProjectileHitListener;
 import com.combatium.listeners.projectile.ProjectileThrowListener;
 import com.combatium.listeners.regen.EntityRegainHealthListener;
 import com.combatium.listeners.snapshot.AirSwingListener;
+import com.combatium.listeners.snapshot.KickListener;
 import com.combatium.listeners.util.*;
 import com.combatium.listeners.util.ping.AttributeChangeListener;
 import com.combatium.listeners.util.ping.JoinQuitListener;
@@ -117,6 +118,7 @@ public final class CombatiumLite extends JavaPlugin {
             );
 
             PacketEvents.getAPI().getEventManager().registerListener(new AirSwingListener(), PacketListenerPriority.LOWEST);
+            PacketEvents.getAPI().getEventManager().registerListener(new KickListener(), PacketListenerPriority.LOWEST);
             pluginManager.registerEvents(new JoinQuitListener(), this);
             PacketEvents.getAPI().getSettings()
                     .checkForUpdates(false)

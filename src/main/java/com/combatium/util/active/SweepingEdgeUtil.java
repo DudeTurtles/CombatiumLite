@@ -17,7 +17,8 @@ import java.util.ArrayList;
 public class SweepingEdgeUtil {
     public static void Sweep(Player player, @Nullable LivingEntity hit) {
         if (player == null) return;
-        if (hit != null && (!player.isOnGround() || player.isSprinting())) return;
+        if (hit != null && player.isSprinting() && !player.isInsideVehicle() && !player.isUnderWater()) return;
+        if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying()) return;
 
         addParticle(player);
 

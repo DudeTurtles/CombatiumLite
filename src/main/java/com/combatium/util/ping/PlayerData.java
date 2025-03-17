@@ -49,8 +49,8 @@ public class PlayerData {
 
     // Gets the estimated client side vertical velocity of the player based on ping.
     public double estimateVerticalVelocity(double velocity) {
+        if (getEstimatedPing() < 75) return velocity;
         int ping = (int) (getEstimatedPing() / 50);
-        if (ping < 2) return velocity;
         return PingCalculations.estimateVelocity(velocity, ping, gravity);
     }
 

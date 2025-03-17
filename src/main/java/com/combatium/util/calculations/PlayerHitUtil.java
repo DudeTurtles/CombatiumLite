@@ -1,15 +1,14 @@
 package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -25,7 +24,7 @@ import static org.bukkit.potion.PotionEffectType.*;
 
 public class PlayerHitUtil {
     private static Boolean backShots;
-    private static Map<Player, Double> lastTickDamage = new HashMap<>();
+    private static final Map<Player, Double> lastTickDamage = new HashMap<>();
 
     public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, boolean isSwordBlocked, EntityDamageEvent.DamageCause damageCause) {
         float damage = (weapon.getType() == Material.MACE) ? maceDamage(weapon, attacker) : (float) attackDamage(weapon, attacker);
@@ -34,10 +33,22 @@ public class PlayerHitUtil {
         if (meta != null && meta.hasEnchants()) {
             if (meta.hasEnchant(Enchantment.SHARPNESS)) {
                 damage += ((meta.getEnchantLevel(Enchantment.SHARPNESS) / 2.0f) + 0.5f);
-            } else if (meta.hasEnchant(Enchantment.IMPALING) && (damagedEntity.isInWaterOrRain())) {
+            }
+            if (meta.hasEnchant(Enchantment.IMPALING) && (damagedEntity.isInWaterOrRain())) {
                 damage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
-            } else if (DisableShieldUtil.getCleavingLevel(weapon) > 0) {
+            }
+            if (DisableShieldUtil.getCleavingLevel(weapon) > 0) {
                 damage += 1 + DisableShieldUtil.getCleavingLevel(weapon);
+            }
+            if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && (damagedEntity instanceof Spider || damagedEntity instanceof Silverfish ||
+                    damagedEntity instanceof Bee || damagedEntity instanceof Endermite)) {
+                damage += (2.5f * meta.getEnchantLevel(Enchantment.BANE_OF_ARTHROPODS));
+            }
+            if (meta.hasEnchant(Enchantment.SMITE) && (damagedEntity instanceof Zombie || damagedEntity instanceof Skeleton ||
+                    damagedEntity instanceof WitherSkeleton || damagedEntity instanceof Stray || damagedEntity instanceof Phantom ||
+                    damagedEntity instanceof ZombieHorse || damagedEntity instanceof SkeletonHorse || damagedEntity instanceof Wither ||
+                    damagedEntity instanceof Zoglin || damagedEntity instanceof ZombifiedPiglin)) {
+                damage += (2.5f * meta.getEnchantLevel(Enchantment.SMITE));
             }
             if (meta.hasEnchant(Enchantment.SWEEPING_EDGE) && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 float sweepLevel = meta.getEnchantLevel(Enchantment.SWEEPING_EDGE);
@@ -270,7 +281,7 @@ public class PlayerHitUtil {
         lastTickDamage.put(player, damage);
     }
 
-    public static void thornsCheck(LivingEntity entity, Player attacker) {
+    public static void thornsCheck(LivingEntity entity, LivingEntity attacker) {
         ItemStack helmet = null;
         ItemStack chestplate = null;
         ItemStack leggings = null;

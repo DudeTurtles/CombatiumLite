@@ -75,6 +75,7 @@ public class PlayerPingData {
     }
 
     public void sendPing() {
+        if (player.getScoreboardTags().contains("bot")) return;
         int packetId = random.nextInt(1, 10000);
         timeline.put(packetId, System.currentTimeMillis());
         WrapperPlayServerPing packet = new WrapperPlayServerPing(packetId);

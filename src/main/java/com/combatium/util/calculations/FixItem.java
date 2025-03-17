@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.combatium.util.active.ReachUtil.getCooldown;
+
 
 public class FixItem {
     private static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
@@ -101,7 +103,7 @@ public class FixItem {
         ItemMeta meta = item.getItemMeta();
         boolean altered = false;
         if (meta.getAttributeModifiers(Attribute.ATTACK_SPEED) == null) {
-            double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? (attackSpeed(item.getType()) / 2) - 1.25 : attackSpeed(item.getType()) - 2.5;
+            double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / getCooldown(item.getType(), 0)) - 1.25) : (20d / getCooldown(item.getType(), 0)) - 2.5;
             meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             altered = true;

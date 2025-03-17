@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.combatium.CombatiumLite.sprintFix;
 import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.FixItem.isSword;
@@ -99,7 +100,7 @@ public class PlayerDamageEntity {
 
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
 
-        dealDamage(entity, damage, finalDamage, weapon, player);
+        dealDamage(entity, damage, player);
 
         if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
             KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
@@ -150,10 +151,19 @@ public class PlayerDamageEntity {
         InvulnerabilityScheduler.setInvulnerable(entity, (weapon.getType() == Material.MACE) ? 10 : ReachUtil.getCooldown(weapon.getType(), haste) - 1, originalDamage);
     }
 
-    private static void dealDamage(LivingEntity entity, float damage, float finalDamage, ItemStack weapon, Player cause) {
+    private static void dealDamage(LivingEntity entity, float damage, Player cause) {
         hasProcessed.put(cause, true);
+        ServerPlayer nmsPlayer = ((CraftPlayer) cause).getHandle();
+        boolean sprinting = nmsPlayer.isSprinting();
         DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
         entity.damage(damage, damageSource);
+
+        if (!sprintFix) {
+            nmsPlayer.setSprinting(false);
+        } else {
+            nmsPlayer.setSprinting(sprinting);
+        }
+
     }
 
     private static boolean isKillShot(LivingEntity entity, float finalDamage) {

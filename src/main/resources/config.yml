@@ -36,6 +36,11 @@ pvp:
   # Default: false
   hitThroughTransparent: false
 
+  # A bug fix which removes the need for w tapping.
+  # This is false by default as it is generally not used, especially in competitive settings.
+  # Default: false
+  sprintFix: false
+
   # If the saturation changes from the combat tests should be implemented.
   # This makes it so that eating food doesn't increase saturation each time, but instead
   # increases it to the maximum saturation of the food. This means that eating multiple

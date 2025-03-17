@@ -60,6 +60,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean sweepOnMiss;
     public static boolean fixSweepOnThrow;
     public static double shieldProtectionArc;
+    public static boolean sprintFix;
     BukkitTask pingTask;
 
     @Override
@@ -83,6 +84,7 @@ public final class CombatiumLite extends JavaPlugin {
         swordBlockingDisplay = getConfig().getBoolean("pvp.swordBlockingDisplay", false);
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
         hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
+        sprintFix = getConfig().getBoolean("pvp.sprintFix", false);
         saturationChanges = getConfig().getBoolean("pvp.saturationChanges", true);
         updateLore = getConfig().getBoolean("pvp.updateLore", true);
         optimizations = getConfig().getBoolean("pvp.optimizations", true);
@@ -173,6 +175,7 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Sweep On Miss: " + sweepOnMiss);
         logger.log(java.util.logging.Level.INFO, "Fix Sweep On Throw: " + fixSweepOnThrow);
         logger.log(java.util.logging.Level.INFO, "Shield Protection Arc: " + shieldProtectionArc);
+        logger.log(java.util.logging.Level.INFO, "Sprint Fix: " + sprintFix);
     }
 
     public static CombatiumLite getInstance() {

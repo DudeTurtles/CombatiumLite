@@ -70,7 +70,7 @@ public class PlayerDamageEntity {
                 blockAngle = CombatiumLite.shieldProtectionArc;
             }
 
-            isBlocked = (angle < blockAngle - 180) || blockAngle >= 360;
+            isBlocked = (angle < Math.toRadians(blockAngle - 180)) || blockAngle >= 360;
         }
 
         if ((isBlocked) && DisableShieldUtil.isAxe(weapon)) { // Updated shield blocking times

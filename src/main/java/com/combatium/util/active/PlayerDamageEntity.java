@@ -44,7 +44,7 @@ public class PlayerDamageEntity {
 
     public static double playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
-        weapon.damage(1, entity);
+        if (weapon != null && weapon.getType() != Material.AIR) weapon.damage(1, entity);
 
         if (CombatiumLite.hitsReduceVelocity) player.setVelocity(player.getVelocity().multiply(0.8));
 

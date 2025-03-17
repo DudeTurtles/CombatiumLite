@@ -22,11 +22,7 @@ public class ItemDataHandler {
                 CombatiumLite.logger.warning("Error reading item data: " + e.getMessage());
                 return defaultValue;
             }
-        } else {
-            container.set(key, PersistentDataType.DOUBLE, defaultValue);
-            item.setItemMeta(meta);
-            return defaultValue;
-        }
+        } else return defaultValue;
     }
 
     public static boolean checkItemDataBoolean(NamespacedKey key, ItemStack item, boolean defaultValue) {

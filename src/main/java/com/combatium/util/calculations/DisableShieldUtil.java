@@ -7,6 +7,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import javax.annotation.Nullable;
+
 import static org.bukkit.Sound.ITEM_SHIELD_BREAK;
 
 public class DisableShieldUtil {
@@ -36,7 +38,8 @@ public class DisableShieldUtil {
         return 0;
     }
 
-    public static boolean isAxe(ItemStack weapon) {
+    public static boolean isAxe(@Nullable ItemStack weapon) {
+        if (weapon == null) return false;
         return weapon.getType() == Material.WOODEN_AXE || weapon.getType() == Material.STONE_AXE ||
                 weapon.getType() == Material.GOLDEN_AXE || weapon.getType() == Material.IRON_AXE ||
                 weapon.getType() == Material.DIAMOND_AXE || weapon.getType() == Material.NETHERITE_AXE;

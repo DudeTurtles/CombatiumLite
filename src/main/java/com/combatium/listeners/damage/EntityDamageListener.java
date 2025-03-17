@@ -11,6 +11,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
+import static com.combatium.scheduler.InvulnerabilityScheduler.getLastDamageCause;
+
 public class EntityDamageListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event) {
@@ -25,6 +27,14 @@ public class EntityDamageListener implements Listener {
                 event.getDamageSource().getDamageType() == DamageType.GENERIC_KILL || event.getDamageSource().getDamageType() == DamageType.GENERIC)) {
             if (event.getEntity() instanceof LivingEntity livingEntity) {
                 double invulDamage = InvulnerabilityScheduler.isInvulnerable(livingEntity);
+
+                if (event.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL &&
+                        getLastDamageCause(livingEntity) == EntityDamageEvent.DamageCause.FLY_INTO_WALL &&
+                        invulDamage > 0) {
+                    event.setCancelled(true);
+                    return;
+                }
+
                 if (invulDamage >= event.getDamage()) {
                     event.setCancelled(true);
                     return;
@@ -38,7 +48,7 @@ public class EntityDamageListener implements Listener {
                 }
 
                 // If the damage is not from an entity, set the entity to be invulnerable for 10 ticks
-                if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) InvulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage);
+                if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) InvulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage, event.getCause());
             }
         }
     }

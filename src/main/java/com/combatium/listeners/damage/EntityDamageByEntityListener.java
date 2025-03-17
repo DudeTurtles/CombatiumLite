@@ -113,7 +113,7 @@ public class EntityDamageByEntityListener implements Listener {
                     ticks = 10;
                 }
 
-                InvulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage);
+                InvulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage, event.getCause());
             }
         }
     }

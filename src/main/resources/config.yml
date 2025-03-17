@@ -123,6 +123,11 @@ pvp:
   # Default: true
   fasterLiquidDrinking: true
 
+  # If when the player misses an attack, if they have sweeping edge, should the sweep attack still be applied.
+  # This is a feature in CTS, and is enabled by default.
+  # Default: true
+  sweepOnMiss: true
+
   # The number of ticks between regen ticks. (20 ticks = 1 second)
   # 39 by default, meaning regen ticks every 40 ticks, or 2 seconds.
   # In vanilla, this is 79 ticks, or 4 seconds, but in CTS, it is 39 ticks.

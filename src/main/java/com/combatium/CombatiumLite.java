@@ -56,6 +56,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean fasterLiquidDrinking;
     public static boolean hitThroughTransparent;
     public static boolean saturationChanges;
+    public static boolean sweepOnMiss;
     BukkitTask pingTask;
 
     @Override
@@ -91,6 +92,7 @@ public final class CombatiumLite extends JavaPlugin {
         tridentsReturnFromVoid = getConfig().getBoolean("pvp.tridentsReturnFromVoid", true);
         swapAccuracy = getConfig().getBoolean("pvp.swapAccuracy", true);
         fasterLiquidDrinking = getConfig().getBoolean("pvp.fasterLiquidDrinking", true);
+        sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
         ReachUtil.setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
         ReachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);

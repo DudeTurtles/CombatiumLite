@@ -26,7 +26,7 @@ public class EntityAttackListener implements Listener {
         if (event.getDamager() instanceof Player player) {
             ItemStack weapon = player.getInventory().getItemInMainHand();
             if (visualAttackSpeed) {
-                ItemMeta meta = FixItem.fixAttackSpeed(weapon);
+                ItemMeta meta = FixItem.fixAttackSpeedAndDamage(weapon);
                 if (meta != null) {
                     player.getInventory().getItemInMainHand().setItemMeta(meta);
                 }

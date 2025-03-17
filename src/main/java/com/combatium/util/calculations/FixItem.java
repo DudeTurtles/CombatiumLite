@@ -92,20 +92,27 @@ public class FixItem {
         return meta;
     }
 
-    public static ItemMeta fixAttackSpeed(ItemStack item) {
+    public static ItemMeta fixAttackSpeedAndDamage(ItemStack item) {
         if (item == null || item.getItemMeta() == null || !ReachUtil.Tools.contains(item.getType())) {
             return null;
         }
 
         ItemMeta meta = item.getItemMeta();
+        boolean altered = false;
         if (meta.getAttributeModifiers(Attribute.ATTACK_SPEED) == null) {
             double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? (attackSpeed(item.getType()) / 2) - 1.25 : attackSpeed(item.getType()) - 2.5;
             meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-            return meta;
+            altered = true;
+        }
+        if (meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE) == null) {
+            double attackDamage = PlayerHitUtil.attackDamage(item, null) - 1;
+            meta.addAttributeModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier(ATTACK_SPEED, attackDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            altered = true;
         }
 
-        return null;
+        return altered ? meta : null;
     }
 
     public static ItemMeta fixReach(ItemStack item) {

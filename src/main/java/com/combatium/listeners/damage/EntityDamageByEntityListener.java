@@ -68,6 +68,11 @@ public class EntityDamageByEntityListener implements Listener {
                 return;
             }
 
+            if (!weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) && event.getCause() == EntityDamageByEntityEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+                event.setCancelled(true);
+                return;
+            }
+
             int haste = 0;
             if (attacker.hasPotionEffect(PotionEffectType.HASTE)) {
                 haste = Objects.requireNonNull((attacker).getPotionEffect(PotionEffectType.HASTE)).getAmplifier();
@@ -135,9 +140,6 @@ public class EntityDamageByEntityListener implements Listener {
 
                 InvulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage);
             }
-        } else if (event.getDamager() instanceof LivingEntity e && event.getCause() == EntityDamageByEntityEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-            ItemStack weapon = Objects.requireNonNull(e.getEquipment()).getItemInMainHand();
-            if (!weapon.containsEnchantment(Enchantment.SWEEPING_EDGE)) event.setCancelled(true);
         }
     }
 }

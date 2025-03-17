@@ -5,8 +5,6 @@ import com.combatium.listeners.util.AnimationListener;
 import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.util.calculations.DisableShieldUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
-import com.combatium.util.ping.PingManager;
-import com.combatium.util.ping.PlayerPingData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -101,9 +99,6 @@ public class PlayerDamageEntity {
         if (!cancelKB && strength > 0) {
             KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked);
         }
-
-        //if (isBlocked) KnockbackUtil.applyKnockback(entity, 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), true);
-        //if (gravFix) entity.setVelocity(entity.getVelocity().setY((entity.getVelocity().getY() - 0.04)));
 
         dealDamage(entity, damage, finalDamage, weapon, player);
 

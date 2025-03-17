@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class API {
     public static ItemStack getFixedItem(Material material, boolean swordBlocking) {
         ItemStack item = new ItemStack(material);
-        ItemMeta itemMeta = FixItem.fixAttackSpeed(item);
+        ItemMeta itemMeta = FixItem.fixAttackSpeedAndDamage(item);
         if (itemMeta != null) {
             item.setItemMeta(itemMeta);
         }

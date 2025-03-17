@@ -35,7 +35,7 @@ public class InventoryClickListener implements Listener {
                 event.getCurrentItem().setItemMeta(meta);
             }
         } else if(visualAttackSpeed) {
-            ItemMeta meta = FixItem.fixAttackSpeed(event.getCurrentItem());
+            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getCurrentItem());
             if (meta != null) {
                 event.getCurrentItem().setItemMeta(meta);
             }

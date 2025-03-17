@@ -4,6 +4,7 @@ import com.combatium.enchants.CustomEnchants;
 import com.combatium.listeners.damage.EntityDamageByEntityListener;
 import com.combatium.listeners.damage.EntityDamageListener;
 import com.combatium.listeners.damage.KnockbackListener;
+import com.combatium.listeners.damage.VehicleDamageListener;
 import com.combatium.listeners.itemFixers.*;
 import com.combatium.listeners.projectile.DispenseTridentListener;
 import com.combatium.listeners.projectile.ProjectileHitListener;
@@ -140,6 +141,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new KnockbackListener(), this);
         pluginManager.registerEvents(new JoinQuitListener(), this);
         pluginManager.registerEvents(new ConsumeListener(), this);
+        pluginManager.registerEvents(new VehicleDamageListener(), this);
     }
 
     private static void printConfig() {

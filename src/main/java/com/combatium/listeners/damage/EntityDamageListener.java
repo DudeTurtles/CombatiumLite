@@ -6,14 +6,15 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 public class EntityDamageListener implements Listener {
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent) {
+        if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent && !event.isCancelled() && event.getDamage() > 0) {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
             if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {
                 e.clearActiveItem();

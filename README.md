@@ -15,7 +15,8 @@ This plugin is configurable through the config.yml file, but it is recommended t
 That being said, the config options which are disabled by default are not required, and are for specific situations. Please read the notes around the config options prior to changing them. <br>
 
 ### Other Support / Bugs
-If you are having issues with this plugin or are encountering bugs, feel free to reach out. 
+If you are having issues with this plugin or are encountering bugs, feel free to reach out.
+- [Discord](https://discord.gg/mxwHCTVj8A)
 
 
 ### Plans

@@ -47,3 +47,11 @@ public void setAttackSpeed(ItemStack item, double attackSpeed) {
     item.setItemMeta(meta);
 }
 ```
+You can also use commands to give custom items. For example:
+
+/give @s diamond_sword[custom_data={PublicBukkitValues:{"combatium:update_lore":1b,"combatium:attack_damage":100d}}]
+
+While this will appear improperly, it will update when a player interacts with it, either by clicking it in an inventory, attacking with it, or picking it up.
+
+## Additional Features
+If you would like to request support for additional modding, support for other mods, or have any questions, feel free to reach out on the discord server listed in the README.md file.

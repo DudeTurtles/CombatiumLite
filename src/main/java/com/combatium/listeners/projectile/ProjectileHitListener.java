@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
+import static com.combatium.CombatiumLite.logger;
 import static com.combatium.util.calculations.FixItem.isSword;
 
 public class ProjectileHitListener implements Listener {
@@ -54,7 +55,14 @@ public class ProjectileHitListener implements Listener {
                 double d = -doubleDoubleImmutablePair.leftDouble();
                 double d1 = -doubleDoubleImmutablePair.rightDouble();
 
-                nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
+                try {
+                    nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
+                } catch (NoSuchMethodError e) {
+                    nmsEntity.hurt(nmsEntity.damageSources().genericKill(), 0.000000001f);
+                    logger.severe("Failed to apply proper damage. Please report this to the CombatiumLite developers.");
+                    logger.severe("This is not a critical error, but it may affect gameplay.");
+                    logger.severe("Error: " + e.getMessage());
+                }
                 KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, false, 0, true);
                 if (event.getEntity().getShooter() instanceof LivingEntity attacker1) PlayerHitUtil.thornsCheck(entity, attacker1);
             }

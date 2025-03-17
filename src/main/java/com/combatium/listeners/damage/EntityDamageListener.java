@@ -1,13 +1,10 @@
 package com.combatium.listeners.damage;
 
-import com.combatium.CombatiumLite;
 import com.combatium.scheduler.InvulnerabilityScheduler;
 import net.minecraft.world.item.ItemUseAnimation;
-import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -16,7 +13,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 public class EntityDamageListener implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof LivingEntity e) {
+        if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent) {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
             if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {
                 e.clearActiveItem();
@@ -40,9 +37,6 @@ public class EntityDamageListener implements Listener {
                 }
 
                 // If the damage is not from an entity, set the entity to be invulnerable for 10 ticks
-                if (!(livingEntity instanceof Player)) {
-                    Bukkit.getScheduler().runTaskLater(CombatiumLite.getInstance(), () -> livingEntity.setNoDamageTicks(0), 1);
-                }
                 if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) InvulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage);
             }
         }

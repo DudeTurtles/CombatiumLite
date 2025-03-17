@@ -18,12 +18,10 @@ public class PlayerInteractListener implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (CombatiumLite.hitThroughTransparent && event.getAction() == LEFT_CLICK_BLOCK && Objects.requireNonNull(event.getClickedBlock()).isPassable()) {
-            if (isRateLimited(event.getPlayer())) return;
-
             LivingEntity entity = checkHit(event.getPlayer());
             if (entity != null) {
-                event.getPlayer().attack(entity);
                 event.setCancelled(true);
+                if (!isRateLimited(event.getPlayer())) event.getPlayer().attack(entity);
                 return;
             }
         }

@@ -34,6 +34,13 @@ pvp:
   # Default: false
   weakerSpamCrits: false
 
+  # If you should be able to hit an entity through passable blocks such as vines, grass, and cobwebs.
+  # This is a feature in the original snapshots, but given it is calculated server side, it is less accurate
+  # than the original snapshots, and isn't a feature I'm confident in. It also has to store past locations for
+  # every player to compensate for ping, which can be taxing on the server.
+  # Default: false
+  hitThroughTransparent: false
+
   # If potions should stack to 16
   # Default: true
   stackablePotions: true

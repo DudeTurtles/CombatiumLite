@@ -15,11 +15,16 @@ import org.bukkit.util.Vector;
 import java.util.Objects;
 
 import static com.combatium.util.calculations.FixItem.isSword;
+import static org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK;
 
 public class KnockbackListener implements Listener {
     @EventHandler
     public void onKnockback(EntityKnockbackByEntityEvent event) {
-        if (event.getHitBy() instanceof Player) return;
+        if (event.getHitBy() instanceof Player) {
+            if (event.getEntity().getLastDamageCause() != null && event.getEntity().getLastDamageCause().getCause() == ENTITY_ATTACK) event.setCancelled(true);
+            return;
+        }
+
         if (event.getHitBy() instanceof CraftWindCharge && !CombatiumLite.wackyWindCharges) return;
 
         double strength = (event.getKnockbackStrength() / (1 - Objects.requireNonNull(event.getEntity().getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue())) / 0.6;

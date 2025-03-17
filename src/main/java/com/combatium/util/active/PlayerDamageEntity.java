@@ -6,7 +6,7 @@ import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.util.calculations.DisableShieldUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
 import com.combatium.util.ping.PingManager;
-import com.combatium.util.ping.PlayerData;
+import com.combatium.util.ping.PlayerPingData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -84,10 +84,10 @@ public class PlayerDamageEntity {
         //Apply Knockback
         boolean onGround = entity.isOnGround();
         if (entity instanceof Player && CombatiumLite.pingImprovements) {
-            PlayerData playerData = PingManager.getPlayerData(entity.getUniqueId());
-            if (playerData != null) onGround = playerData.isOnGround(entity.getVelocity().getY());
+            PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
+            if (playerPingData != null) onGround = playerPingData.isOnGround(entity.getVelocity().getY());
         }
-        boolean gravFix = !onGround;
+        //boolean gravFix = !onGround;
         Vector direction = player.getLocation().subtract(entity.getLocation()).toVector().setY(0);
 
         KnockbackUtil.applyKnockback(entity, (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) ? 0.32 : 0.4000000059604645D, direction.getX(), direction.getZ(), isBlocked, isSwordBlocked);
@@ -109,7 +109,7 @@ public class PlayerDamageEntity {
         }
 
         //if (isBlocked) KnockbackUtil.applyKnockback(entity, 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), true);
-        if (gravFix) entity.setVelocity(entity.getVelocity().setY((entity.getVelocity().getY() - 0.04)));
+        //if (gravFix) entity.setVelocity(entity.getVelocity().setY((entity.getVelocity().getY() - 0.04)));
 
         dealDamage(entity, damage, finalDamage, weapon, player);
 

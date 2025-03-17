@@ -5,6 +5,7 @@ import com.combatium.util.active.PlayerDamageEntity;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.active.TridentTracker;
 import com.combatium.util.calculations.PlayerHitUtil;
+import com.combatium.util.hitThroughTransparent.HitManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -106,6 +107,12 @@ public class Scheduler {
 
         if (CombatiumLite.tridentsReturnFromVoid) {
             TridentTracker.checkTridents();
+        }
+
+        if (CombatiumLite.hitThroughTransparent) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                HitManager.updatePlayerData(player);
+            }
         }
 
         currentTick++;

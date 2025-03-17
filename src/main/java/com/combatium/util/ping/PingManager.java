@@ -7,12 +7,12 @@ import java.util.Map;
 import java.util.UUID;
 
 public class PingManager {
-    private static final Map<UUID, PlayerData> playerData = new HashMap<>();
+    private static final Map<UUID, PlayerPingData> playerData = new HashMap<>();
     /*
      * Will be replaced with more robust ping calculations
      */
     public static int getPingTicks (Player player) {
-        PlayerData data = playerData.get(player.getUniqueId());
+        PlayerPingData data = playerData.get(player.getUniqueId());
         if (data == null) return 0;
         return (int) Math.min(5, (data.getEstimatedPing() / 50));
     }
@@ -21,11 +21,11 @@ public class PingManager {
         return playerData.containsKey(player);
     }
 
-    public static PlayerData getPlayerData(UUID player) {
+    public static PlayerPingData getPlayerData(UUID player) {
         return playerData.get(player);
     }
 
-    public static void addPlayerData(UUID player, PlayerData data) {
+    public static void addPlayerData(UUID player, PlayerPingData data) {
         playerData.put(player, data);
     }
 

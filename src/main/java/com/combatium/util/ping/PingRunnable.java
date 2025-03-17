@@ -9,8 +9,8 @@ public class PingRunnable extends BukkitRunnable {
     public void run() {
         if (!CombatiumLite.pingImprovements) return;
         for (UUID uuid : PingManager.getPlayers()) {
-            PlayerData playerData = PingManager.getPlayerData(uuid);
-            playerData.sendPing();
+            PlayerPingData playerPingData = PingManager.getPlayerData(uuid);
+            playerPingData.sendPing();
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.combatium.listeners.util.ping;
 import com.combatium.util.ping.PingCalculations;
 import com.combatium.util.ping.PingManager;
-import com.combatium.util.ping.PlayerData;
+import com.combatium.util.ping.PlayerPingData;
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.attribute.Attributes;
@@ -66,7 +66,7 @@ public class AttributeChangeListener extends PacketListenerAbstract {
         return this.currentGravity = newValue;
     }
     public void onPlayerGravityChange(Player player, double newGravity) {
-        PlayerData playerData = PingManager.getPlayerData(player.getUniqueId());
-        playerData.setGravity(newGravity);
+        PlayerPingData playerPingData = PingManager.getPlayerData(player.getUniqueId());
+        playerPingData.setGravity(newGravity);
     }
 }

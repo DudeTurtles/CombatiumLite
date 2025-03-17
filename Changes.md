@@ -21,6 +21,7 @@ This page is a work in progress, which aims to document the changes which this p
  - Changing weapons no longer resets your attack cooldown.<br>
  - Eating is now interrupted when a player takes damage from attacks or projectiles.<br>
  - Consume time for all liquids, such as potions, soups, etc. is now 1 second, or 20 ticks.<br>
+ - You can now hit mobs through passable blocks such as grass, flowers, and cobwebs.<br>
 
 <div align="center">
 <h3 class="center">Grace Period</h3>

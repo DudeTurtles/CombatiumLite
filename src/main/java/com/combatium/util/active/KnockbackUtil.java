@@ -2,8 +2,7 @@ package com.combatium.util.active;
 
 import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
-import com.combatium.util.ping.PlayerData;
-import net.minecraft.world.entity.Entity;
+import com.combatium.util.ping.PlayerPingData;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
@@ -36,14 +35,14 @@ public class KnockbackUtil {
 
                 boolean onGround = entity.isOnGround();
                 if (entity instanceof Player && CombatiumLite.pingImprovements) {
-                    PlayerData playerData = PingManager.getPlayerData(entity.getUniqueId());
-                    if (playerData != null) onGround = playerData.isOnGround(entity.getVelocity().getY());
+                    PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
+                    if (playerPingData != null) onGround = playerPingData.isOnGround(entity.getVelocity().getY());
                 }
 
                 double vertical = delta.getY();
                 if (!onGround && entity instanceof Player && CombatiumLite.pingImprovements) {
-                    PlayerData playerData = PingManager.getPlayerData(entity.getUniqueId());
-                    if (playerData != null) vertical = playerData.estimateVerticalVelocity(vertical);
+                    PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
+                    if (playerPingData != null) vertical = playerPingData.estimateVerticalVelocity(vertical);
                 }
 
                 if (Double.isNaN(diff.getX())) {

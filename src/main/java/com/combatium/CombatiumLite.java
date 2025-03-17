@@ -54,6 +54,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean pingImprovements;
     public static boolean swapAccuracy;
     public static boolean fasterLiquidDrinking;
+    public static boolean hitThroughTransparent;
     BukkitTask pingTask;
 
     @Override
@@ -77,6 +78,7 @@ public final class CombatiumLite extends JavaPlugin {
         hitsReduceVelocity = getConfig().getBoolean("pvp.hitsReduceVelocity", false);
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
+        hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
         updateLore = getConfig().getBoolean("pvp.updateLore", true);
         optimizations = getConfig().getBoolean("pvp.optimizations", true);
         cooldownShowsFullCharge = getConfig().getBoolean("pvp.cooldownShowsFullCharge", true);

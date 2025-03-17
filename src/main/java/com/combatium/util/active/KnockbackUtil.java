@@ -14,9 +14,9 @@ import static com.combatium.CombatiumLite.logger;
 import static java.lang.Double.min;
 
 public class KnockbackUtil {
-    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, boolean isSwordBlocked, boolean checkVertical) {
+    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, double knockbackReduction, boolean checkVertical) {
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
-        knockbackRes = min(1.0, knockbackRes + (isBlocked ? 0.5 : 0.0) + (isSwordBlocked? 0.3 : 0.0));
+        knockbackRes = min(1.0, knockbackRes + (isBlocked ? knockbackReduction : 0.0));
         Entity nmsEntity = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) entity).getHandle();
 
         strength *= 1.0 - knockbackRes;

@@ -20,6 +20,7 @@ import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
+import static com.combatium.util.active.PlayerDamageEntity.*;
+import static com.combatium.util.calculations.ItemDataHandler.checkItemDataBoolean;
 import static com.combatium.util.calculations.ItemDataHandler.checkItemDataDouble;
 
 
@@ -34,6 +37,7 @@ public class FixItem {
     public static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
     public static final NamespacedKey REACH = new NamespacedKey("combatium", "reach");
     public static final NamespacedKey ATTACK_DAMAGE = new NamespacedKey("combatium", "attack_damage");
+    public static final NamespacedKey UPDATE_LORE = new NamespacedKey("combatium", "update_lore");
     private static final java.lang.invoke.VarHandle API_ITEM_STACK_CRAFT_DELEGATE_FIELD;
 
     static {
@@ -69,7 +73,13 @@ public class FixItem {
         net.minecraft.world.item.ItemStack nmsItem = net.minecraft.world.item.ItemStack.fromBukkitCopy(item);
         DataComponentPatch test = DataComponentPatch.builder().set(DataComponents.CONSUMABLE, consumable).build();
         nmsItem.applyComponents(test);
-        return CraftItemStack.asBukkitCopy(nmsItem);
+        ItemStack bukkitItem = CraftItemStack.asBukkitCopy(nmsItem);
+        ItemMeta meta = bukkitItem.getItemMeta();
+        meta.getPersistentDataContainer().set(BLOCK_ANGLE, PersistentDataType.DOUBLE, 130.0);
+        meta.getPersistentDataContainer().set(KNOCKBACK_REDUCTION, PersistentDataType.DOUBLE, 0.3);
+        meta.getPersistentDataContainer().set(BLOCK_AMOUNT, PersistentDataType.DOUBLE, 3.0);
+        bukkitItem.setItemMeta(meta);
+        return bukkitItem;
     }
 
     public static ItemStack fixLiquidConsumeTime(ItemStack item) {
@@ -207,8 +217,8 @@ public class FixItem {
         double attackDamage = (CombatiumLite.supportExternalWeaponMods) ? checkItemDataDouble(ATTACK_DAMAGE, item, PlayerHitUtil.attackDamage(item, null)) : PlayerHitUtil.attackDamage(item, null);
         double reach = (CombatiumLite.supportExternalWeaponMods) ? checkItemDataDouble(REACH, item, ReachUtil.getReach(item.getType())) : ReachUtil.getReach(item.getType());
 
-        //Checks if the lore is already updated
-        if (meta.lore() != null && !Objects.requireNonNull(meta.lore()).isEmpty()) {
+        //Checks if the lore is already updated or if it should be updated
+        if (!checkItemDataBoolean(UPDATE_LORE, item, false) && meta.lore() != null && !Objects.requireNonNull(meta.lore()).isEmpty()) {
             return null;
         }
 
@@ -219,6 +229,8 @@ public class FixItem {
         lore.add(Component.text(" ").append(Component.text(format(attackSpeed)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.DARK_GREEN).append(Component.text(" Attack Speed"))));
         if (reach != 2.5) lore.add(Component.text(" ").append(Component.text(format(reach)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.DARK_GREEN).append(Component.text(" Attack Reach"))));
         meta.lore(lore);
+
+        meta.getPersistentDataContainer().set(UPDATE_LORE, PersistentDataType.BOOLEAN, false);
 
         return meta;
     }

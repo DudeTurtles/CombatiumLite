@@ -12,10 +12,12 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
 import java.util.Objects;
 
-import static com.combatium.util.calculations.FixItem.isSword;
+import static com.combatium.util.active.PlayerDamageEntity.*;
 import static io.papermc.paper.event.entity.EntityKnockbackEvent.Cause.*;
 
 public class KnockbackListener implements Listener {
@@ -25,28 +27,35 @@ public class KnockbackListener implements Listener {
         if (!(cause == ENTITY_ATTACK || cause == SWEEP_ATTACK)) return;
 
         boolean isBlocked = false;
-        if (event.getEntity().getLastDamageCause() != null) {
-            Vec3 vector = ((CraftDamageSource) event.getEntity().getLastDamageCause().getDamageSource()).getHandle().getSourcePosition();
-            if (vector != null) {
-                net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) event.getEntity()).getHandle();
-                Vec3 balls = nmsEntity.calculateViewVector(0.0f, nmsEntity.getYHeadRot());
-                Vec3 directionVector = vector.vectorTo(nmsEntity.position());
-                directionVector = directionVector.subtract(0, directionVector.y(), 0).normalize();
-                double angle = directionVector.dot(balls) * Math.PI;
-                isBlocked = (angle < Math.toRadians(CombatiumLite.shieldProtectionArc - 180)) || CombatiumLite.shieldProtectionArc == 360;
+        double knockbackReduction = 0;
+        double blockAngle;
+
+        if (event.getEntity() instanceof Player p && p.isBlocking()) {
+            ItemStack shield = p.getActiveItem();
+
+            if (shield.getItemMeta() != null) {
+                knockbackReduction = shield.getItemMeta().getPersistentDataContainer().getOrDefault(KNOCKBACK_REDUCTION, PersistentDataType.DOUBLE, 0.5);
+                blockAngle = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_ANGLE, PersistentDataType.DOUBLE, CombatiumLite.shieldProtectionArc);
+            } else {
+                knockbackReduction = 0.5;
+                blockAngle = CombatiumLite.shieldProtectionArc;
             }
-        }
 
-        boolean isBlocking = false;
-        boolean isSwordBlocking = false;
-        if (event.getEntity() instanceof Player player) {
-            if (CombatiumLite.swordBlocking) isSwordBlocking = isSword(player.getActiveItem().getType());
-            isBlocking = player.isBlocking();
-        }
+            double angle = 999;
 
-        isBlocked &= isBlocking;
-        boolean isSwordBlocked = isSwordBlocking && isBlocked;
-        if (isSwordBlocked) isBlocked = false;
+            if (event.getEntity().getLastDamageCause() != null) {
+                Vec3 vector = ((CraftDamageSource) event.getEntity().getLastDamageCause().getDamageSource()).getHandle().getSourcePosition();
+                if (vector != null) {
+                    net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) event.getEntity()).getHandle();
+                    Vec3 balls = nmsEntity.calculateViewVector(0.0f, nmsEntity.getYHeadRot());
+                    Vec3 directionVector = vector.vectorTo(nmsEntity.position());
+                    directionVector = directionVector.subtract(0, directionVector.y(), 0).normalize();
+                    angle = directionVector.dot(balls) * Math.PI;
+                }
+            }
+
+            if (angle != 999) isBlocked = (angle < blockAngle - 180) || blockAngle >= 360;
+        }
 
         double strength = (event.getKnockbackStrength() / (1 - Objects.requireNonNull(event.getEntity().getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue()));
         Vector v = event.getEntity().getVelocity();
@@ -71,7 +80,7 @@ public class KnockbackListener implements Listener {
             }
         }
 
-        KnockbackUtil.applyKnockback(event.getEntity(), strength, x, z, isBlocked, isSwordBlocked, true);
+        KnockbackUtil.applyKnockback(event.getEntity(), strength, x, z, isBlocked, knockbackReduction, true);
         event.setCancelled(true);
     }
 }

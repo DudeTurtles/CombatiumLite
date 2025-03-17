@@ -12,6 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.damage.CraftDamageSource;
@@ -25,6 +26,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffectType;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,13 +35,15 @@ import java.util.Objects;
 import static com.combatium.CombatiumLite.sprintFix;
 import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
-import static com.combatium.util.calculations.FixItem.isSword;
 import static com.combatium.util.calculations.PlayerHitUtil.*;
 import static org.bukkit.Sound.ENTITY_PLAYER_ATTACK_CRIT;
 
 public class PlayerDamageEntity {
     private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
     public static final Map<Player, Boolean> hasProcessed = new HashMap<>();
+    public static final NamespacedKey BLOCK_ANGLE = new NamespacedKey("combatium", "block_angle");
+    public static final NamespacedKey BLOCK_AMOUNT = new NamespacedKey("combatium", "block_amount");
+    public static final NamespacedKey KNOCKBACK_REDUCTION = new NamespacedKey("combatium", "knockback_reduction");
 
     public static double playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
@@ -50,26 +54,34 @@ public class PlayerDamageEntity {
         //Calculation for reduced shield blocking arc
         net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) entity).getHandle();
 
-        double angle = getAngle(player, entity);
-        boolean isBlocked = (angle < Math.toRadians(CombatiumLite.shieldProtectionArc - 180)) || CombatiumLite.shieldProtectionArc == 360;
+        boolean isBlocked = false;
+        double blockAmount = 0;
+        double knockbackReduction = 0;
+        double blockAngle = 0;
 
-        boolean isBlocking = false;
-        boolean isSwordBlocking = false;
-        if (entity instanceof Player p) {
-            if (CombatiumLite.swordBlocking) isSwordBlocking = isSword(p.getActiveItem().getType());
-            isBlocking = p.isBlocking();
+        if (entity instanceof Player p && p.isBlocking()) {
+            double angle = getAngle(player, entity);
+            ItemStack shield = p.getActiveItem();
+
+            if (shield.getItemMeta() != null) {
+                blockAmount = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_AMOUNT, PersistentDataType.DOUBLE, 5.0);
+                knockbackReduction = shield.getItemMeta().getPersistentDataContainer().getOrDefault(KNOCKBACK_REDUCTION, PersistentDataType.DOUBLE, 0.5);
+                blockAngle = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_ANGLE, PersistentDataType.DOUBLE, CombatiumLite.shieldProtectionArc);
+            } else {
+                blockAmount = 5;
+                knockbackReduction = 0.5;
+                blockAngle = CombatiumLite.shieldProtectionArc;
+            }
+
+            isBlocked = (angle < blockAngle - 180) || blockAngle >= 360;
         }
 
-        isBlocked &= isBlocking;
-        boolean isSwordBlocked = isSwordBlocking && isBlocked;
-        if (isSwordBlocked) isBlocked = false;
-
-        if ((isBlocked || isSwordBlocked) && DisableShieldUtil.isAxe(weapon)) { // Updated shield blocking times
+        if ((isBlocked) && DisableShieldUtil.isAxe(weapon)) { // Updated shield blocking times
             // Maybe make it so player no longer counts as blocking
             DisableShieldUtil.disableShield((Player) entity, weapon);
         }
 
-        float damage = PlayerHitUtil.getRawDamage(player, entity, weapon, isBlocked, isSwordBlocked, damageCause);
+        float damage = PlayerHitUtil.getRawDamage(player, entity, weapon, isBlocked, blockAmount, damageCause);
         double invulnerableDamage = InvulnerabilityScheduler.isInvulnerable(entity);
         float originalDamage = damage;
         boolean cancelKB = false;
@@ -96,7 +108,7 @@ public class PlayerDamageEntity {
             strength = (player.isSprinting() && (player.getAttackCooldown() <= 0.9)) ? 1.0 : 0.0;
         }
 
-        if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
+        if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, knockbackReduction, false);
 
         ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
 
@@ -122,7 +134,7 @@ public class PlayerDamageEntity {
         if (dealDamage) dealDamage(entity, damage, player);
 
         if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
+            KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, knockbackReduction, false);
         }
 
         if (ReachUtil.isOverCharged(player, weapon, ReachUtil.getHaste(player)) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&

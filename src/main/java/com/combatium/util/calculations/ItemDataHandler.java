@@ -28,4 +28,25 @@ public class ItemDataHandler {
             return defaultValue;
         }
     }
+
+    public static boolean checkItemDataBoolean(NamespacedKey key, ItemStack item, boolean defaultValue) {
+        if (item == null || !item.hasItemMeta()) {
+            return defaultValue;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        if (container.has(key, PersistentDataType.BOOLEAN)) {
+            try {
+                return container.getOrDefault(key, PersistentDataType.BOOLEAN, defaultValue);
+            } catch (Exception e) {
+                CombatiumLite.logger.warning("Error reading item data: " + e.getMessage());
+                return defaultValue;
+            }
+        } else {
+            container.set(key, PersistentDataType.BOOLEAN, defaultValue);
+            item.setItemMeta(meta);
+            return defaultValue;
+        }
+    }
 }

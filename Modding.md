@@ -16,6 +16,12 @@ For attack speed, Combatium Lite uses rounded ticks to match CTS 8c. This means 
 For example, a sword with an attack speed of 3 will have 20/3 = 6.666666666666667, which will be rounded to 7 ticks of cooldown time.
 Please keep this in mind when setting attack speed, as it will be rounded.
 
+Please keep in mind, if you've updated an item and would like the items lore to reflect the changes, you will need to set the UPDATE_LORE key to true, and then update the item meta.
+
+Items can also be modded to block. An item is considered blockable if it has the blocking animation attached to it.
+Unless the item has the below keys for BLOCK_ANGLE, BLOCK_AMOUNT, and KNOCKBACK_REDUCTION, it will use the defaults of 130, 5.0, and 0.5 respectively.
+For blockable modding, the block angle is in degrees,  the knockback reduction is added to the players knockback resistance, and the block amount is the amount of damage the blockable will block.
+
 ### MAKE SURE TO USE THE CORRECT DATA TYPE FOR THE DATA YOU ARE TRYING TO ACCESS OR SET, OTHERWISE IT WILL NOT WORK.
 
 ## Keys
@@ -23,9 +29,13 @@ Please keep this in mind when setting attack speed, as it will be rounded.
 public static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
 public static final NamespacedKey REACH = new NamespacedKey("combatium", "reach");
 public static final NamespacedKey ATTACK_DAMAGE = new NamespacedKey("combatium", "attack_damage");
+public static final NamespacedKey BLOCK_ANGLE = new NamespacedKey("combatium", "block_angle");
+public static final NamespacedKey BLOCK_AMOUNT = new NamespacedKey("combatium", "block_amount");
+public static final NamespacedKey KNOCKBACK_REDUCTION = new NamespacedKey("combatium", "knockback_reduction");
+public static final NamespacedKey UPDATE_LORE = new NamespacedKey("combatium", "update_lore");
 ```
 
-Each of these are stored as doubles, so please make sure to access and set them properly.
+Each of these EXCEPT FOR UPDATE LORE, WHICH IS A BOOLEAN, is a double, so please make sure to access and set them properly.
 
 ## Examples
 This is a short example method which sets a weapons attack speed.

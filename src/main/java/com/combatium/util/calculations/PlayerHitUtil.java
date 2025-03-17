@@ -30,7 +30,7 @@ public class PlayerHitUtil {
     private static Boolean backShots;
     private static final Map<Player, Double> lastTickDamage = new HashMap<>();
 
-    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, boolean isSwordBlocked, EntityDamageEvent.DamageCause damageCause) {
+    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, double blockAmount, EntityDamageEvent.DamageCause damageCause) {
         float damage = (float) attackDamage(weapon, attacker);
 
         ItemMeta meta = weapon.getItemMeta();
@@ -84,15 +84,9 @@ public class PlayerHitUtil {
             damage *= 1.5f;
         }
 
-        if (isSwordBlocked) {
-            if (damage > 3) {
-                return damage - 3;
-            } else {
-                return 0;
-            }
-        } else if (isBlocked) {
-            if (damage > 5) {
-                return damage - 5;
+        else if (isBlocked) {
+            if (damage > blockAmount) {
+                return (float) (damage - blockAmount);
             } else {
                 damagedEntity.getWorld().playSound(damagedEntity.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 1.0f);
                 return 0;

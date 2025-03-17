@@ -55,7 +55,7 @@ public class ProjectileHitListener implements Listener {
                 double d1 = -doubleDoubleImmutablePair.rightDouble();
 
                 nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
-                KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, false, isSwordBlocked, true);
+                KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, false, 0, true);
                 if (event.getEntity().getShooter() instanceof LivingEntity attacker1) PlayerHitUtil.thornsCheck(entity, attacker1);
             }
             if (!(event.getHitEntity() instanceof Player)) Bukkit.getScheduler().runTaskLater(CombatiumLite.getInstance(), () -> entity.setNoDamageTicks(0), 1);

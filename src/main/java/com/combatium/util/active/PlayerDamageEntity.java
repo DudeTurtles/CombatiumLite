@@ -82,12 +82,6 @@ public class PlayerDamageEntity {
         if (weapon.getType() == Material.MACE) cancelKB = macePostHit(weapon, player.getFallDistance(), player, entity);
 
         //Apply Knockback
-        boolean onGround = entity.isOnGround();
-        if (entity instanceof Player && CombatiumLite.pingImprovements) {
-            PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
-            if (playerPingData != null) onGround = playerPingData.isOnGround(entity.getVelocity().getY());
-        }
-        //boolean gravFix = !onGround;
         Vector direction = player.getLocation().subtract(entity.getLocation()).toVector().setY(0);
 
         KnockbackUtil.applyKnockback(entity, (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) ? 0.32 : 0.4000000059604645D, direction.getX(), direction.getZ(), isBlocked, isSwordBlocked);

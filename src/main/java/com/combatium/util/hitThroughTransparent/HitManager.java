@@ -37,7 +37,8 @@ public class HitManager {
 
     public static LivingEntity checkHit(Player player) {
         int ticks = PingManager.getPingTicks(player);
-        Location eyeLocation = player.getEyeLocation();
+        PlayerData playerData = data.get(player);
+        Location eyeLocation = playerData.getNearestEyeLocation(ticks);
         Vector direction = eyeLocation.getDirection();
 
         // Check entities that may be hit

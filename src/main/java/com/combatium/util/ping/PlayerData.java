@@ -49,7 +49,7 @@ public class PlayerData {
 
     // Gets the estimated client side vertical velocity of the player based on ping.
     public double estimateVerticalVelocity(double velocity) {
-        return PingCalculations.estimateVelocity(velocity, getEstimatedPing(), gravity);
+        return PingCalculations.estimateVelocity(velocity, ((int) getEstimatedPing() / 50), gravity);
     }
 
     public Long getPing() {

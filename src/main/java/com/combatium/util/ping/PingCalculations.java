@@ -48,9 +48,9 @@ public class PingCalculations {
         return Math.min(num, max);
     }
 
-    public static double estimateVelocity(double velocity, long ping, double acceleration) {
+    public static double estimateVelocity(double velocity, int ping, double acceleration) {
         double estimatedVelocity = velocity;
-        for (int i = 0; i < ping / 50; i++) {
+        for (int i = 0; i < ping; i++) {
             estimatedVelocity -= acceleration;
             estimatedVelocity = Math.min(estimatedVelocity, TERMINAL_VELOCITY);
             estimatedVelocity *= MULTIPLIER;

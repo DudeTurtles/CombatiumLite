@@ -3,15 +3,10 @@ package com.combatium.util.active;
 import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
 import com.combatium.util.ping.PlayerPingData;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.Vec3;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-import org.gradle.internal.scripts.ScriptOriginUtil;
-
 import java.util.Objects;
 
 import static com.combatium.CombatiumLite.logger;

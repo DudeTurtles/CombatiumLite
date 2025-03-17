@@ -16,7 +16,7 @@ public class AnimationListener implements Listener {
     private static final Map<Player, Integer> validHit = new HashMap<>();
 
     private static boolean isSameTick(Player player) {
-        if (validHit.containsKey(player) && validHit.get(player) == Scheduler.getCurrentTick()) {
+        if (validHit.containsKey(player) && Math.abs(validHit.get(player) - Scheduler.getCurrentTick()) <= 1) {
             return false;
         }
         if (lastEntry.containsKey(player)) {

@@ -31,10 +31,6 @@ public class KnockbackUtil {
                 if (entity instanceof Player && CombatiumLite.pingImprovements) {
                     PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
                     if (playerPingData != null) onGround = playerPingData.isOnGround(entity.getVelocity().getY());
-
-                    if (!onGround && playerPingData != null && checkVertical) {
-                        vertical = playerPingData.estimateVerticalVelocity(vertical);
-                    }
                 }
 
                 Vector velocity = new Vector(delta.getX() / 2.0 - diff.getX(), (onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, vertical + (strength * 0.5)))), delta.getZ() / 2.0 - diff.getZ());

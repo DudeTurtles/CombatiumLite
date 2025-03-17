@@ -1,4 +1,5 @@
 package com.combatium.listeners.util.ping;
+import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
 import com.combatium.util.ping.PlayerPingData;
 import org.bukkit.entity.Player;
@@ -12,7 +13,7 @@ public class JoinQuitListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        PingManager.addPlayerData(player.getUniqueId(), new PlayerPingData(player));
+        if (CombatiumLite.pingImprovements) PingManager.addPlayerData(player.getUniqueId(), new PlayerPingData(player));
     }
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {

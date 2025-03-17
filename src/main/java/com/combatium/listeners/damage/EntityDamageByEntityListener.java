@@ -20,8 +20,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffectType;
-import java.util.Objects;
 
 import static com.combatium.util.active.PlayerDamageEntity.hasProcessed;
 import static com.combatium.util.calculations.PlayerHitUtil.getFinalDamage;
@@ -71,30 +69,21 @@ public class EntityDamageByEntityListener implements Listener {
                 return;
             }
 
-            int haste = 0;
-            if (attacker.hasPotionEffect(PotionEffectType.HASTE)) {
-                haste = Objects.requireNonNull((attacker).getPotionEffect(PotionEffectType.HASTE)).getAmplifier();
-            }
-
             //Checks if a player is charged, also allows sweep damage to be dealt due to sweep damage being a separate event
-            if (ReachUtil.isCharged(attacker) || event.getCause() == EntityDamageByEntityEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-                event.setDamage(PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, event.getCause(), false));
-                if (event.getDamage() == 0) {
-                    event.setCancelled(true);
-                    return;
-                }
+            if (ReachUtil.isCharged(attacker)) {
+                PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, EntityDamageEvent.DamageCause.ENTITY_ATTACK, true);
             } else {
                 if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod) {
                     //Grace period for early hits
-                    int earlyTicks = ReachUtil.earlyHit(attacker, haste, weapon.getType());
+                    int earlyTicks = ReachUtil.earlyHit(attacker);
                     if (earlyTicks > 0) {
-                        ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, event.getCause(), earlyTicks);
+                        ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, EntityDamageEvent.DamageCause.ENTITY_ATTACK, earlyTicks);
                         Scheduler.scheduleHit(scheduledHit);
                     }
                 }
                 AnimationListener.cancelAnim(attacker);
-                event.setCancelled(true);
             }
+            event.setCancelled(true);
             ReachUtil.rateLimit(attacker);
             victim.setNoDamageTicks(0);
         } else if (event.getDamager() instanceof Trident trident) { // Updated trident damage calculation

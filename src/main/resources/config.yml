@@ -151,8 +151,8 @@ pvp:
   # This is to prevent spam clicking from being as effective, and to encourage proper timing of attacks.
   # Essentially, this acts to limit the players max clicks per second, to 20 divided by this number.
   # Can be set to 0 to disable the rate limit, or disabled by setting rateLimit to false.
-  # Default: 3
-  rateLimitTicks: 3
+  # Default: 4
+  rateLimitTicks: 4
 
   # The cooldown, in ticks, that a player should have after missing an attack.
   # Can be set to 0 to disable the cooldown (This is not recommended).

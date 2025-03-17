@@ -87,36 +87,23 @@ public class PlayerDamageEntity {
 
         if (weapon.getType() == Material.MACE) cancelKB = macePostHit(weapon, player.getFallDistance(), player, entity);
 
+        double strength;
         //Apply Knockback
-        double strength = player.isSprinting() ? 1.0 : 0.0;
+        if (dealDamage) {
+            strength = player.isSprinting() ? 1.0 : 0.0;
 
-        //Increase knockback strength based on knockback enchantment level
-        if (weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchant(Enchantment.KNOCKBACK) && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+            //Increase knockback strength based on knockback enchantment level
+            if (weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchant(Enchantment.KNOCKBACK) && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
 
-            strength += getKnockback(((CraftPlayer) player).getHandle(), ((CraftLivingEntity) entity).getHandle(),
-                    ((CraftDamageSource) DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(player).withDirectEntity(player).build()).getHandle(),
-                    (CraftItemStack.unwrap(weapon)));
+                strength += getKnockback(((CraftPlayer) player).getHandle(), ((CraftLivingEntity) entity).getHandle(),
+                        ((CraftDamageSource) DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(player).withDirectEntity(player).build()).getHandle(),
+                        (CraftItemStack.unwrap(weapon)));
+            }
+        } else {
+            strength = (player.isSprinting() && (player.getAttackCooldown() <= 0.9)) ? 1.0 : 0.0;
         }
 
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
-
-        if (dealDamage) dealDamage(entity, damage, player);
-
-        if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
-        }
-
-        if (ReachUtil.isOverCharged(player, weapon.getType(), ReachUtil.getHaste(player)) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
-                damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-            SweepingEdgeUtil.Sweep(player, entity);
-        }
-
-        PlayerHitUtil.thornsCheck(entity, player);
-
-        if (!isBlocked && weapon.containsEnchantment(Enchantment.FIRE_ASPECT)) {
-            int fireProt = getFireProt(entity);
-            entity.setFireTicks(fireProt > 7 ? 0 : (int) ((80 * weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT) * (1 - (0.15 * fireProt)))));
-        }
 
         ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
 
@@ -138,6 +125,24 @@ public class PlayerDamageEntity {
         if (isBlocked) player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
         //float pitchShift = (float) (Math.random() * 0.2) * ((damage > 5) ? -2 : 1);
         //if (isSwordBlocked) player.getWorld().playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1, (pitchShift + 1.3f));
+
+        if (dealDamage) dealDamage(entity, damage, player);
+
+        if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+            KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
+        }
+
+        if (ReachUtil.isOverCharged(player, weapon.getType(), ReachUtil.getHaste(player)) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
+                damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+            SweepingEdgeUtil.Sweep(player, entity);
+        }
+
+        PlayerHitUtil.thornsCheck(entity, player);
+
+        if (!isBlocked && weapon.containsEnchantment(Enchantment.FIRE_ASPECT)) {
+            int fireProt = getFireProt(entity);
+            entity.setFireTicks(fireProt > 7 ? 0 : (int) ((80 * weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT) * (1 - (0.15 * fireProt)))));
+        }
 
         int haste = 0;
         if (player.hasPotionEffect(PotionEffectType.HASTE)) {

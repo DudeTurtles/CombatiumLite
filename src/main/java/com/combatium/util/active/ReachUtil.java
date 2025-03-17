@@ -22,6 +22,7 @@ public class ReachUtil {
             Material.NETHERITE_PICKAXE, Material.MACE));
 
     private static final Map<Player, Integer> playerCooldowns = new HashMap<>();
+    private static final Map<Player, Integer> cooldownTime = new HashMap<>();
     private static final Map<Player, Integer> rateLimit = new HashMap<>();
     private static int missTime = 4;
     private static int rateLimitTicks= 3;
@@ -29,30 +30,35 @@ public class ReachUtil {
     public static void resetCooldown(Player player, boolean wasMiss, Material item) {
         rateLimit(player);
 
-        if (wasMiss) playerCooldowns.put(player, Scheduler.getCurrentTick() + missTime);
-        else playerCooldowns.put(player, Scheduler.getCurrentTick() + getCooldown(item, getHaste(player)));
+        if (wasMiss) {
+            playerCooldowns.put(player, Scheduler.getCurrentTick());
+            cooldownTime.put(player, missTime);
+        }
+        else {
+            playerCooldowns.put(player, Scheduler.getCurrentTick());
+            cooldownTime.put(player, getCooldown(item, getHaste(player)));
+        }
     }
 
-    public static int earlyHit(Player player, int haste, Material item) {
-        int cooldownTicks = getCooldown(item, haste);
-        int ticksRemaining = playerCooldowns.get(player) - Scheduler.getCurrentTick();
-        if (((double) ticksRemaining) / ((double) cooldownTicks) <= 0.2) return ticksRemaining + 1;
+    public static int earlyHit(Player player) {
+        int ticksRemaining = cooldownTime.get(player) - (Scheduler.getCurrentTick() - playerCooldowns.get(player));
+        if (((double) ticksRemaining) / ((double) cooldownTime.get(player)) <= 0.2) return ticksRemaining + 1;
         else return 0;
     }
 
     public static boolean isOverCharged(Player player, Material item, int haste) {
-        int cooldown = getCooldown(item, haste);
+        int cooldown = cooldownTime.get(player);
 
         if (!playerCooldowns.containsKey(player)) {
             resetCooldown(player, false, item);
             return false;
         }
 
-        return playerCooldowns.get(player) + cooldown <= Scheduler.getCurrentTick();
+        return playerCooldowns.get(player) + (cooldown * 2) <= Scheduler.getCurrentTick();
     }
 
     private static boolean checkOvercharge(Player player, Material item, int haste) {
-        int cooldown = getCooldown(item, haste);
+        int cooldown = cooldownTime.get(player);
 
         if (!playerCooldowns.containsKey(player)) {
             resetCooldown(player, false, item);
@@ -61,16 +67,17 @@ public class ReachUtil {
 
         if (CombatiumLite.improvedChargedHits) cooldown -= PingManager.getPingTicks(player);
 
-        return playerCooldowns.get(player) + cooldown <= Scheduler.getCurrentTick();
+        return playerCooldowns.get(player) + (cooldown * 2) <= Scheduler.getCurrentTick();
     }
 
     public static boolean isCharged(Player player) {
         if (!playerCooldowns.containsKey(player)) {
             playerCooldowns.put(player, Scheduler.getCurrentTick());
+            cooldownTime.put(player, 0);
             return false;
         }
 
-        return Scheduler.getCurrentTick() >= playerCooldowns.get(player);
+        return Scheduler.getCurrentTick() >= playerCooldowns.get(player) + cooldownTime.get(player);
     }
 
     public static void updatePlayerReach(Player player) {
@@ -84,6 +91,7 @@ public class ReachUtil {
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
         if (player.isBlocking()) {
             playerCooldowns.put(player, Scheduler.getCurrentTick());
+            cooldownTime.put(player, 0);
         }
 
         int haste = getHaste(player);
@@ -98,6 +106,7 @@ public class ReachUtil {
 
     public static void removePlayer(Player player) {
         playerCooldowns.remove(player);
+        cooldownTime.remove(player);
     }
 
     //Cooldown time in ticks (3.5 | 3 | 2.5 | 2 | 1)

@@ -73,12 +73,14 @@ public class PlayerDamageEntity {
             isBlocked = (angle < Math.toRadians(blockAngle - 180)) || blockAngle >= 360;
         }
 
+        float damage = PlayerHitUtil.getRawDamage(player, entity, weapon, isBlocked, blockAmount, damageCause);
+
         if ((isBlocked) && DisableShieldUtil.isAxe(weapon)) { // Updated shield blocking times
             // Maybe make it so player no longer counts as blocking
+            isBlocked = false;
             DisableShieldUtil.disableShield((Player) entity, weapon);
         }
 
-        float damage = PlayerHitUtil.getRawDamage(player, entity, weapon, isBlocked, blockAmount, damageCause);
         double invulnerableDamage = InvulnerabilityScheduler.isInvulnerable(entity);
         float originalDamage = damage;
         boolean cancelKB = false;

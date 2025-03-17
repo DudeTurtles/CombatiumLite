@@ -49,7 +49,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean improvedChargedHits;
     public static boolean rateLimit;
     public static boolean tridentsReturnFromVoid;
-    public static boolean hitsReduceVelocity;
     public static boolean swordBlocking;
     public static boolean swordBlockingDisplay;
     public static boolean weakerSpamCrits;
@@ -80,7 +79,6 @@ public final class CombatiumLite extends JavaPlugin {
         backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
         stackablePotions = getConfig().getBoolean("pvp.stackablePotions", true);
         visualCooldownChanges = getConfig().getBoolean("pvp.visualCooldownChanges", true);
-        hitsReduceVelocity = getConfig().getBoolean("pvp.hitsReduceVelocity", false);
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
         swordBlockingDisplay = getConfig().getBoolean("pvp.swordBlockingDisplay", false);
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
@@ -154,9 +152,11 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new ItemDropListener(), this);
         pluginManager.registerEvents(new PlayerDeathListener(), this);
 
-        CombatifyListener combatifyListener = new CombatifyListener();
-        pluginManager.registerEvents(combatifyListener, this);
-        getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
+        if (combatifySupport) {
+            CombatifyListener combatifyListener = new CombatifyListener();
+            pluginManager.registerEvents(combatifyListener, this);
+            getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
+        }
     }
 
     @Override
@@ -170,7 +170,6 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Back Shots Plus: " + backShotsPlus);
         logger.log(java.util.logging.Level.INFO, "Stackable Potions: " + stackablePotions);
         logger.log(java.util.logging.Level.INFO, "Visual Cooldown Changes: " + visualCooldownChanges);
-        logger.log(java.util.logging.Level.INFO, "Hits Reduce Velocity: " + hitsReduceVelocity);
         logger.log(java.util.logging.Level.INFO, "Sword Blocking: " + swordBlocking);
         logger.log(java.util.logging.Level.INFO, "Weaker Spam Crits: " + weakerSpamCrits);
         logger.log(java.util.logging.Level.INFO, "Hit Through Transparent: " + hitThroughTransparent);

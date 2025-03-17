@@ -119,6 +119,7 @@ Netherite: 7<br><br>
  - Sweep attacks can now only be dealt if the weapon has the Sweeping Edge enchantment.<br>
  - Sweeping edge now deals half as much damage as previously.<br>
  - Sweep attacks can now be dealt even if an entity isn't hit.<br>
+ - Sweeping edge can now be applied to axes.<br>
 
 <div align="center">
 <h4 class="center">Cleaving</h4>
@@ -127,6 +128,11 @@ Netherite: 7<br><br>
 - Cleaving has 3 levels, with each level increasing the time shields are disabled by 0.5 seconds.<br>
 - Cleaving increases damage by 2 damage (1 heart) increasing by 1 damage (0.5 hearts) per subsequent level.<br>
 - Cleaving is mutually exclusive with Sharpness, Bane of Arthropods, and Smite.<br>
+
+<div align="center">
+<h4 class="center">Other Enchant Info</h4>
+</div>
+ - Like sweeping edge, Fire Aspect, Looting, and Knockback can now be applied to axes.<br>
 
 <div align="center">
 <h4 class="center">Projectiles</h4>

@@ -5,6 +5,7 @@ import com.combatium.listeners.util.AnimationListener;
 import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.util.calculations.DisableShieldUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
+import com.destroystokyo.paper.MaterialSetTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -46,8 +47,6 @@ public class PlayerDamageEntity {
         AnimationListener.validHit(player);
         if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) weapon.damage(1, entity);
 
-        if (CombatiumLite.hitsReduceVelocity) player.setVelocity(player.getVelocity().multiply(0.8));
-
         //Calculation for reduced shield blocking arc
         net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) entity).getHandle();
 
@@ -75,7 +74,7 @@ public class PlayerDamageEntity {
 
         float damage = PlayerHitUtil.getRawDamage(player, entity, weapon, isBlocked, blockAmount, damageCause);
 
-        if ((isBlocked) && DisableShieldUtil.isAxe(weapon)) { // Updated shield blocking times
+        if ((isBlocked) && weapon != null && MaterialSetTag.ITEMS_AXES.isTagged(weapon.getType())) { // Updated shield blocking times
             // Maybe make it so player no longer counts as blocking
             isBlocked = false;
             DisableShieldUtil.disableShield((Player) entity, weapon);

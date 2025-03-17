@@ -5,13 +5,6 @@ pvp:
   # Default: false
   backShotsPlus: false
 
-  # If hitting an entity should reduce the players current velocity. Similar to
-  # 1.8 combat, this allows for players to reduce their knockback by hitting an entity.
-  # this will not be as impactful as in 1.8 as there is a limit to attack speed,
-  # and only valid attacks will reduce velocity.
-  # Default: false
-  hitsReduceVelocity: false
-
   # If the player should be able to block with a sword, similar to 1.8 combat.
   # This will reduce damage taken by 3 when blocking, but will also reduce
   # the players movement speed.

@@ -2,7 +2,6 @@ package com.combatium.listeners.damage;
 
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.entity.CraftVehicle;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;

@@ -96,23 +96,6 @@ public class PlayerHitUtil {
         return damage;
     }
 
-    private static float maceDamage(ItemStack weapon, Player player) {
-        float maceDamage = 6;
-        float distance = player.isGliding() ? 1 : player.getFallDistance();
-        float fallDamage;
-
-        if (distance <= 3) fallDamage = distance * 4;
-        else if (distance <= 8) fallDamage = 12 + (distance - 3) * 2;
-        else fallDamage = 22 + (distance - 8);
-
-        if (weapon.containsEnchantment(Enchantment.DENSITY)) {
-            fallDamage += (0.5f * weapon.getEnchantmentLevel(Enchantment.DENSITY) * distance);
-        }
-
-        maceDamage += (distance > 1.5) ? fallDamage : 0;
-        return maceDamage;
-    }
-
     //Calculate the damage values after armor and resistance are accounted for
     public static float getFinalDamage(LivingEntity damagedEntity, float rawDamage, ItemStack weapon) {
         double protPassPercent = getProtPassPercent(damagedEntity);

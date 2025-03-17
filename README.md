@@ -11,8 +11,12 @@ Since the combat test snapshots are no longer being updated, there are plans to 
 </div>
 
 ### Configuration
-This plugin is configurable through the config.yml file, but it is recommended to use the default settings. The default settings are designed to replicate the Combat Test Snapshots as closely as possible. While some of the config options are simple quality of life options, they help to maintain consistency, and help the modified combat make more sense to newer players. Things like grace period and optimizations are also relatively important to the combat system, and are mainly config options for testing purposes. <br>
-That being said, the config options which are disabled by default are generally jokes, and are not included in this statement, as the inclusion of these options is entirely for fun, and up to individual preference, and aren't in any way related to the original combat snapshots.
+This plugin is configurable through the config.yml file, but it is recommended to use the default settings. The default settings are designed to replicate the Combat Test Snapshots as closely as possible. While some of the config options are simple quality of life options, they help to maintain consistency, and help the modified combat make more sense to newer players. Things like grace period are also relatively important to the combat system, and are mainly config options for testing purposes. <br>
+That being said, the config options which are disabled by default are not required, and are for specific situations. Please read the notes around the config options prior to changing them. <br>
+
+### Other Support / Bugs
+If you are having issues with this plugin or are encountering bugs, feel free to reach out. 
+
 
 ### Plans
 
@@ -32,6 +36,7 @@ That being said, the config options which are disabled by default are generally 
   - There is no shield hitting.
   - Shields do not activate on crouch.
   - Changes to bow mechanics.
+- If you would like to limit these inaccuracies, playing through the Combatify mod (ensure this is enabled in the plugin config), will make visual attacking accurate.
 
 #### Requirements
 - Java 21

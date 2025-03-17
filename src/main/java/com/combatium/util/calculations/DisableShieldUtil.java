@@ -38,12 +38,4 @@ public class DisableShieldUtil {
         }
         return 0;
     }
-
-    public static boolean isAxe(@Nullable ItemStack weapon) {
-        if (weapon == null) return false;
-        MaterialSetTag.ITEMS_AXES.isTagged(weapon.getType());
-        return weapon.getType() == Material.WOODEN_AXE || weapon.getType() == Material.STONE_AXE ||
-                weapon.getType() == Material.GOLDEN_AXE || weapon.getType() == Material.IRON_AXE ||
-                weapon.getType() == Material.DIAMOND_AXE || weapon.getType() == Material.NETHERITE_AXE;
-    }
 }

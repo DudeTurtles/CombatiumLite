@@ -2,6 +2,7 @@ package com.combatium.listeners.itemFixers;
 
 import com.combatium.util.calculations.FixItem;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -35,7 +36,7 @@ public class InventoryClickListener implements Listener {
                 event.getCurrentItem().setItemMeta(meta);
             }
         } else if(visualAttackSpeed) {
-            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getCurrentItem());
+            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getCurrentItem(), (event.getWhoClicked() instanceof Player) ? (Player) event.getWhoClicked() : null);
             if (meta != null) {
                 event.getCurrentItem().setItemMeta(meta);
             }

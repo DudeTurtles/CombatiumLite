@@ -24,7 +24,7 @@ public class PlayerInteractListenerFix implements Listener {
         if (weapon.getType().isAir()) return;
 
         if (visualAttackSpeed) {
-            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(weapon);
+            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(weapon, event.getPlayer());
             if (meta != null) {
                 event.getPlayer().getInventory().getItemInMainHand().setItemMeta(meta);
             }

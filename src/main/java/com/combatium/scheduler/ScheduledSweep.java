@@ -3,7 +3,7 @@ package com.combatium.scheduler;
 import com.combatium.util.active.SweepingEdgeUtil;
 import org.bukkit.entity.Player;
 
-import static com.combatium.listeners.util.PlayerInteractListener.isPotentialFalseInput;
+import static com.combatium.listeners.util.sweepingEdgeListeners.PlayerInteractListener.isPotentialFalseInput;
 
 public class ScheduledSweep {
     private final Player player;

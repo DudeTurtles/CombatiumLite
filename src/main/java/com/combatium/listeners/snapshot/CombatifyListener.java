@@ -1,9 +1,10 @@
-package com.combatium.listeners;
+package com.combatium.listeners.snapshot;
 
 import com.combatium.CombatiumLite;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.active.SweepingEdgeUtil;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,6 +25,7 @@ public class CombatifyListener implements Listener, PluginMessageListener {
         if (event.getChannel().equals("combatify:remaining_use_ticks")) {
             Player player = event.getPlayer();
             CombatiumLite.logger.info(player.getName() + " has joined with Combatify");
+            player.getAttribute(Attribute.ATTACK_SPEED).setBaseValue(4.0);
             combatifyPlayers.add(player.getUniqueId());
         }
     }
@@ -36,14 +38,18 @@ public class CombatifyListener implements Listener, PluginMessageListener {
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] bytes) {
         if (channel.equals("combatify:miss_attack")) {
-            CombatiumLite.logger.info(player.getName() + " has missed");
+            //CombatiumLite.logger.info(player.getName() + " has missed");
 
-            ReachUtil.resetCooldown(player, true, Material.AIR);
+            ReachUtil.resetCooldown(player, true, player.getInventory().getItemInMainHand().getType());
 
             if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand().getType(), ReachUtil.getHaste(player))
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }
         }
+    }
+
+    public static boolean isCombatifyPlayer(Player player) {
+        return combatifyPlayers.contains(player.getUniqueId());
     }
 }

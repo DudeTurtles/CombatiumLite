@@ -21,6 +21,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
+import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
 import static com.combatium.util.active.PlayerDamageEntity.hasProcessed;
 import static com.combatium.util.calculations.PlayerHitUtil.getFinalDamage;
 
@@ -73,7 +74,7 @@ public class EntityDamageByEntityListener implements Listener {
             if (ReachUtil.isCharged(attacker)) {
                 PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, EntityDamageEvent.DamageCause.ENTITY_ATTACK, true);
             } else {
-                if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod) {
+                if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod && !isCombatifyPlayer(attacker)) {
                     //Grace period for early hits
                     int earlyTicks = ReachUtil.earlyHit(attacker);
                     if (earlyTicks > 0) {

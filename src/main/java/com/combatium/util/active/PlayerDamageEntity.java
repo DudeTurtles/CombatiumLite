@@ -27,7 +27,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffectType;
 import java.util.HashMap;
 import java.util.Map;
@@ -170,19 +169,6 @@ public class PlayerDamageEntity {
             nmsPlayer.setSprinting(sprinting);
         }
 
-    }
-
-    private static boolean isKillShot(LivingEntity entity, float finalDamage) {
-        if (entity.getActiveItem().getType() == Material.TOTEM_OF_UNDYING) {
-            return false;
-        }
-        if (entity instanceof Player player) {
-            PlayerInventory inv = player.getInventory();
-            if (inv.getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING || inv.getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING) {
-                return false;
-            }
-        }
-        return entity.getHealth() - finalDamage <= 0;
     }
 
     protected static float getKnockback(net.minecraft.world.entity.LivingEntity attacker, Entity target, net.minecraft.world.damagesource.DamageSource damageSource, net.minecraft.world.item.ItemStack item) {

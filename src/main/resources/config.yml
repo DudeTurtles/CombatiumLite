@@ -41,6 +41,11 @@ pvp:
   # Default: false
   sprintFix: false
 
+  # If the plugin should support players joining on Combatify.
+  # This will make it so their weapons are updated to have the proper attack speed.
+  # Default: false
+  combatifySupport: false
+
   # If the saturation changes from the combat tests should be implemented.
   # This makes it so that eating food doesn't increase saturation each time, but instead
   # increases it to the maximum saturation of the food. This means that eating multiple
@@ -78,10 +83,10 @@ pvp:
   # Default: true
   tridentsReturnFromVoid: true
 
-  # If the weapons should hold attribute modifiers for reach, to lessen the impact of ping on
-  # non-charged attacks. (Only a config option due to testing / development, should remain true)
+  # If the weapons should hold attribute modifiers for reach.
+  # Should remain true unless you have a plugin which modifies the reach of weapons.
   # Default: true
-  optimizations: true
+  updateItemReach: true
 
   # If the animations server side should be improved to more accurately match CTS.
   # Makes it so arm swing animations only play when a player can attack, so attacks

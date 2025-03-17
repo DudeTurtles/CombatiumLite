@@ -1,7 +1,7 @@
 package com.combatium;
 
 import com.combatium.enchants.CustomEnchants;
-import com.combatium.listeners.CombatifyListener;
+import com.combatium.listeners.snapshot.CombatifyListener;
 import com.combatium.listeners.damage.*;
 import com.combatium.listeners.itemFixers.*;
 import com.combatium.listeners.projectile.DispenseTridentListener;
@@ -13,6 +13,8 @@ import com.combatium.listeners.util.*;
 import com.combatium.listeners.util.ping.AttributeChangeListener;
 import com.combatium.listeners.util.ping.JoinQuitListener;
 import com.combatium.listeners.util.ping.PingReceiveListener;
+import com.combatium.listeners.util.sweepingEdgeListeners.ItemDropListener;
+import com.combatium.listeners.util.sweepingEdgeListeners.PlayerInteractListener;
 import com.combatium.scheduler.Scheduler;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
@@ -39,7 +41,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean backShotsPlus;
     public static boolean visualCooldownChanges;
     public static boolean stackablePotions;
-    public static boolean optimizations;
+    public static boolean updateItemReach;
     public static boolean updateLore;
     public static boolean cooldownShowsFullCharge;
     public static boolean gracePeriod;
@@ -61,6 +63,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean fixSweepOnThrow;
     public static double shieldProtectionArc;
     public static boolean sprintFix;
+    public static boolean combatifySupport;
     BukkitTask pingTask;
 
     @Override
@@ -85,9 +88,10 @@ public final class CombatiumLite extends JavaPlugin {
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
         hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
         sprintFix = getConfig().getBoolean("pvp.sprintFix", false);
+        combatifySupport = getConfig().getBoolean("pvp.combatifySupport", false);
         saturationChanges = getConfig().getBoolean("pvp.saturationChanges", true);
         updateLore = getConfig().getBoolean("pvp.updateLore", true);
-        optimizations = getConfig().getBoolean("pvp.optimizations", true);
+        updateItemReach = getConfig().getBoolean("pvp.updateItemReach", true);
         cooldownShowsFullCharge = getConfig().getBoolean("pvp.cooldownShowsFullCharge", true);
         gracePeriod = getConfig().getBoolean("pvp.gracePeriod", true);
         improvedAnimations = getConfig().getBoolean("pvp.improvedAnimations", true);
@@ -136,11 +140,11 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new PlayerInteractListener(), this);
         pluginManager.registerEvents(new PlayerJoinListener(), this);
         pluginManager.registerEvents(new ProjectileThrowListener(), this);
-        pluginManager.registerEvents(new EntityAttackListener(visualCooldownChanges, optimizations), this);
-        pluginManager.registerEvents(new PlayerInteractListenerFix(visualCooldownChanges, optimizations), this);
-        pluginManager.registerEvents(new ItemPickupListener(stackablePotions, visualCooldownChanges, optimizations), this);
-        pluginManager.registerEvents(new InventoryClickListener(stackablePotions, visualCooldownChanges, optimizations), this);
-        pluginManager.registerEvents(new CraftItemListener(visualCooldownChanges, optimizations), this);
+        pluginManager.registerEvents(new EntityAttackListener(visualCooldownChanges, updateItemReach), this);
+        pluginManager.registerEvents(new PlayerInteractListenerFix(visualCooldownChanges, updateItemReach), this);
+        pluginManager.registerEvents(new ItemPickupListener(stackablePotions, visualCooldownChanges, updateItemReach), this);
+        pluginManager.registerEvents(new InventoryClickListener(stackablePotions, visualCooldownChanges, updateItemReach), this);
+        pluginManager.registerEvents(new CraftItemListener(visualCooldownChanges, updateItemReach), this);
         pluginManager.registerEvents(new TickListener(new Scheduler(this, regenTickDelay)), this);
         pluginManager.registerEvents(new DispenseTridentListener(), this);
         pluginManager.registerEvents(new AnimationListener(), this);
@@ -173,7 +177,7 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Hit Through Transparent: " + hitThroughTransparent);
         logger.log(java.util.logging.Level.INFO, "Saturation Changes: " + saturationChanges);
         logger.log(java.util.logging.Level.INFO, "Update Lore: " + updateLore);
-        logger.log(java.util.logging.Level.INFO, "Optimizations: " + optimizations);
+        logger.log(java.util.logging.Level.INFO, "Update Item Reach: " + updateItemReach);
         logger.log(java.util.logging.Level.INFO, "Cooldown Shows Full Charge: " + cooldownShowsFullCharge);
         logger.log(java.util.logging.Level.INFO, "Grace Period: " + gracePeriod);
         logger.log(java.util.logging.Level.INFO, "Improved Animations: " + improvedAnimations);

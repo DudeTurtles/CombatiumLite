@@ -26,7 +26,7 @@ public class CraftItemListener implements Listener {
         }
 
         if(visualChanges) {
-            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getCurrentItem());
+            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getCurrentItem(), null);
             if (meta != null) {
                 event.getCurrentItem().setItemMeta(meta);
             }

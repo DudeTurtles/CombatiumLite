@@ -4,11 +4,15 @@ import com.combatium.CombatiumLite;
 import com.combatium.scheduler.Scheduler;
 import com.combatium.util.ping.PingManager;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import java.util.*;
 
+import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
 import static com.combatium.util.calculations.FixItem.attackSpeed;
 
 public class ReachUtil {
@@ -26,6 +30,9 @@ public class ReachUtil {
     private static final Map<Player, Integer> rateLimit = new HashMap<>();
     private static int missTime = 4;
     private static int rateLimitTicks= 3;
+    private static final NamespacedKey chargedReach = new NamespacedKey("combatium", "charged-reach");
+    private static final NamespacedKey combatifyReach = new NamespacedKey("combatify", "charged_reach");
+    private static final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
 
     public static void resetCooldown(Player player, boolean wasMiss, Material item) {
         rateLimit(player);
@@ -54,7 +61,7 @@ public class ReachUtil {
             return false;
         }
 
-        return playerCooldowns.get(player) + (cooldown * 2) <= Scheduler.getCurrentTick();
+        return playerCooldowns.get(player) + (cooldown + getCooldown(item, haste)) <= Scheduler.getCurrentTick();
     }
 
     private static boolean checkOvercharge(Player player, Material item, int haste) {
@@ -67,7 +74,7 @@ public class ReachUtil {
 
         if (CombatiumLite.improvedChargedHits) cooldown -= PingManager.getPingTicks(player);
 
-        return playerCooldowns.get(player) + (cooldown * 2) <= Scheduler.getCurrentTick();
+        return playerCooldowns.get(player) + (cooldown + getCooldown(item, haste)) <= Scheduler.getCurrentTick();
     }
 
     public static boolean isCharged(Player player) {
@@ -81,13 +88,11 @@ public class ReachUtil {
     }
 
     public static void updatePlayerReach(Player player) {
-        Material type = player.getInventory().getItemInMainHand().getType();
-        /*
-         * Optimizations uses item attributes to help non-charged reach be less ping dependent,
-         * so if optimizations are enabled, we use the base reach of 2.5, since the weapon will modify if needed
-         */
-        double baseReach = CombatiumLite.optimizations ? 2.5 : getReach(type);
+        if (isCombatifyPlayer(player)) {
+            return;
+        }
 
+        Material type = player.getInventory().getItemInMainHand().getType();
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
         if (player.isBlocking()) {
             playerCooldowns.put(player, Scheduler.getCurrentTick());
@@ -98,9 +103,10 @@ public class ReachUtil {
 
 
         if (checkOvercharge(player, type, haste) && !player.isSneaking()) {
-            Objects.requireNonNull(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).setBaseValue(baseReach + 1);
+            AttributeInstance attribute = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
+            if (attribute.getModifier(chargedReach) == null) attribute.addModifier(chargedReachModifier);
         } else {
-            Objects.requireNonNull(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).setBaseValue(baseReach);
+            Objects.requireNonNull(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).removeModifier(chargedReach);
         }
     }
 

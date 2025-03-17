@@ -2,6 +2,7 @@ package com.combatium.listeners.itemFixers;
 
 import com.combatium.util.calculations.FixItem;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -32,7 +33,7 @@ public class ItemPickupListener implements Listener {
                 event.getItem().getItemStack().setItemMeta(meta);
             }
         } else if(visualAttackSpeed) {
-            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getItem().getItemStack());
+            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getItem().getItemStack(), (event.getEntity() instanceof Player player) ? player : null);
             if (meta != null) {
                 event.getItem().getItemStack().setItemMeta(meta);
             }

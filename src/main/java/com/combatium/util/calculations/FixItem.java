@@ -15,6 +15,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -25,12 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
 import static com.combatium.util.active.ReachUtil.getCooldown;
 
 
 public class FixItem {
     private static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
     private static final NamespacedKey REACH = new NamespacedKey("combatium", "reach");
+    private static final NamespacedKey COMBATIFY_REACH = new NamespacedKey("combatify", "charged_reach");
     private static final java.lang.invoke.VarHandle API_ITEM_STACK_CRAFT_DELEGATE_FIELD;
 
     static {
@@ -95,19 +98,52 @@ public class FixItem {
         return meta;
     }
 
-    public static ItemMeta fixAttackSpeedAndDamage(ItemStack item) {
+    public static ItemMeta fixAttackSpeedAndDamage(ItemStack item, Player player) {
         if (item == null || item.getItemMeta() == null || !ReachUtil.Tools.contains(item.getType())) {
             return null;
         }
 
         ItemMeta meta = item.getItemMeta();
         boolean altered = false;
-        if (meta.getAttributeModifiers(Attribute.ATTACK_SPEED) == null) {
-            double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / getCooldown(item.getType(), 0)) - 1.25) : (20d / getCooldown(item.getType(), 0)) - 2.5;
-            meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-            altered = true;
+
+        if (CombatiumLite.combatifySupport) {
+            if (isCombatifyPlayer(player)) {
+                if (meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
+                    meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed(item.getType()) - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                    meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    altered = true;
+                } else {
+                    AttributeModifier modifier = meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).iterator().next();
+                    if (modifier.getAmount() != attackSpeed(item.getType()) - 2.5) {
+                        meta.removeAttributeModifier(Attribute.ATTACK_SPEED, modifier);
+                        meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed(item.getType()) - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                        altered = true;
+                    }
+                }
+            } else {
+                double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / getCooldown(item.getType(), 0)) - 1.25) : (20d / getCooldown(item.getType(), 0)) - 2.5;
+                if (meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
+                    meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                    meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    altered = true;
+                } else {
+                    AttributeModifier modifier = meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).iterator().next();
+                    if (modifier.getAmount() != attackSpeed) {
+                        meta.removeAttributeModifier(Attribute.ATTACK_SPEED, modifier);
+                        meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                        altered = true;
+                    }
+                }
+            }
+        } else {
+            if (meta.getAttributeModifiers(Attribute.ATTACK_SPEED) == null) {
+                double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / getCooldown(item.getType(), 0)) - 1.25) : (20d / getCooldown(item.getType(), 0)) - 2.5;
+                meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                altered = true;
+            }
         }
+
         if (meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE) == null) {
             double attackDamage = PlayerHitUtil.attackDamage(item, null) - 1;
             meta.addAttributeModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier(ATTACK_SPEED, attackDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));

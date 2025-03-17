@@ -1,4 +1,4 @@
-package com.combatium.listeners.util;
+package com.combatium.listeners.util.sweepingEdgeListeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

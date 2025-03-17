@@ -136,7 +136,7 @@ public class PlayerDamageEntity {
             else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
         }
 
-        player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 3), 0.3, 0.3, 0.3, 0);
+        if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 
         if (isBlocked) player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
         //float pitchShift = (float) (Math.random() * 0.2) * ((damage > 5) ? -2 : 1);
@@ -177,7 +177,6 @@ public class PlayerDamageEntity {
         float f = (float) attacker.getAttributeValue(Attributes.ATTACK_KNOCKBACK);
 
         return EnchantmentHelper.modifyKnockback((ServerLevel) attacker.level(), item, target, damageSource, f);
-
     }
 
     private static Material getWeaponType(Material material, Player player) {

@@ -13,14 +13,12 @@ import static com.combatium.util.calculations.ValidHitChecks.isValidHit;
 public class ScheduledHit {
     Player attacker;
     LivingEntity target;
-    ItemStack weapon;
     EntityDamageEvent.DamageCause damageCause;
     int scheduleTime;
 
-    public ScheduledHit(Player attacker, LivingEntity target, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, int inTicks) {
+    public ScheduledHit(Player attacker, LivingEntity target, EntityDamageEvent.DamageCause damageCause, int inTicks) {
         this.attacker = attacker;
         this.target = target;
-        this.weapon = weapon;
         this.damageCause = damageCause;
         this.scheduleTime = Scheduler.getCurrentTick() + inTicks;
     }
@@ -30,6 +28,8 @@ public class ScheduledHit {
     }
 
     public void execute() {
+        ItemStack weapon = attacker.getInventory().getItemInMainHand();
+
         if (!isValidHit(attacker, target)) {
             resetCooldown(attacker, true, weapon.getType());
             return;

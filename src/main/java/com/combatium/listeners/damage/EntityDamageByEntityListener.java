@@ -81,7 +81,7 @@ public class EntityDamageByEntityListener implements Listener {
                     //Grace period for early hits
                     int earlyTicks = ReachUtil.earlyHit(attacker, haste, weapon.getType());
                     if (earlyTicks > 0) {
-                        ScheduledHit scheduledHit = new ScheduledHit(attacker, victim,weapon, event.getCause(), earlyTicks);
+                        ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, event.getCause(), earlyTicks);
                         Scheduler.scheduleHit(scheduledHit);
                     }
                 }

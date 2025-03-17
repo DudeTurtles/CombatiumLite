@@ -24,7 +24,6 @@ public class PlayerData {
     private final Random random = new Random();
     private Long lastPing;
     private Long ping;
-    private double verticalVelocity;
     private double gravity = 0.08;
 
     public PlayerData(Player player) {
@@ -44,16 +43,13 @@ public class PlayerData {
         this.lastPing = lastPing;
     }
 
-    public void setVerticalVelocity(double verticalVelocity) {
-        this.verticalVelocity = verticalVelocity;
-    }
-
     public void setGravity(double gravity) {
         this.gravity = gravity;
     }
 
-    public double getVerticalVelocity() {
-        return verticalVelocity;
+    // Gets the estimated client side vertical velocity of the player based on ping.
+    public double estimateVerticalVelocity(double velocity) {
+        return PingCalculations.estimateVelocity(velocity, getEstimatedPing(), gravity);
     }
 
     public Long getPing() {

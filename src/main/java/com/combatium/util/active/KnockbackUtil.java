@@ -3,6 +3,8 @@ package com.combatium.util.active;
 import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
 import com.combatium.util.ping.PlayerData;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -38,6 +40,12 @@ public class KnockbackUtil {
                     if (playerData != null) onGround = playerData.isOnGround(entity.getVelocity().getY());
                 }
 
+                double vertical = delta.getY();
+                if (!onGround && entity instanceof Player && CombatiumLite.pingImprovements) {
+                    PlayerData playerData = PingManager.getPlayerData(entity.getUniqueId());
+                    if (playerData != null) vertical = playerData.estimateVerticalVelocity(vertical);
+                }
+
                 if (Double.isNaN(diff.getX())) {
                     diff.setX(0.0);
                 }
@@ -45,7 +53,8 @@ public class KnockbackUtil {
                     diff.setZ(0.0);
                 }
 
-                entity.setVelocity(new Vector(delta.getX() / 2.0 - diff.getX(), onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, delta.getY() + (strength * 0.5))), delta.getZ() / 2.0 - diff.getZ()));
+                Vec3 velocity = new Vec3(delta.getX() / 2.0 - diff.getX(), onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, vertical + (strength * 0.5))), delta.getZ() / 2.0 - diff.getZ());
+                ((org.bukkit.craftbukkit.entity.CraftLivingEntity) entity).getHandle().setDeltaMovement(velocity);
             } catch (Exception e) {
                 logger.warning("=== Please Report This to the Developer ===");
                 logger.warning("Error applying knockback to entity: " + entity.getName());

@@ -18,6 +18,8 @@ public class ProjectileHitListener implements Listener {
         if (event.getHitEntity() instanceof LivingEntity entity) {
             if (event.getEntity() instanceof Egg || event.getEntity() instanceof Snowball || event.getEntity() instanceof EnderPearl) {
                 net.minecraft.world.entity.LivingEntity e = ((CraftLivingEntity) entity).getHandle();
+                net.minecraft.world.entity.LivingEntity attacker = null;
+                if (event.getEntity().getShooter() instanceof LivingEntity livingEntity) attacker = ((CraftLivingEntity) livingEntity).getHandle();
 
                 Vector v = event.getEntity().getVelocity().multiply(-1);
                 double angle = PlayerHitUtil.calculateAngle(new double[]{entity.getLocation().getDirection().getX(), 0, entity.getLocation().getDirection().getZ()},
@@ -38,9 +40,9 @@ public class ProjectileHitListener implements Listener {
                     return;
                 }
 
-                e.hurt(e.damageSources().genericKill(), 0.000000001f);
+                e.hurt((attacker == null) ? e.damageSources().genericKill() : e.damageSources().genericKill().customEventDamager(attacker), 0.000000001f);
                 KnockbackUtil.applyKnockback(entity, 1f/2f, v.getX(), v.getZ(), isBlocked, isSwordBlocked, true);
-                if (event.getEntity().getShooter() instanceof LivingEntity attacker) PlayerHitUtil.thornsCheck(entity, attacker);
+                if (event.getEntity().getShooter() instanceof LivingEntity attacker1) PlayerHitUtil.thornsCheck(entity, attacker1);
             }
         }
     }

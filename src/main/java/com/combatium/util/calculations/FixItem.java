@@ -85,9 +85,10 @@ public class FixItem {
     }
 
     public static ItemMeta fixPotions(ItemStack item) {
-        if (item.getItemMeta() == null || item.getType() == Material.POTION) return null;
+        if (item.getItemMeta() == null || !(item.getType() == Material.POTION)) return null;
 
         ItemMeta meta = item.getItemMeta();
+        if (meta.hasMaxStackSize() && meta.getMaxStackSize() == 16) return null;
         meta.setMaxStackSize(16);
         return meta;
     }
@@ -183,7 +184,7 @@ public class FixItem {
 
     private static boolean isLiquid(Material item) {
         return switch (item) {
-            case HONEY_BOTTLE, POTION, MILK_BUCKET, BEETROOT_SOUP, MUSHROOM_STEW, RABBIT_STEW, SUSPICIOUS_STEW -> true;
+            case HONEY_BOTTLE, POTION, MILK_BUCKET, BEETROOT_SOUP, MUSHROOM_STEW, RABBIT_STEW, SUSPICIOUS_STEW-> true;
             default -> false;
         };
     }

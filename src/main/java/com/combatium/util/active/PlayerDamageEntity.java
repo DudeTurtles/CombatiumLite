@@ -148,7 +148,7 @@ public class PlayerDamageEntity {
          * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
         resetCooldown(player, false, getWeaponType(weapon, player));
-        InvulnerabilityScheduler.setInvulnerable(entity, (weapon.getType() == Material.MACE) ? 9 : ReachUtil.getCooldown(weapon, haste) - 2, originalDamage);
+        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(weapon, haste) - 2, originalDamage);
         return damage;
     }
 

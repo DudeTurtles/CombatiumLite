@@ -109,32 +109,40 @@ public class FixItem {
 
         if (CombatiumLite.combatifySupport) {
             if (isCombatifyPlayer(player)) {
-                if (meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
+                if (meta.getAttributeModifiers() != null && meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
                     meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, dataAttackSpeed - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                     meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                     altered = true;
-                } else {
+                } else if (meta.getAttributeModifiers() != null) {
                     AttributeModifier modifier = meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).iterator().next();
                     if (modifier.getAmount() != dataAttackSpeed - 2.5) {
                         meta.removeAttributeModifier(Attribute.ATTACK_SPEED, modifier);
                         meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, dataAttackSpeed - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                         altered = true;
                     }
+                } else {
+                    meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, dataAttackSpeed - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                    meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    altered = true;
                 }
             } else {
                 int attackCooldown = (int) Math.round(20d / dataAttackSpeed);
                 double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / attackCooldown) - 1.25) : (20d / attackCooldown) - 2.5;
-                if (meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
+                if (meta.getAttributeModifiers() != null && meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
                     meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                     meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                     altered = true;
-                } else {
+                } else if (meta.getAttributeModifiers() != null) {
                     AttributeModifier modifier = meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).iterator().next();
                     if (modifier.getAmount() != attackSpeed) {
                         meta.removeAttributeModifier(Attribute.ATTACK_SPEED, modifier);
                         meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                         altered = true;
                     }
+                } else {
+                    meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                    meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    altered = true;
                 }
             }
         } else {

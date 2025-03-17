@@ -17,7 +17,7 @@ That being said, the config options which are disabled by default are generally 
 - [ ] Add 8c support
 
 ### Known Issues
-- [ ] Food loss due to regen is wrong.
+
 
 #### Implementation ideas for plans
  - N/A all significant plans have been implemented

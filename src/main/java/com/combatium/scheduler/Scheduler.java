@@ -9,16 +9,12 @@ import com.combatium.util.hitThroughTransparent.HitManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 
 import static com.combatium.util.calculations.FixItem.isSword;
 
@@ -30,7 +26,7 @@ public class Scheduler {
     static int regenTickDelay;
     static ArrayList<ScheduledHit> scheduledHits;
     static ArrayList<ScheduledHit> toRemove;
-    private static final Map<Player, Integer> regenExhaustionMap = new HashMap<>();
+    Random random = new Random();
 
     public Scheduler(Plugin plugin, int regenTickDelay) {
         Scheduler.plugin = plugin;
@@ -82,7 +78,7 @@ public class Scheduler {
                     } else {
                         player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue());
                     }
-                    addExhaustion(player, 3);
+                    if (random.nextBoolean()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
                 }
             }
         } else {
@@ -116,19 +112,5 @@ public class Scheduler {
         }
 
         currentTick++;
-    }
-
-    private static void addExhaustion(Player player, int exhaustion) {
-        int exhaustionValue = regenExhaustionMap.getOrDefault(player, 0);
-        exhaustionValue += exhaustion;
-        if (exhaustionValue > 3) {
-            exhaustionValue -= 4;
-            /*
-             * Call an event to ensure the hunger loss is cancellable.
-             */
-            FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() > 1 ? player.getFoodLevel() - 1 : 0, new ItemStack(Material.WAXED_WEATHERED_CUT_COPPER_STAIRS));
-            Bukkit.getPluginManager().callEvent(event);
-        }
-        regenExhaustionMap.put(player, exhaustionValue);
     }
 }

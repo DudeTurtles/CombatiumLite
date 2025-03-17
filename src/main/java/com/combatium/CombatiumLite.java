@@ -9,7 +9,6 @@ import com.combatium.listeners.projectile.DispenseTridentListener;
 import com.combatium.listeners.projectile.ProjectileHitListener;
 import com.combatium.listeners.projectile.ProjectileThrowListener;
 import com.combatium.listeners.regen.EntityRegainHealthListener;
-import com.combatium.listeners.regen.RegenFoodChangeEvent;
 import com.combatium.listeners.snapshot.AirSwingListener;
 import com.combatium.listeners.util.*;
 import com.combatium.listeners.util.ping.AttributeChangeListener;
@@ -134,7 +133,6 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new InventoryClickListener(stackablePotions, visualCooldownChanges, optimizations), this);
         pluginManager.registerEvents(new CraftItemListener(visualCooldownChanges, optimizations), this);
         pluginManager.registerEvents(new TickListener(new Scheduler(this, regenTickDelay)), this);
-        pluginManager.registerEvents(new RegenFoodChangeEvent(), this);
         pluginManager.registerEvents(new DispenseTridentListener(), this);
         pluginManager.registerEvents(new AnimationListener(), this);
         pluginManager.registerEvents(new KnockbackListener(), this);

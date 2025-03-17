@@ -58,6 +58,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean hitThroughTransparent;
     public static boolean saturationChanges;
     public static boolean sweepOnMiss;
+    public static boolean fixSweepOnThrow;
     BukkitTask pingTask;
 
     @Override
@@ -94,6 +95,7 @@ public final class CombatiumLite extends JavaPlugin {
         swapAccuracy = getConfig().getBoolean("pvp.swapAccuracy", true);
         fasterLiquidDrinking = getConfig().getBoolean("pvp.fasterLiquidDrinking", true);
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
+        fixSweepOnThrow = getConfig().getBoolean("pvp.fixSweepOnThrow", true);
         ReachUtil.setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
         ReachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
@@ -142,6 +144,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new JoinQuitListener(), this);
         pluginManager.registerEvents(new ConsumeListener(), this);
         pluginManager.registerEvents(new VehicleDamageListener(), this);
+        pluginManager.registerEvents(new ItemDropListener(), this);
     }
 
     private static void printConfig() {
@@ -166,6 +169,8 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Tridents Return From Void: " + tridentsReturnFromVoid);
         logger.log(java.util.logging.Level.INFO, "Swap Accuracy: " + swapAccuracy);
         logger.log(java.util.logging.Level.INFO, "Faster Liquid Drinking: " + fasterLiquidDrinking);
+        logger.log(java.util.logging.Level.INFO, "Sweep On Miss: " + sweepOnMiss);
+        logger.log(java.util.logging.Level.INFO, "Fix Sweep On Throw: " + fixSweepOnThrow);
     }
 
     public static CombatiumLite getInstance() {

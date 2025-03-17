@@ -25,6 +25,7 @@ public class Scheduler {
     static int regenTick;
     //The amount of ticks between each regen tick (Default 39)
     static int regenTickDelay;
+    static ArrayList<ScheduledSweep> scheduledSweeps;
     static ArrayList<ScheduledHit> scheduledHits;
     static ArrayList<ScheduledHit> toRemove;
     Random random = new Random();
@@ -34,6 +35,7 @@ public class Scheduler {
         Scheduler.regenTickDelay = regenTickDelay;
         currentTick = 0;
         regenTick = 0;
+        scheduledSweeps = new ArrayList<>();
         scheduledHits = new ArrayList<>();
         toRemove = new ArrayList<>();
     }
@@ -46,6 +48,10 @@ public class Scheduler {
         scheduledHits.add(hit);
     }
 
+    public static void scheduleSweep(Player player) {
+        scheduledSweeps.add(new ScheduledSweep(player));
+    }
+
     public void tick() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.setNoDamageTicks(0);
@@ -54,6 +60,12 @@ public class Scheduler {
         for (Player player : Bukkit.getOnlinePlayers()) {
             ReachUtil.updatePlayerReach(player);
         }
+
+        //Runs any scheduled Sweeping Edge hits
+        for (ScheduledSweep sweep : scheduledSweeps) {
+            sweep.execute();
+        }
+        scheduledSweeps.clear();
 
         //Checks if any scheduled hits should be run
         for (ScheduledHit hit : scheduledHits) {

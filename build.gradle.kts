@@ -1,10 +1,8 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
+    id ("com.gradleup.shadow") version "9.0.0-beta4"
     id("java")
-    id ("com.gradleup.shadow") version "8.3.5"
-    id("io.papermc.paperweight.userdev") version "1.7.7"
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.8"
 }
 
 group = "CombatiumLite"

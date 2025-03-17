@@ -18,8 +18,9 @@ That being said, the config options which are disabled by default are generally 
 - [ ] Fix projectile throw velocity
 
 ### Known Issues
-- [ ] Some actions such as throwing items from your inventory, or throwing projectiles, can sometimes trigger sweeping edge if the item in your main hand has the enchantment.
+- [x] Some actions such as throwing items from your inventory, or throwing projectiles, can sometimes trigger sweeping edge if the item in your main hand has the enchantment.
 - - Unfortunately, this is an issue with paper, and is not something that can be fixed to my knowledge.
+- I fixed it
 
 
 #### Implementation ideas for plans

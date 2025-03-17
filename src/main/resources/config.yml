@@ -128,6 +128,12 @@ pvp:
   # Default: true
   sweepOnMiss: true
 
+  # This delays the sweep attack by one tick, to prevent an issue where paper would apply the sweep attack
+  # when ever a player dropped an item from their inventory. This is recommended, as from experience
+  # it is annoying to have the sweep attack applied when you drop an item.
+  # Default: true
+  fixSweepOnThrow: true
+
   # The number of ticks between regen ticks. (20 ticks = 1 second)
   # 39 by default, meaning regen ticks every 40 ticks, or 2 seconds.
   # In vanilla, this is 79 ticks, or 4 seconds, but in CTS, it is 39 ticks.

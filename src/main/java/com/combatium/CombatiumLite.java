@@ -50,7 +50,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean tridentsReturnFromVoid;
     public static boolean hitsReduceVelocity;
     public static boolean swordBlocking;
-    public static boolean wackyWindCharges;
     public static boolean weakerSpamCrits;
     public static boolean pingImprovements;
     public static boolean swapAccuracy;
@@ -77,7 +76,6 @@ public final class CombatiumLite extends JavaPlugin {
         backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
         stackablePotions = getConfig().getBoolean("pvp.stackablePotions", true);
         visualCooldownChanges = getConfig().getBoolean("pvp.visualCooldownChanges", true);
-        wackyWindCharges = getConfig().getBoolean("pvp.wackyWindCharges", false);
         hitsReduceVelocity = getConfig().getBoolean("pvp.hitsReduceVelocity", false);
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
@@ -152,7 +150,6 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Back Shots Plus: " + backShotsPlus);
         logger.log(java.util.logging.Level.INFO, "Stackable Potions: " + stackablePotions);
         logger.log(java.util.logging.Level.INFO, "Visual Cooldown Changes: " + visualCooldownChanges);
-        logger.log(java.util.logging.Level.INFO, "Wacky Wind Charges: " + wackyWindCharges);
         logger.log(java.util.logging.Level.INFO, "Hits Reduce Velocity: " + hitsReduceVelocity);
         logger.log(java.util.logging.Level.INFO, "Sword Blocking: " + swordBlocking);
         logger.log(java.util.logging.Level.INFO, "Weaker Spam Crits: " + weakerSpamCrits);

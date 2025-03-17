@@ -57,26 +57,24 @@ public class PlayerHitUtil {
         }
 
         //Calculate damage from critical hits, strength, and weakness
-        float critDamage = 0;
+        float critMultiplier = 1;
         if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            float critMultiplier = (isOverCharged(attacker, weapon.getType(), getHaste(attacker)) || !CombatiumLite.weakerSpamCrits) ? 0.5f : 0.25f;
-            if (weapon.getType() == Material.MACE) critDamage = (float) (attackDamage(weapon, attacker) * critMultiplier);
-            else critDamage = damage * critMultiplier;
+            critMultiplier = (isOverCharged(attacker, weapon.getType(), getHaste(attacker)) || !CombatiumLite.weakerSpamCrits) ? 0.5f : 0.25f;
         }
-        float strengthDamage = 0;
+        float strengthMultiplier = 1;
         if (attacker.hasPotionEffect(STRENGTH)) {
-            if (weapon.getType() == Material.MACE) strengthDamage = (float) (attackDamage(weapon, attacker) * (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier()));
-            else strengthDamage = damage * (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier());
+            if (weapon.getType() == Material.MACE) strengthMultiplier = (float) (attackDamage(weapon, attacker) * (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier()));
+            else strengthMultiplier = (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier());
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {
-            critDamage = damage * 0.5f;
+            critMultiplier += 0.5f;
         }
-        float weaknessDamage = 0;
+        float weaknessMultiplier = 1;
         if (attacker.hasPotionEffect(WEAKNESS)) {
-            weaknessDamage = (damage * 0.2f * Objects.requireNonNull(attacker.getPotionEffect(WEAKNESS)).getAmplifier());
+            weaknessMultiplier = (damage * 0.2f * Objects.requireNonNull(attacker.getPotionEffect(WEAKNESS)).getAmplifier());
         }
 
-        float finalDamage = (damage + critDamage + strengthDamage - weaknessDamage);
+        float finalDamage = ((damage * critMultiplier * strengthMultiplier) / (weaknessMultiplier));
 
         if (isSwordBlocked) {
             if (finalDamage > 3) {
@@ -129,6 +127,18 @@ public class PlayerHitUtil {
         double potionPassPercent = 1 - ( resistance * 0.2);
 
         return (float) (rawDamage * armorPassPercent * protPassPercent * potionPassPercent);
+    }
+
+    public static boolean dealsEnchantDamage(ItemStack weapon, Entity damagedEntity) {
+        if (!(weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchants())) return false;
+        ItemMeta meta = weapon.getItemMeta();
+        if (meta.hasEnchant(Enchantment.SHARPNESS)) return true;
+        if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain()) return true;
+        if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && (damagedEntity instanceof Spider || damagedEntity instanceof Silverfish ||
+                damagedEntity instanceof Bee || damagedEntity instanceof Endermite)) return true;
+        return meta.hasEnchant(Enchantment.SMITE) && (damagedEntity instanceof Zombie || damagedEntity instanceof Skeleton || damagedEntity instanceof WitherSkeleton ||
+                damagedEntity instanceof Stray || damagedEntity instanceof Phantom || damagedEntity instanceof ZombieHorse || damagedEntity instanceof SkeletonHorse ||
+                damagedEntity instanceof Wither || damagedEntity instanceof Zoglin || damagedEntity instanceof ZombifiedPiglin);
     }
 
     public static double calculateAngle(double[] v1, double[] v2) {

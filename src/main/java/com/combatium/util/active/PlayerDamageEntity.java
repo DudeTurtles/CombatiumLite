@@ -6,6 +6,7 @@ import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.util.calculations.DisableShieldUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -14,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.damage.CraftDamageSource;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
@@ -34,6 +36,7 @@ import java.util.Objects;
 import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.FixItem.isSword;
+import static com.combatium.util.calculations.PlayerHitUtil.dealsEnchantDamage;
 import static com.combatium.util.calculations.PlayerHitUtil.getFireProt;
 import static org.bukkit.Sound.ENTITY_PLAYER_ATTACK_CRIT;
 
@@ -110,16 +113,21 @@ public class PlayerDamageEntity {
             entity.setFireTicks(fireProt > 7 ? 0 : (int) ((80 * weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT) * (1 - (0.15 * fireProt)))));
         }
 
+        ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
+        Entity nmsEntity = ((CraftEntity) entity).getHandle();
+
         //Fix item crit particles and sounds
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             player.getWorld().playSound(player.getLocation(), ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
             if (player.isSprinting() || player.getAttackCooldown() > 0) {
-                entity.getWorld().spawnParticle(org.bukkit.Particle.CRIT, entity.getLocation(), 50, 0.5, 1, 0.5, 0.05);
+                nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 4));
             }
         } else {
             if (player.isSprinting()) player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
             else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
         }
+
+        if (dealsEnchantDamage(weapon, entity)) nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 5));
 
         if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 

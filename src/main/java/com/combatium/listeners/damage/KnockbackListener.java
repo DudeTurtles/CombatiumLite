@@ -6,7 +6,6 @@ import com.combatium.util.calculations.PlayerHitUtil;
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.craftbukkit.entity.CraftWindCharge;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,11 +14,13 @@ import org.bukkit.util.Vector;
 import java.util.Objects;
 
 import static com.combatium.util.calculations.FixItem.isSword;
+import static io.papermc.paper.event.entity.EntityKnockbackEvent.Cause.*;
 
 public class KnockbackListener implements Listener {
     @EventHandler
     public void onKnockback(EntityKnockbackByEntityEvent event) {
-        if (event.getHitBy() instanceof CraftWindCharge && !CombatiumLite.wackyWindCharges) return;
+        EntityKnockbackEvent.Cause cause = event.getCause();
+        if (!(cause == ENTITY_ATTACK || cause == SWEEP_ATTACK)) return;
 
         double strength = (event.getKnockbackStrength() / (1 - Objects.requireNonNull(event.getEntity().getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue()));
         Vector v = event.getEntity().getVelocity();
@@ -60,7 +61,7 @@ public class KnockbackListener implements Listener {
 
         if ((isBlocked && event.getCause() == EntityKnockbackByEntityEvent.Cause.ENTITY_ATTACK) || event.getCause() == EntityKnockbackEvent.Cause.SHIELD_BLOCK) return;
 
-        KnockbackUtil.applyKnockback(event.getEntity(), strength, x, z, isBlocked, isSwordBlocked, false);
+        KnockbackUtil.applyKnockback(event.getEntity(), strength, x, z, isBlocked, isSwordBlocked, true);
         event.setCancelled(true);
     }
 }

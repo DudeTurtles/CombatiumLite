@@ -19,7 +19,6 @@ import java.util.Random;
 public class PlayerPingData {
     private final Player player;
     public final User user;
-    private static final long pingOffset = 25;
     private final Map<Integer, Long> timeline = new HashMap<>();
     private final Random random = new Random();
     private Long lastPing;
@@ -72,7 +71,7 @@ public class PlayerPingData {
         long current = (ping != null) ? ping : player.getPing();
         long last = (lastPing != null) ? lastPing : player.getPing();
         long ping = (current - last > 20L) ? last : current;
-        return (Math.max(1, ping - pingOffset));
+        return (Math.max(1, ping));
     }
 
     public void sendPing() {

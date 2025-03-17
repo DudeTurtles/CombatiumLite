@@ -13,19 +13,16 @@ import java.util.*;
 import static com.combatium.util.calculations.FixItem.attackSpeed;
 
 public class ReachUtil {
-    // All items which have charged attacks which give bonus reach
-    public static final Set<Material> CHARGE_TYPES = Collections.unmodifiableSet(EnumSet.of(Material.TRIDENT,
+    public static final Set<Material> Tools = Collections.unmodifiableSet(EnumSet.of(Material.TRIDENT,
             Material.WOODEN_AXE, Material.STONE_AXE, Material.GOLDEN_AXE, Material.IRON_AXE,
             Material.DIAMOND_AXE, Material.NETHERITE_AXE, Material.WOODEN_SWORD, Material.STONE_SWORD,
-            Material.GOLDEN_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD));
-
-    //All items which have custom reach values, and aren't in the above set
-    public static final Set<Material> REACH_TYPES = Collections.unmodifiableSet(EnumSet.of(Material.WOODEN_HOE, Material.STONE_HOE,
-            Material.IRON_HOE, Material.GOLDEN_HOE, Material.DIAMOND_HOE, Material.NETHERITE_HOE));
+            Material.GOLDEN_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD, Material.WOODEN_HOE,
+            Material.STONE_HOE, Material.IRON_HOE, Material.GOLDEN_HOE, Material.DIAMOND_HOE, Material.NETHERITE_HOE, Material.WOODEN_SHOVEL,
+            Material.STONE_SHOVEL, Material.GOLDEN_SHOVEL, Material.IRON_SHOVEL, Material.DIAMOND_SHOVEL, Material.NETHERITE_SHOVEL,
+            Material.WOODEN_PICKAXE, Material.STONE_PICKAXE, Material.GOLDEN_PICKAXE, Material.IRON_PICKAXE, Material.DIAMOND_PICKAXE, Material.NETHERITE_PICKAXE));
 
     private static final Map<Player, Integer> playerCooldowns = new HashMap<>();
     private static final Map<Player, Integer> rateLimit = new HashMap<>();
-    private static boolean limitedChargedWeapons = false;
     private static int missTime = 4;
     private static int rateLimitTicks= 3;
 
@@ -83,7 +80,6 @@ public class ReachUtil {
          * so if optimizations are enabled, we use the base reach of 2.5, since the weapon will modify if needed
          */
         double baseReach = CombatiumLite.optimizations ? 2.5 : getReach(type);
-        boolean canCharge = !limitedChargedWeapons || CHARGE_TYPES.contains(type);
 
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
         if (player.isBlocking()) {
@@ -93,7 +89,7 @@ public class ReachUtil {
         int haste = getHaste(player);
 
 
-        if (canCharge && checkOvercharge(player, type, haste) && !player.isSneaking()) {
+        if (checkOvercharge(player, type, haste) && !player.isSneaking()) {
             Objects.requireNonNull(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).setBaseValue(baseReach + 1);
         } else {
             Objects.requireNonNull(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).setBaseValue(baseReach);
@@ -128,10 +124,6 @@ public class ReachUtil {
             return Objects.requireNonNull(player.getPotionEffect(PotionEffectType.HASTE)).getAmplifier();
         }
         return 0;
-    }
-
-    public static void setLimitedChargedWeapons(boolean limitedChargedWeapons) {
-        ReachUtil.limitedChargedWeapons = limitedChargedWeapons;
     }
 
     public static boolean isRateLimited(Player player) {

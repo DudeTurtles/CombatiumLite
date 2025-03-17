@@ -6,7 +6,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.component.Consumable;
@@ -28,7 +27,6 @@ import java.util.Objects;
 
 
 public class FixItem {
-    private static final boolean limitedChargedWeapons = false;
     private static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
     private static final NamespacedKey REACH = new NamespacedKey("combatium", "reach");
     private static final java.lang.invoke.VarHandle API_ITEM_STACK_CRAFT_DELEGATE_FIELD;
@@ -95,7 +93,7 @@ public class FixItem {
     }
 
     public static ItemMeta fixAttackSpeed(ItemStack item) {
-        if (item == null || item.getItemMeta() == null || !(ReachUtil.REACH_TYPES.contains(item.getType()) || ReachUtil.CHARGE_TYPES.contains(item.getType()))) {
+        if (item == null || item.getItemMeta() == null || !ReachUtil.Tools.contains(item.getType())) {
             return null;
         }
 
@@ -111,8 +109,7 @@ public class FixItem {
     }
 
     public static ItemMeta fixReach(ItemStack item) {
-        if (item == null || item.getItemMeta() == null || !(ReachUtil.REACH_TYPES.contains(item.getType()) ||
-                ReachUtil.CHARGE_TYPES.contains(item.getType()))) {
+        if (item == null || item.getItemMeta() == null || !ReachUtil.Tools.contains(item.getType())) {
             return null;
         }
 
@@ -129,8 +126,7 @@ public class FixItem {
 
     public static ItemMeta updateLore(ItemStack item) {
         //Checks if an items lore needs to be updated
-        if (item == null || item.getItemMeta() == null || !(ReachUtil.REACH_TYPES.contains(item.getType()) ||
-                ReachUtil.CHARGE_TYPES.contains(item.getType()) || item.getType() == Material.MACE)) {
+        if (item == null || item.getItemMeta() == null || !ReachUtil.Tools.contains(item.getType())) {
             return null;
         }
 
@@ -149,8 +145,7 @@ public class FixItem {
         lore.add(Component.text("When in Main Hand:").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY));
         lore.add(Component.text(" ").append(Component.text(format(attackDamage)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.DARK_GREEN).append(Component.text(" Attack Damage"))));
         lore.add(Component.text(" ").append(Component.text(format(attackSpeed)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.DARK_GREEN).append(Component.text(" Attack Speed"))));
-        lore.add(Component.text(" ").append(Component.text(format(reach)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.DARK_GREEN).append(Component.text(" Base Reach"))));
-        if (limitedChargedWeapons) lore.add(Component.text(" ").append(Component.text((ReachUtil.CHARGE_TYPES.contains(item.getType()) ? " +1 When Charged" : "Can't Charge")).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.DARK_GREEN)));
+        if (reach != 2.5) lore.add(Component.text(" ").append(Component.text(format(reach)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.DARK_GREEN).append(Component.text(" Attack Reach"))));
         meta.lore(lore);
 
         return meta;
@@ -170,10 +165,6 @@ public class FixItem {
             case GOLDEN_HOE, DIAMOND_HOE, NETHERITE_HOE -> 3.5;
             default -> 2.5;
         };
-    }
-
-    public static void setLimitedChargedWeapons(boolean limitedChargedWeapons) {
-        ReachUtil.setLimitedChargedWeapons(limitedChargedWeapons);
     }
 
     public static boolean isSword(Material item) {

@@ -37,6 +37,9 @@ public final class CombatiumLite extends JavaPlugin {
     private static CombatiumLite INSTANCE;
     public static PluginManager pluginManager;
     public static Logger logger = Logger.getLogger("[CombatiumLite]");
+    public static boolean backShotsPlus;
+    public static boolean visualCooldownChanges;
+    public static boolean stackablePotions;
     public static boolean optimizations;
     public static boolean updateLore;
     public static boolean cooldownShowsFullCharge;
@@ -69,10 +72,9 @@ public final class CombatiumLite extends JavaPlugin {
 
         //Check for config options
         saveDefaultConfig();
-        boolean backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
-        boolean stackablePotions = getConfig().getBoolean("pvp.stackablePotions", true);
-        boolean visualCooldownChanges = getConfig().getBoolean("pvp.visualCooldownChanges", true);
-        limitedChargedWeapons = getConfig().getBoolean("pvp.limitedChargedWeapons", false);
+        backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
+        stackablePotions = getConfig().getBoolean("pvp.stackablePotions", true);
+        visualCooldownChanges = getConfig().getBoolean("pvp.visualCooldownChanges", true);
         wackyWindCharges = getConfig().getBoolean("pvp.wackyWindCharges", false);
         hitsReduceVelocity = getConfig().getBoolean("pvp.hitsReduceVelocity", false);
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
@@ -92,6 +94,8 @@ public final class CombatiumLite extends JavaPlugin {
         ReachUtil.setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
         ReachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
+
+        printConfig();
 
         if (pingImprovements) {
             PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
@@ -113,8 +117,6 @@ public final class CombatiumLite extends JavaPlugin {
         }
 
         PlayerHitUtil.setBackShots(backShotsPlus);
-        ReachUtil.setLimitedChargedWeapons(limitedChargedWeapons);
-        FixItem.setLimitedChargedWeapons(limitedChargedWeapons);
 
         pluginManager.registerEvents(new EntityDamageByEntityListener(), this);
         pluginManager.registerEvents(new EntityDamageListener(), this);
@@ -136,6 +138,29 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new AnimationListener(), this);
         pluginManager.registerEvents(new KnockbackListener(), this);
         pluginManager.registerEvents(new JoinQuitListener(), this);
+    }
+
+    private static void printConfig() {
+        logger.log(java.util.logging.Level.INFO, "=== CombatiumLite Config ===");
+        logger.log(java.util.logging.Level.INFO, "Back Shots Plus: " + backShotsPlus);
+        logger.log(java.util.logging.Level.INFO, "Stackable Potions: " + stackablePotions);
+        logger.log(java.util.logging.Level.INFO, "Visual Cooldown Changes: " + visualCooldownChanges);
+        logger.log(java.util.logging.Level.INFO, "Wacky Wind Charges: " + wackyWindCharges);
+        logger.log(java.util.logging.Level.INFO, "Hits Reduce Velocity: " + hitsReduceVelocity);
+        logger.log(java.util.logging.Level.INFO, "Sword Blocking: " + swordBlocking);
+        logger.log(java.util.logging.Level.INFO, "Weaker Spam Crits: " + weakerSpamCrits);
+        logger.log(java.util.logging.Level.INFO, "Hit Through Transparent: " + hitThroughTransparent);
+        logger.log(java.util.logging.Level.INFO, "Update Lore: " + updateLore);
+        logger.log(java.util.logging.Level.INFO, "Optimizations: " + optimizations);
+        logger.log(java.util.logging.Level.INFO, "Cooldown Shows Full Charge: " + cooldownShowsFullCharge);
+        logger.log(java.util.logging.Level.INFO, "Grace Period: " + gracePeriod);
+        logger.log(java.util.logging.Level.INFO, "Improved Animations: " + improvedAnimations);
+        logger.log(java.util.logging.Level.INFO, "Improved Charged Hits: " + improvedChargedHits);
+        logger.log(java.util.logging.Level.INFO, "Ping Improvements: " + pingImprovements);
+        logger.log(java.util.logging.Level.INFO, "Rate Limit: " + rateLimit);
+        logger.log(java.util.logging.Level.INFO, "Tridents Return From Void: " + tridentsReturnFromVoid);
+        logger.log(java.util.logging.Level.INFO, "Swap Accuracy: " + swapAccuracy);
+        logger.log(java.util.logging.Level.INFO, "Faster Liquid Drinking: " + fasterLiquidDrinking);
     }
 
     public static CombatiumLite getInstance() {

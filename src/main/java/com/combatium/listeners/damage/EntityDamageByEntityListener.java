@@ -79,7 +79,10 @@ public class EntityDamageByEntityListener implements Listener {
             //Checks if a player is charged, also allows sweep damage to be dealt due to sweep damage being a separate event
             if (ReachUtil.isCharged(attacker) || event.getCause() == EntityDamageByEntityEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 event.setDamage(PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, event.getCause(), false));
-
+                if (event.getDamage() == 0) {
+                    event.setCancelled(true);
+                    return;
+                }
             } else {
                 if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod) {
                     //Grace period for early hits
@@ -105,6 +108,7 @@ public class EntityDamageByEntityListener implements Listener {
 
             if (invulDamage >= event.getDamage()) {
                 event.setCancelled(true);
+                event.setDamage(0);
                 return;
             }
 

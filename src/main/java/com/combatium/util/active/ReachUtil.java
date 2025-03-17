@@ -127,7 +127,7 @@ public class ReachUtil {
     }
 
     public static boolean isRateLimited(Player player) {
-        if (!rateLimit.containsKey(player) || !CombatiumLite.rateLimit) return true;
+        if (!rateLimit.containsKey(player) || !CombatiumLite.rateLimit) return false;
         return rateLimit.get(player) >= Scheduler.getCurrentTick();
     }
 

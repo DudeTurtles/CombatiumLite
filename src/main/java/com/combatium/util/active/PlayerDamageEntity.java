@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.combatium.CombatiumLite.sprintFix;
+import static com.combatium.CombatiumLite.*;
 import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.PlayerHitUtil.*;
@@ -43,9 +43,17 @@ public class PlayerDamageEntity {
     public static final NamespacedKey BLOCK_AMOUNT = new NamespacedKey("combatium", "block_amount");
     public static final NamespacedKey KNOCKBACK_REDUCTION = new NamespacedKey("combatium", "knockback_reduction");
 
-    public static double playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
+    public static void playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
-        if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) weapon.damage(1, entity);
+        // For some reason this would occasionally cause issues when dealing with players hitting bot players created by other plugins
+        if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) {
+            try {
+                weapon.damage(1, entity);
+            } catch (Exception ignored) {
+                logger.warning("Failed to damage weapon");
+                logger.warning("Error Message: " + ignored.getMessage());
+            }
+        }
 
         //Calculation for reduced shield blocking arc
         net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) entity).getHandle();
@@ -59,7 +67,7 @@ public class PlayerDamageEntity {
             double angle = getAngle(player, entity);
             ItemStack shield = p.getActiveItem();
 
-            if (shield.getItemMeta() != null) {
+            if (supportExternalWeaponMods && shield != null && shield.getItemMeta() != null) {
                 blockAmount = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_AMOUNT, PersistentDataType.DOUBLE, 5.0);
                 knockbackReduction = shield.getItemMeta().getPersistentDataContainer().getOrDefault(KNOCKBACK_REDUCTION, PersistentDataType.DOUBLE, 0.5);
                 blockAngle = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_ANGLE, PersistentDataType.DOUBLE, CombatiumLite.shieldProtectionArc);
@@ -84,7 +92,7 @@ public class PlayerDamageEntity {
         float originalDamage = damage;
         boolean cancelKB = false;
         damage -= (float) invulnerableDamage;
-        if (damage <= 0) return 0;
+        if (damage <= 0) return;
 
         float finalDamage = PlayerHitUtil.getFinalDamage(entity, damage, weapon);
 
@@ -126,8 +134,6 @@ public class PlayerDamageEntity {
         if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 
         if (isBlocked) player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
-        //float pitchShift = (float) (Math.random() * 0.2) * ((damage > 5) ? -2 : 1);
-        //if (isSwordBlocked) player.getWorld().playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1, (pitchShift + 1.3f));
 
         if (dealDamage) dealDamage(entity, damage, player);
 
@@ -159,7 +165,6 @@ public class PlayerDamageEntity {
          */
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) resetCooldown(player, false, getWeaponType(weapon, player));
         InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(weapon, haste) - 2, originalDamage, damageCause);
-        return damage;
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {

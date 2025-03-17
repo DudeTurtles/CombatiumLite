@@ -33,7 +33,6 @@ import static com.combatium.util.active.ReachUtil.getCooldown;
 public class FixItem {
     private static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
     private static final NamespacedKey REACH = new NamespacedKey("combatium", "reach");
-    private static final NamespacedKey COMBATIFY_REACH = new NamespacedKey("combatify", "charged_reach");
     private static final java.lang.invoke.VarHandle API_ITEM_STACK_CRAFT_DELEGATE_FIELD;
 
     static {

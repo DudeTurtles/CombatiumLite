@@ -152,7 +152,7 @@ public class PlayerDamageEntity {
          * Set cooldown at the end to ensure things like full charge checks function properly
          */
         resetCooldown(player, false, getWeaponType(weapon.getType(), player));
-        InvulnerabilityScheduler.setInvulnerable(entity, (weapon.getType() == Material.MACE) ? 10 : ReachUtil.getCooldown(weapon.getType(), haste) - 1, originalDamage);
+        InvulnerabilityScheduler.setInvulnerable(entity, (weapon.getType() == Material.MACE) ? 9 : ReachUtil.getCooldown(weapon.getType(), haste) - 2, originalDamage);
         return damage;
     }
 

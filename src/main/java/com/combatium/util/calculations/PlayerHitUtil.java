@@ -2,9 +2,13 @@ package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
@@ -27,7 +31,7 @@ public class PlayerHitUtil {
     private static final Map<Player, Double> lastTickDamage = new HashMap<>();
 
     public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, boolean isSwordBlocked, EntityDamageEvent.DamageCause damageCause) {
-        float damage = (weapon.getType() == Material.MACE) ? maceDamage(weapon, attacker) : (float) attackDamage(weapon, attacker);
+        float damage = (float) attackDamage(weapon, attacker);
 
         ItemMeta meta = weapon.getItemMeta();
         if (meta != null && meta.hasEnchants()) {
@@ -53,45 +57,49 @@ public class PlayerHitUtil {
             if (meta.hasEnchant(Enchantment.SWEEPING_EDGE) && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 float sweepLevel = meta.getEnchantLevel(Enchantment.SWEEPING_EDGE);
                 return ((damage + 1f) * (sweepLevel / (2f * (sweepLevel + 1f))));
-            } else if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) { return 0; }
+            } else if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+                return 0;
+            }
         }
 
         //Calculate damage from critical hits, strength, and weakness
-        float critMultiplier = 1;
-        if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            critMultiplier = (isOverCharged(attacker, weapon.getType(), getHaste(attacker)) || !CombatiumLite.weakerSpamCrits) ? 0.5f : 0.25f;
-        }
-        float strengthMultiplier = 1;
         if (attacker.hasPotionEffect(STRENGTH)) {
-            if (weapon.getType() == Material.MACE) strengthMultiplier = (float) (attackDamage(weapon, attacker) * (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier()));
-            else strengthMultiplier = (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier());
+            damage *= 1.2f + (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier());
+        }
+        if (attacker.hasPotionEffect(WEAKNESS)) {
+            damage *= 0.8f - (0.2f * Objects.requireNonNull(attacker.getPotionEffect(WEAKNESS)).getAmplifier());
+        }
+
+        if (weapon.getType() == Material.MACE) {
+            net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
+            net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) damagedEntity).getHandle();
+            net.minecraft.world.entity.LivingEntity attackerNMS = ((CraftLivingEntity) attacker).getHandle();
+            damage += nmsWeapon.getItem().getAttackDamageBonus(nmsEntity, damage, attackerNMS.damageSources().playerAttack((net.minecraft.world.entity.player.Player) attackerNMS));
+        }
+
+        if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+            damage *= (isOverCharged(attacker, weapon.getType(), getHaste(attacker)) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {
-            critMultiplier += 0.5f;
+            damage *= 1.5f;
         }
-        float weaknessMultiplier = 1;
-        if (attacker.hasPotionEffect(WEAKNESS)) {
-            weaknessMultiplier = (damage * 0.2f * Objects.requireNonNull(attacker.getPotionEffect(WEAKNESS)).getAmplifier());
-        }
-
-        float finalDamage = ((damage * critMultiplier * strengthMultiplier) / (weaknessMultiplier));
 
         if (isSwordBlocked) {
-            if (finalDamage > 3) {
-                return finalDamage - 3;
+            if (damage > 3) {
+                return damage - 3;
             } else {
                 return 0;
             }
         } else if (isBlocked) {
-            if (finalDamage > 5) {
-                return finalDamage - 5;
+            if (damage > 5) {
+                return damage - 5;
             } else {
                 damagedEntity.getWorld().playSound(damagedEntity.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 1.0f);
                 return 0;
             }
         }
 
-        return finalDamage;
+        return damage;
     }
 
     private static float maceDamage(ItemStack weapon, Player player) {
@@ -141,29 +149,14 @@ public class PlayerHitUtil {
                 damagedEntity instanceof Wither || damagedEntity instanceof Zoglin || damagedEntity instanceof ZombifiedPiglin);
     }
 
-    public static double calculateAngle(double[] v1, double[] v2) {
-        double dotProduct = 0.0;
-        double magnitudeV1 = 0.0;
-        double magnitudeV2 = 0.0;
-
-        for (int i = 0; i < v1.length; i++) {
-            dotProduct += v1[i] * v2[i];
-            magnitudeV1 += v1[i] * v1[i];
-            magnitudeV2 += v2[i] * v2[i];
-        }
-
-        magnitudeV1 = Math.sqrt(magnitudeV1);
-        magnitudeV2 = Math.sqrt(magnitudeV2);
-
-        double cosineAngle = dotProduct / (magnitudeV1 * magnitudeV2);
-
-        return Math.toDegrees(Math.acos(cosineAngle));
-    }
-
     public static boolean wasBackShots(Player attacker, Entity damagedEntity) {
-        double angle = calculateAngle(new double[]{damagedEntity.getLocation().getDirection().getX() * -1, 0, damagedEntity.getLocation().getDirection().getZ() * -1},
-                new double[]{attacker.getLocation().getDirection().getX(), 0, attacker.getLocation().getDirection().getZ()});
-        return angle >= 140;
+        Vec3 vector = CraftLocation.toVec3D(attacker.getLocation());
+        net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) damagedEntity).getHandle();
+        Vec3 balls = nmsEntity.calculateViewVector(0.0f, nmsEntity.getYHeadRot());
+        Vec3 directionVector = vector.vectorTo(nmsEntity.position());
+        directionVector = directionVector.subtract(0, directionVector.y(), 0).normalize();
+        double angle = directionVector.dot(balls) * Math.PI;
+        return angle >= Math.toRadians(100);
     }
 
     public static double attackDamage(ItemStack weapon, @Nullable Player player) {

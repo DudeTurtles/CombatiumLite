@@ -7,7 +7,6 @@ import com.combatium.scheduler.ScheduledHit;
 import com.combatium.scheduler.Scheduler;
 import com.combatium.util.active.PlayerDamageEntity;
 import com.combatium.util.active.ReachUtil;
-import com.combatium.util.calculations.PlayerHitUtil;
 import org.bukkit.Material;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
@@ -22,9 +21,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 import java.util.Objects;
 
+import static com.combatium.CombatiumLite.logger;
 import static com.combatium.util.active.PlayerDamageEntity.hasProcessed;
 import static com.combatium.util.calculations.PlayerHitUtil.getFinalDamage;
 
@@ -58,6 +57,7 @@ public class EntityDamageByEntityListener implements Listener {
                     }
                 }
                 hasProcessed.put(attacker, false);
+                logger.info("Processed damage: " + event.getDamage() + " Processed final damage: " + event.getFinalDamage() );
                 return;
             }
 
@@ -103,24 +103,6 @@ public class EntityDamageByEntityListener implements Listener {
             event.setDamage(damage);
         } else if (event.getEntity() instanceof LivingEntity victim) { // Ensure replacement i-frames work for other cases
             double invulDamage = InvulnerabilityScheduler.isInvulnerable(victim);
-
-            //Calculation for reduced shield blocking arc
-            boolean isBlocking = false;
-            Vector lookDirection = event.getDamager().getLocation().subtract(victim.getLocation()).toVector();
-            Vector entityDirection = victim.getLocation().getDirection();
-            double angle = PlayerHitUtil.calculateAngle(new double[]{entityDirection.getX(), 0, entityDirection.getZ()}, new double[]{lookDirection.getX(), 0, lookDirection.getZ()});
-
-            boolean isBlocked = isBlocking && angle <= 50;
-
-            if ((event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0) && !isBlocked) {
-                ItemStack weapon;
-                if (event.getDamager() instanceof Player attacker) weapon = attacker.getInventory().getItemInMainHand();
-                else if (event.getDamager() instanceof LivingEntity e) weapon = Objects.requireNonNull(e.getEquipment()).getItemInMainHand();
-                else return;
-
-                event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
-                event.setDamage(getFinalDamage(victim, (float) event.getDamage(), weapon));
-            }
 
             if (invulDamage >= event.getDamage()) {
                 event.setCancelled(true);

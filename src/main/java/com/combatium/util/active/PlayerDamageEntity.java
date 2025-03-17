@@ -11,14 +11,15 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.damage.CraftDamageSource;
-import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
@@ -28,11 +29,11 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.combatium.CombatiumLite.logger;
 import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.FixItem.isSword;
@@ -51,19 +52,23 @@ public class PlayerDamageEntity {
         if (CombatiumLite.hitsReduceVelocity) player.setVelocity(player.getVelocity().multiply(0.8));
 
         //Calculation for reduced shield blocking arc
-        boolean isSwordBlocking = false;
-        boolean isBlocking = false;
-        Vector lookDirection = player.getLocation().subtract(entity.getLocation()).toVector();
-        Vector entityDirection = entity.getLocation().getDirection();
-        double angle = PlayerHitUtil.calculateAngle(new double[]{entityDirection.getX(), 0, entityDirection.getZ()}, new double[]{lookDirection.getX(), 0, lookDirection.getZ()});
+        Vec3 vector = CraftLocation.toVec3D(player.getLocation());
+        net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) entity).getHandle();
+        Vec3 balls = nmsEntity.calculateViewVector(0.0f, nmsEntity.getYHeadRot());
+        Vec3 directionVector = vector.vectorTo(nmsEntity.position());
+        directionVector = directionVector.subtract(0, directionVector.y(), 0).normalize();
+        double angle = directionVector.dot(balls) * Math.PI;
+        boolean isBlocked = (angle < Math.toRadians(CombatiumLite.shieldProtectionArc - 180)) || CombatiumLite.shieldProtectionArc == 360;
 
-        if (entity instanceof Player victim) {
-            if (CombatiumLite.swordBlocking) isSwordBlocking = isSword(victim.getActiveItem().getType());
-            isBlocking = victim.isBlocking();
+        boolean isBlocking = false;
+        boolean isSwordBlocking = false;
+        if (entity instanceof Player p) {
+            if (CombatiumLite.swordBlocking) isSwordBlocking = isSword(p.getActiveItem().getType());
+            isBlocking = p.isBlocking();
         }
 
-        boolean isBlocked = isBlocking && angle <= 50;
-        boolean isSwordBlocked = isSwordBlocking && angle <= 50;
+        isBlocked &= isBlocking;
+        boolean isSwordBlocked = isSwordBlocking && isBlocked;
         if (isSwordBlocked) isBlocked = false;
 
         if ((isBlocked || isSwordBlocked) && DisableShieldUtil.isAxe(weapon)) { // Updated shield blocking times
@@ -114,7 +119,6 @@ public class PlayerDamageEntity {
         }
 
         ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
-        Entity nmsEntity = ((CraftEntity) entity).getHandle();
 
         //Fix item crit particles and sounds
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
@@ -150,6 +154,7 @@ public class PlayerDamageEntity {
     private static void dealDamage(LivingEntity entity, float damage, float finalDamage, ItemStack weapon, Player cause) {
         hasProcessed.put(cause, true);
         DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
+        logger.info("Damage " + damage + " with expected final damage " + finalDamage);
         entity.damage(damage, damageSource);
     }
 

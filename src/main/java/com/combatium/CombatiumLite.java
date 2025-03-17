@@ -58,6 +58,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean saturationChanges;
     public static boolean sweepOnMiss;
     public static boolean fixSweepOnThrow;
+    public static double shieldProtectionArc;
     BukkitTask pingTask;
 
     @Override
@@ -94,6 +95,7 @@ public final class CombatiumLite extends JavaPlugin {
         fasterLiquidDrinking = getConfig().getBoolean("pvp.fasterLiquidDrinking", true);
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
         fixSweepOnThrow = getConfig().getBoolean("pvp.fixSweepOnThrow", true);
+        shieldProtectionArc = getConfig().getDouble("pvp.shieldProtectionArc", 130);
         ReachUtil.setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
         ReachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
@@ -168,6 +170,7 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Faster Liquid Drinking: " + fasterLiquidDrinking);
         logger.log(java.util.logging.Level.INFO, "Sweep On Miss: " + sweepOnMiss);
         logger.log(java.util.logging.Level.INFO, "Fix Sweep On Throw: " + fixSweepOnThrow);
+        logger.log(java.util.logging.Level.INFO, "Shield Protection Arc: " + shieldProtectionArc);
     }
 
     public static CombatiumLite getInstance() {

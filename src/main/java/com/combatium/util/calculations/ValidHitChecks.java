@@ -1,6 +1,8 @@
 package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
+import com.combatium.util.ping.PingManager;
+import com.combatium.util.ping.PlayerData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -11,7 +13,11 @@ public class ValidHitChecks {
         try {
             ServerPlayer nmsPlayer = ((org.bukkit.craftbukkit.entity.CraftPlayer) attacker).getHandle();
             Entity nmsVictim = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) victim).getHandle();
-            return nmsPlayer.canInteractWithEntity(nmsVictim, 0.25);
+
+            PlayerData playerData = PingManager.getPlayerData(attacker.getUniqueId());
+            double distance = (playerData.getEstimatedPing() / 200.0) + 0.25;
+
+            return nmsPlayer.canInteractWithEntity(nmsVictim, Math.min(distance, 2));
         } catch (Exception e) {
             CombatiumLite.logger.warning("Failed to check if " + attacker.getName() + " can interact with " + victim.getName());
             CombatiumLite.logger.warning("Could not obtain Server Player");

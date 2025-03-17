@@ -37,19 +37,13 @@ import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.FixItem.isSword;
 import static com.combatium.util.calculations.PlayerHitUtil.getFireProt;
-import static com.combatium.util.calculations.ValidHitChecks.isValidHit;
 import static org.bukkit.Sound.ENTITY_PLAYER_ATTACK_CRIT;
 
 public class PlayerDamageEntity {
-    private static Map<Player, Material> lastTickWeapon = new HashMap<>();
-    public static Map<Player, Boolean> hasProcessed = new HashMap<>();
+    private static final Map<Player, Material> lastTickWeapon = new HashMap<>();
+    public static final Map<Player, Boolean> hasProcessed = new HashMap<>();
 
     public static void playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause) {
-        if (!isValidHit(player, entity) && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            resetCooldown(player, true, getWeaponType(weapon.getType(), player));
-            return;
-        }
-
         AnimationListener.validHit(player);
         weapon.damage(1, entity);
 

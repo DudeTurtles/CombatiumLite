@@ -79,21 +79,20 @@ public class PlayerData {
     }
 
     public boolean isOnGround(double verticalVelocity) {
-        if (player.isOnGround()) return true;
         Material material = player.getLocation().getBlock().getType();
         if (player.isGliding() || material == Material.WATER || material == Material.LAVA
                 || material == Material.COBWEB || material == Material.SCAFFOLDING)
             return false;
-        if (ping == null || ping < pingOffset)
-            return false;
+
         double gDist = getDistanceToGround();
-        if (gDist <= 0)
-            return false;
+        if (gDist <= 0) return true;
+
         int tMax = verticalVelocity > 0 ? com.combatium.util.ping.PingCalculations.calculateTimeToMaxVelocity(verticalVelocity, gravity) : 0;
         double mH = verticalVelocity > 0 ? com.combatium.util.ping.PingCalculations.calculateDistanceTraveled(verticalVelocity, tMax, gravity) : 0;
         int tFall = com.combatium.util.ping.PingCalculations.calculateFallTime(verticalVelocity, mH + gDist, gravity);
-        if (tFall == -1)
-            return false;
+
+        if (tFall == -1) return false;
+
         return getEstimatedPing() >= tMax + tFall / 20.0 * 1000 && gDist <= 1.3;
     }
 

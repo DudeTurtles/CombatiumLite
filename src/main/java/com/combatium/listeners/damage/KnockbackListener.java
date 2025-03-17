@@ -19,13 +19,9 @@ import static com.combatium.util.calculations.FixItem.isSword;
 public class KnockbackListener implements Listener {
     @EventHandler
     public void onKnockback(EntityKnockbackByEntityEvent event) {
-        if (event.getHitBy() instanceof Player) {
-            return;
-        }
-
         if (event.getHitBy() instanceof CraftWindCharge && !CombatiumLite.wackyWindCharges) return;
 
-        double strength = (event.getKnockbackStrength() / (1 - Objects.requireNonNull(event.getEntity().getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue())) / 0.6;
+        double strength = (event.getKnockbackStrength() / (1 - Objects.requireNonNull(event.getEntity().getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue()));
         Vector v = event.getEntity().getVelocity();
         Vector k = event.getKnockback().add(v);
         double x = ((v.getX() / 2d) - k.getX()) / event.getKnockbackStrength();

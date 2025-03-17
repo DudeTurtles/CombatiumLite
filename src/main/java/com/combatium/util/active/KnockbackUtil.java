@@ -3,6 +3,7 @@ package com.combatium.util.active;
 import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
 import com.combatium.util.ping.PlayerPingData;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -16,13 +17,7 @@ public class KnockbackUtil {
     public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, boolean isSwordBlocked, boolean checkVertical) {
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
         knockbackRes = min(1.0, knockbackRes + (isBlocked ? 0.5 : 0.0) + (isSwordBlocked? 0.3 : 0.0));
-
-        if (Double.isNaN(x)) {
-            x = 0.0;
-        }
-        if (Double.isNaN(z)) {
-            z = 0.0;
-        }
+        Entity nmsEntity = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) entity).getHandle();
 
         strength *= 1.0 - knockbackRes;
         if (strength > 0.0F) {
@@ -42,14 +37,8 @@ public class KnockbackUtil {
                     }
                 }
 
-                if (Double.isNaN(diff.getX())) {
-                    diff.setX(0.0);
-                }
-                if (Double.isNaN(diff.getZ())) {
-                    diff.setZ(0.0);
-                }
-
-                Vector velocity = new Vector(delta.getX() / 2.0 - diff.getX(), onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, vertical + (strength * 0.5))), delta.getZ() / 2.0 - diff.getZ());
+                Vector velocity = new Vector(delta.getX() / 2.0 - diff.getX(), (onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, vertical + (strength * 0.5)))), delta.getZ() / 2.0 - diff.getZ());
+                nmsEntity.hasImpulse = true;
                 entity.setVelocity(velocity);
             } catch (Exception e) {
                 logger.warning("=== Please Report This to the Developer ===");

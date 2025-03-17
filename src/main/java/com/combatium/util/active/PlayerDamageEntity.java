@@ -80,8 +80,6 @@ public class PlayerDamageEntity {
         if (weapon.getType() == Material.MACE) cancelKB = macePostHit(weapon, player.getFallDistance(), player, entity);
 
         //Apply Knockback
-        Vector direction = player.getLocation().subtract(entity.getLocation()).toVector().setY(0);
-
         double strength = player.isSprinting() ? 1.0 : 0.0;
 
         //Increase knockback strength based on knockback enchantment level

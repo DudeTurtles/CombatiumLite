@@ -17,6 +17,8 @@ That being said, the config options which are disabled by default are generally 
 - [ ] Add 8c support
 
 ### Known Issues
+- [ ] Some actions such as throwing items from your inventory, or throwing projectiles, can sometimes trigger sweeping edge if the item in your main hand has the enchantment.
+- - Unfortunately, this is an issue with paper, and is not something that can be fixed to my knowledge.
 
 
 #### Implementation ideas for plans

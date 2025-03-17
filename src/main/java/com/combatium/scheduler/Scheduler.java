@@ -103,11 +103,13 @@ public class Scheduler {
         }
 
         //Check for players using sword block
-        if (CombatiumLite.swordBlocking) {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (isSword(player.getActiveItem().getType()))
-                    player.sendActionBar(Component.text("Blocking").color(NamedTextColor.GREEN));
-                else player.sendActionBar(Component.text(""));
+        if (CombatiumLite.swordBlockingDisplay) {
+            if (CombatiumLite.swordBlocking) {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (isSword(player.getActiveItem().getType()))
+                        player.sendActionBar(Component.text("Blocking").color(NamedTextColor.GREEN));
+                    else player.sendActionBar(Component.text(""));
+                }
             }
         }
 

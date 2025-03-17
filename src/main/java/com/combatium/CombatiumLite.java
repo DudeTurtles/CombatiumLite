@@ -50,6 +50,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean tridentsReturnFromVoid;
     public static boolean hitsReduceVelocity;
     public static boolean swordBlocking;
+    public static boolean swordBlockingDisplay;
     public static boolean weakerSpamCrits;
     public static boolean pingImprovements;
     public static boolean swapAccuracy;
@@ -79,6 +80,7 @@ public final class CombatiumLite extends JavaPlugin {
         visualCooldownChanges = getConfig().getBoolean("pvp.visualCooldownChanges", true);
         hitsReduceVelocity = getConfig().getBoolean("pvp.hitsReduceVelocity", false);
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
+        swordBlockingDisplay = getConfig().getBoolean("pvp.swordBlockingDisplay", false);
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
         hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
         saturationChanges = getConfig().getBoolean("pvp.saturationChanges", true);

@@ -19,6 +19,11 @@ pvp:
   # Default: false
   swordBlocking: false
 
+  # If the player should have an action bar message show when they are blocking with a sword.
+  # Implemented for pre-1.21.4 players, where client side block animation wasn't added yet.
+  # Default: false
+  swordBlockingDisplay: false
+
   # If critical hits should do less damage on non-charged hits.
   # This was implemented in combat test 8a to reduce the effectiveness of spam hitting.
   # Default: false

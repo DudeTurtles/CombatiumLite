@@ -4,6 +4,7 @@ import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
 import com.combatium.util.ping.PlayerPingData;
 import net.minecraft.world.entity.Entity;
+import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -15,6 +16,7 @@ import static java.lang.Double.min;
 
 public class KnockbackUtil {
     public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, double knockbackReduction, boolean checkVertical) {
+        if (entity instanceof Player p && (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR)) return;
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
         knockbackRes = min(1.0, knockbackRes + (isBlocked ? knockbackReduction : 0.0));
         Entity nmsEntity = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) entity).getHandle();

@@ -61,7 +61,7 @@ public class FixItem {
                 hasConsumeParticles(false).
                 animation(ItemUseAnimation.BLOCK).
                 build();
-        net.minecraft.world.item.ItemStack nmsItem = getCraftStack(item).handle;
+        net.minecraft.world.item.ItemStack nmsItem = net.minecraft.world.item.ItemStack.fromBukkitCopy(item);
         DataComponentPatch test = DataComponentPatch.builder().set(DataComponents.CONSUMABLE, consumable).build();
         nmsItem.applyComponents(test);
         return CraftItemStack.asBukkitCopy(nmsItem);
@@ -69,7 +69,7 @@ public class FixItem {
 
     public static ItemStack fixLiquidConsumeTime(ItemStack item) {
         if (!isLiquid(item.getType())) return null;
-        net.minecraft.world.item.ItemStack nmsItem = getCraftStack(item).handle;
+        net.minecraft.world.item.ItemStack nmsItem = net.minecraft.world.item.ItemStack.fromBukkitCopy(item);
         Consumable itemConsume = nmsItem.getComponents().get(DataComponents.CONSUMABLE);
         if (itemConsume == null) return null;
         if (itemConsume.consumeSeconds() == 1) return null;
@@ -179,13 +179,5 @@ public class FixItem {
             case HONEY_BOTTLE, POTION, MILK_BUCKET, BEETROOT_SOUP, MUSHROOM_STEW, RABBIT_STEW, SUSPICIOUS_STEW -> true;
             default -> false;
         };
-    }
-
-    private static CraftItemStack getCraftStack(final ItemStack bukkit) {
-        if (bukkit instanceof final CraftItemStack craftItemStack) {
-            return craftItemStack;
-        } else {
-            return  (CraftItemStack) API_ITEM_STACK_CRAFT_DELEGATE_FIELD.get(bukkit);
-        }
     }
 }

@@ -36,6 +36,15 @@ pvp:
   # Default: false
   hitThroughTransparent: false
 
+  # If the saturation changes from the combat tests should be implemented.
+  # This makes it so that eating food doesn't increase saturation each time, but instead
+  # increases it to the maximum saturation of the food. This means that eating multiple
+  # foods in a row will not increase saturation, but will still increase hunger as normal.
+  # While there is a limit to how much saturation a food will get you to, your saturation
+  # will not decrease.
+  # Default: true
+  saturationChanges: true
+
   # If potions should stack to 16
   # Default: true
   stackablePotions: true

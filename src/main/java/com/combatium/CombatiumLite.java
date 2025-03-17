@@ -17,7 +17,6 @@ import com.combatium.listeners.util.ping.JoinQuitListener;
 import com.combatium.listeners.util.ping.PingReceiveListener;
 import com.combatium.scheduler.Scheduler;
 import com.combatium.util.active.ReachUtil;
-import com.combatium.util.calculations.FixItem;
 import com.combatium.util.calculations.PlayerHitUtil;
 import com.combatium.util.ping.PingRunnable;
 import com.github.retrooper.packetevents.PacketEvents;
@@ -57,6 +56,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean swapAccuracy;
     public static boolean fasterLiquidDrinking;
     public static boolean hitThroughTransparent;
+    public static boolean saturationChanges;
     BukkitTask pingTask;
 
     @Override
@@ -80,6 +80,7 @@ public final class CombatiumLite extends JavaPlugin {
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
         hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
+        saturationChanges = getConfig().getBoolean("pvp.saturationChanges", true);
         updateLore = getConfig().getBoolean("pvp.updateLore", true);
         optimizations = getConfig().getBoolean("pvp.optimizations", true);
         cooldownShowsFullCharge = getConfig().getBoolean("pvp.cooldownShowsFullCharge", true);
@@ -138,6 +139,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new AnimationListener(), this);
         pluginManager.registerEvents(new KnockbackListener(), this);
         pluginManager.registerEvents(new JoinQuitListener(), this);
+        pluginManager.registerEvents(new ConsumeListener(), this);
     }
 
     private static void printConfig() {
@@ -150,6 +152,7 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Sword Blocking: " + swordBlocking);
         logger.log(java.util.logging.Level.INFO, "Weaker Spam Crits: " + weakerSpamCrits);
         logger.log(java.util.logging.Level.INFO, "Hit Through Transparent: " + hitThroughTransparent);
+        logger.log(java.util.logging.Level.INFO, "Saturation Changes: " + saturationChanges);
         logger.log(java.util.logging.Level.INFO, "Update Lore: " + updateLore);
         logger.log(java.util.logging.Level.INFO, "Optimizations: " + optimizations);
         logger.log(java.util.logging.Level.INFO, "Cooldown Shows Full Charge: " + cooldownShowsFullCharge);

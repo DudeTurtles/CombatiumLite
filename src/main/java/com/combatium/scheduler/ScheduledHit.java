@@ -34,7 +34,7 @@ public class ScheduledHit {
             resetCooldown(attacker, true, weapon.getType());
             return;
         }
-        PlayerDamageEntity.playerDamageEntityEvent(attacker, target, weapon, damageCause);
+        PlayerDamageEntity.playerDamageEntityEvent(attacker, target, weapon, damageCause, true);
         net.minecraft.world.entity.LivingEntity nmsAttacker = ((CraftLivingEntity) attacker).getHandle();
         nmsAttacker.swing(nmsAttacker.swingingArm, true);
     }

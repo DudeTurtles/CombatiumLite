@@ -45,7 +45,7 @@ public class PlayerDamageEntity {
     private static final Map<Player, Material> lastTickWeapon = new HashMap<>();
     public static final Map<Player, Boolean> hasProcessed = new HashMap<>();
 
-    public static void playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause) {
+    public static double playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
         weapon.damage(1, entity);
 
@@ -81,7 +81,7 @@ public class PlayerDamageEntity {
         float originalDamage = damage;
         boolean cancelKB = false;
         damage -= (float) invulnerableDamage;
-        if (damage <= 0) return;
+        if (damage <= 0) return 0;
 
         float finalDamage = PlayerHitUtil.getFinalDamage(entity, damage, weapon);
 
@@ -100,7 +100,7 @@ public class PlayerDamageEntity {
 
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
 
-        dealDamage(entity, damage, player);
+        if (dealDamage) dealDamage(entity, damage, player);
 
         if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
             KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
@@ -149,6 +149,7 @@ public class PlayerDamageEntity {
          */
         resetCooldown(player, false, getWeaponType(weapon.getType(), player));
         InvulnerabilityScheduler.setInvulnerable(entity, (weapon.getType() == Material.MACE) ? 10 : ReachUtil.getCooldown(weapon.getType(), haste) - 1, originalDamage);
+        return damage;
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {

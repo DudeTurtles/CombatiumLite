@@ -78,7 +78,8 @@ public class EntityDamageByEntityListener implements Listener {
 
             //Checks if a player is charged, also allows sweep damage to be dealt due to sweep damage being a separate event
             if (ReachUtil.isCharged(attacker) || event.getCause() == EntityDamageByEntityEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-                PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, event.getCause());
+                event.setDamage(PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, event.getCause(), false));
+
             } else {
                 if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod) {
                     //Grace period for early hits
@@ -89,9 +90,9 @@ public class EntityDamageByEntityListener implements Listener {
                     }
                 }
                 AnimationListener.cancelAnim(attacker);
+                event.setCancelled(true);
             }
             ReachUtil.rateLimit(attacker);
-            event.setCancelled(true);
             victim.setNoDamageTicks(0);
         } else if (event.getDamager() instanceof Trident trident) { // Updated trident damage calculation
             double damage = 8;

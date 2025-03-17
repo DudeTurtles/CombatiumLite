@@ -156,7 +156,7 @@ public class PlayerDamageEntity {
          * stupid, but it works. Since weapon swapping uses the cooldown of the weapon you swapped from, this is necessary to
          * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
-        resetCooldown(player, false, getWeaponType(weapon, player));
+        if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) resetCooldown(player, false, getWeaponType(weapon, player));
         InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(weapon, haste) - 2, originalDamage, damageCause);
         return damage;
     }

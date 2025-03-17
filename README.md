@@ -15,6 +15,7 @@ That being said, the config options which are disabled by default are generally 
 ### Plans
 - [ ] Add bedrock support
 - [ ] Add 8c support
+- [ ] Fix projectile throw velocity
 
 ### Known Issues
 - [ ] Some actions such as throwing items from your inventory, or throwing projectiles, can sometimes trigger sweeping edge if the item in your main hand has the enchantment.

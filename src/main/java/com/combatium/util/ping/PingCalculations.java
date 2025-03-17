@@ -52,7 +52,6 @@ public class PingCalculations {
         double estimatedVelocity = velocity;
         while (ping >= 1) {
             estimatedVelocity -= acceleration;
-            estimatedVelocity = Math.max(estimatedVelocity, -1 * TERMINAL_VELOCITY);
             estimatedVelocity *= MULTIPLIER;
             ping--;
         }

@@ -21,7 +21,6 @@ public class KnockbackListener implements Listener {
     @EventHandler
     public void onKnockback(EntityKnockbackByEntityEvent event) {
         if (event.getHitBy() instanceof Player) {
-            if (event.getEntity().getLastDamageCause() != null && event.getEntity().getLastDamageCause().getCause() == ENTITY_ATTACK) event.setCancelled(true);
             return;
         }
 
@@ -66,7 +65,7 @@ public class KnockbackListener implements Listener {
 
         if ((isBlocked && event.getCause() == EntityKnockbackByEntityEvent.Cause.ENTITY_ATTACK) || event.getCause() == EntityKnockbackEvent.Cause.SHIELD_BLOCK) return;
 
-        KnockbackUtil.applyKnockback(event.getEntity(), strength, x, z, isBlocked, isSwordBlocked);
+        KnockbackUtil.applyKnockback(event.getEntity(), strength, x, z, isBlocked, isSwordBlocked, true);
         if (!event.getEntity().isOnGround()) event.getEntity().setVelocity(event.getEntity().getVelocity().setY((event.getEntity().getVelocity().getY() - 0.08)));
         event.setCancelled(true);
     }

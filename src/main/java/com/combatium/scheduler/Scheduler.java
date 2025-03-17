@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -78,7 +79,11 @@ public class Scheduler {
                     } else {
                         player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue());
                     }
-                    if (random.nextBoolean()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
+                    if (random.nextBoolean()) {
+                        FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1);
+                        Bukkit.getPluginManager().callEvent(event);
+                        if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
+                    }
                 }
             }
         } else {

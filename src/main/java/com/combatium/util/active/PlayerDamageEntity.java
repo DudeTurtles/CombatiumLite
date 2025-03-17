@@ -82,7 +82,7 @@ public class PlayerDamageEntity {
         //Apply Knockback
         Vector direction = player.getLocation().subtract(entity.getLocation()).toVector().setY(0);
 
-        KnockbackUtil.applyKnockback(entity, (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) ? 0.32 : 0.4000000059604645D, direction.getX(), direction.getZ(), isBlocked, isSwordBlocked);
+        KnockbackUtil.applyKnockback(entity, (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) ? 0.32 : 0.4000000059604645D, direction.getX(), direction.getZ(), isBlocked, isSwordBlocked, true);
 
         double strength = player.isSprinting() ? 1.0 : 0.0;
 
@@ -97,7 +97,7 @@ public class PlayerDamageEntity {
         }
 
         if (!cancelKB && strength > 0) {
-            KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked);
+            KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
         }
 
         dealDamage(entity, damage, finalDamage, weapon, player);

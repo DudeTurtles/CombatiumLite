@@ -1,5 +1,5 @@
 name: CombatiumLite
 version: '1.1.38'
 main: com.combatium.CombatiumLite
-api-version: '1.21'
+api-version: '1.21.4'
 load: STARTUP

@@ -3,10 +3,14 @@ package com.combatium.util.active;
 import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
 import com.combatium.util.ping.PlayerPingData;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+import org.gradle.internal.scripts.ScriptOriginUtil;
 
 import java.util.Objects;
 
@@ -14,7 +18,7 @@ import static com.combatium.CombatiumLite.logger;
 import static java.lang.Double.min;
 
 public class KnockbackUtil {
-    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, boolean isSwordBlocked) {
+    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, boolean isSwordBlocked, boolean checkVertical) {
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
         knockbackRes = min(1.0, knockbackRes + (isBlocked ? 0.5 : 0.0) + (isSwordBlocked? 0.3 : 0.0));
 
@@ -31,16 +35,16 @@ public class KnockbackUtil {
                 Vector delta = entity.getVelocity();
                 Vector diff = (new Vector(x, 0.0, z)).normalize().multiply(strength);
 
+                double vertical = delta.getY();
                 boolean onGround = entity.isOnGround();
+
                 if (entity instanceof Player && CombatiumLite.pingImprovements) {
                     PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
                     if (playerPingData != null) onGround = playerPingData.isOnGround(entity.getVelocity().getY());
-                }
 
-                double vertical = delta.getY();
-                if (!onGround && entity instanceof Player && CombatiumLite.pingImprovements) {
-                    PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
-                    if (playerPingData != null) vertical = playerPingData.estimateVerticalVelocity(vertical);
+                    if (!onGround && playerPingData != null && checkVertical) {
+                        vertical = playerPingData.estimateVerticalVelocity(vertical);
+                    }
                 }
 
                 if (Double.isNaN(diff.getX())) {

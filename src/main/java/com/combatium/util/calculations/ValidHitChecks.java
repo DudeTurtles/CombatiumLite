@@ -15,7 +15,7 @@ public class ValidHitChecks {
             Entity nmsVictim = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) victim).getHandle();
 
             PlayerPingData playerPingData = PingManager.getPlayerData(attacker.getUniqueId());
-            double distance = (playerPingData.getEstimatedPing() / 200.0) + 0.25;
+            double distance = (playerPingData.getEstimatedPingNoOffset() / 200.0) + 0.25;
 
             return nmsPlayer.canInteractWithEntity(nmsVictim, Math.min(distance, 2));
         } catch (Exception e) {

@@ -39,7 +39,7 @@ public class ProjectileHitListener implements Listener {
                 }
 
                 e.hurt(e.damageSources().genericKill(), 0.000000001f);
-                KnockbackUtil.applyKnockback(entity, 1f/2f, v.getX(), v.getZ(), isBlocked, isSwordBlocked);
+                KnockbackUtil.applyKnockback(entity, 1f/2f, v.getX(), v.getZ(), isBlocked, isSwordBlocked, true);
                 if (event.getEntity().getShooter() instanceof LivingEntity attacker) PlayerHitUtil.thornsCheck(entity, attacker);
             }
         }

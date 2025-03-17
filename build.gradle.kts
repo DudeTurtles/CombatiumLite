@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("java")
     id ("com.gradleup.shadow") version "8.3.5"
-    id("io.papermc.paperweight.userdev") version "1.7.2"
+    id("io.papermc.paperweight.userdev") version "1.7.7"
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
@@ -28,13 +28,13 @@ dependencies {
     shadow(localGroovy())
     shadow(gradleApi())
 
-    implementation("com.github.retrooper:packetevents-spigot:2.6.0")
-    paperweight.paperDevBundle("1.21.3-R0.1-SNAPSHOT")
+    implementation("com.github.retrooper:packetevents-spigot:2.7.0")
+    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
 }
 
 tasks {
     runServer {
-        minecraftVersion("1.21.3")
+        minecraftVersion("1.21.4")
     }
 }
 

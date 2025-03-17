@@ -11,7 +11,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -19,7 +18,6 @@ import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
@@ -36,12 +34,11 @@ import static com.combatium.CombatiumLite.sprintFix;
 import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.FixItem.isSword;
-import static com.combatium.util.calculations.PlayerHitUtil.dealsEnchantDamage;
-import static com.combatium.util.calculations.PlayerHitUtil.getFireProt;
+import static com.combatium.util.calculations.PlayerHitUtil.*;
 import static org.bukkit.Sound.ENTITY_PLAYER_ATTACK_CRIT;
 
 public class PlayerDamageEntity {
-    private static final Map<Player, Material> lastTickWeapon = new HashMap<>();
+    private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
     public static final Map<Player, Boolean> hasProcessed = new HashMap<>();
 
     public static double playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
@@ -51,12 +48,9 @@ public class PlayerDamageEntity {
         if (CombatiumLite.hitsReduceVelocity) player.setVelocity(player.getVelocity().multiply(0.8));
 
         //Calculation for reduced shield blocking arc
-        Vec3 vector = CraftLocation.toVec3D(player.getLocation());
         net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) entity).getHandle();
-        Vec3 balls = nmsEntity.calculateViewVector(0.0f, nmsEntity.getYHeadRot());
-        Vec3 directionVector = vector.vectorTo(nmsEntity.position());
-        directionVector = directionVector.subtract(0, directionVector.y(), 0).normalize();
-        double angle = directionVector.dot(balls) * Math.PI;
+
+        double angle = getAngle(player, entity);
         boolean isBlocked = (angle < Math.toRadians(CombatiumLite.shieldProtectionArc - 180)) || CombatiumLite.shieldProtectionArc == 360;
 
         boolean isBlocking = false;
@@ -131,7 +125,7 @@ public class PlayerDamageEntity {
             KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, isSwordBlocked, false);
         }
 
-        if (ReachUtil.isOverCharged(player, weapon.getType(), ReachUtil.getHaste(player)) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
+        if (ReachUtil.isOverCharged(player, weapon, ReachUtil.getHaste(player)) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             SweepingEdgeUtil.Sweep(player, entity);
         }
@@ -149,10 +143,12 @@ public class PlayerDamageEntity {
         }
 
         /*
-         * Set cooldown at the end to ensure things like full charge checks function properly
+         * Set cooldown at the end to ensure things like full charge checks function properly. Trust me, I know it's a little
+         * stupid, but it works. Since weapon swapping uses the cooldown of the weapon you swapped from, this is necessary to
+         * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
-        resetCooldown(player, false, getWeaponType(weapon.getType(), player));
-        InvulnerabilityScheduler.setInvulnerable(entity, (weapon.getType() == Material.MACE) ? 9 : ReachUtil.getCooldown(weapon.getType(), haste) - 2, originalDamage);
+        resetCooldown(player, false, getWeaponType(weapon, player));
+        InvulnerabilityScheduler.setInvulnerable(entity, (weapon.getType() == Material.MACE) ? 9 : ReachUtil.getCooldown(weapon, haste) - 2, originalDamage);
         return damage;
     }
 
@@ -177,15 +173,15 @@ public class PlayerDamageEntity {
         return EnchantmentHelper.modifyKnockback((ServerLevel) attacker.level(), item, target, damageSource, f);
     }
 
-    private static Material getWeaponType(Material material, Player player) {
+    private static ItemStack getWeaponType(ItemStack itemStack, Player player) {
         if (CombatiumLite.swapAccuracy && lastTickWeapon.containsKey(player)) {
             return lastTickWeapon.get(player);
         }
-        return material;
+        return itemStack;
     }
 
-    public static void setLastTickWeapon(Player player, Material material) {
-        lastTickWeapon.put(player, material);
+    public static void setLastTickWeapon(Player player, ItemStack item) {
+        lastTickWeapon.put(player, item);
     }
 
     public static boolean hasProcessed(Player player) {

@@ -78,7 +78,7 @@ public class PlayerHitUtil {
         }
 
         if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            damage *= (isOverCharged(attacker, weapon.getType(), getHaste(attacker)) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
+            damage *= (isOverCharged(attacker, weapon, getHaste(attacker)) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {
             damage *= 1.5f;
@@ -150,18 +150,27 @@ public class PlayerHitUtil {
     }
 
     public static boolean wasBackShots(Player attacker, Entity damagedEntity) {
+        double angle = getAngle(attacker, damagedEntity);
+        return angle >= Math.toRadians(100);
+    }
+
+    public static double getAngle(Player attacker, Entity damagedEntity) {
         Vec3 vector = CraftLocation.toVec3D(attacker.getLocation());
         net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) damagedEntity).getHandle();
         Vec3 balls = nmsEntity.calculateViewVector(0.0f, nmsEntity.getYHeadRot());
         Vec3 directionVector = vector.vectorTo(nmsEntity.position());
         directionVector = directionVector.subtract(0, directionVector.y(), 0).normalize();
-        double angle = directionVector.dot(balls) * Math.PI;
-        return angle >= Math.toRadians(100);
+        return directionVector.dot(balls) * Math.PI;
     }
 
     public static double attackDamage(ItemStack weapon, @Nullable Player player) {
         if (player != null && CombatiumLite.swapAccuracy && lastTickDamage.containsKey(player)) return lastTickDamage.get(player);
-        return switch (weapon.getType()) {
+
+        return (CombatiumLite.supportExternalWeaponMods) ? ItemDataHandler.checkItemDataDouble(FixItem.ATTACK_DAMAGE, weapon, defaultAttackDamage(weapon.getType())) : defaultAttackDamage(weapon.getType());
+    }
+
+    private static double defaultAttackDamage(Material type) {
+        return switch (type) {
             case IRON_HOE, IRON_SHOVEL, DIAMOND_HOE, WOODEN_PICKAXE, GOLDEN_PICKAXE -> 3;
             case WOODEN_SWORD, GOLDEN_SWORD, STONE_SWORD, DIAMOND_SHOVEL, NETHERITE_HOE -> 4;
             case IRON_SWORD, WOODEN_AXE, GOLDEN_AXE, STONE_AXE, NETHERITE_SHOVEL -> 5;

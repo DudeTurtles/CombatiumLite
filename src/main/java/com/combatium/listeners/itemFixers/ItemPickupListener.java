@@ -33,7 +33,7 @@ public class ItemPickupListener implements Listener {
                 event.getItem().getItemStack().setItemMeta(meta);
             }
         } else if(visualAttackSpeed) {
-            ItemMeta meta = FixItem.fixAttackSpeedAndDamage(event.getItem().getItemStack(), (event.getEntity() instanceof Player player) ? player : null);
+            ItemMeta meta = FixItem.fixAttackSpeed(event.getItem().getItemStack(), (event.getEntity() instanceof Player player) ? player : null);
             if (meta != null) {
                 event.getItem().getItemStack().setItemMeta(meta);
             }

@@ -108,7 +108,7 @@ public class EntityDamageByEntityListener implements Listener {
             if (!(event.getDamager() instanceof Projectile)) { // Ensure i-frames are set when damage is not dealt by a projectile
                 int ticks;
                 if (event.getDamager() instanceof LivingEntity de && de.getActiveItem().getType() != Material.AIR) {
-                    ticks = ReachUtil.getCooldown(de.getActiveItem().getType(), 0);
+                    ticks = ReachUtil.getCooldown(de.getActiveItem(), 0);
                 } else {
                     ticks = 10;
                 }

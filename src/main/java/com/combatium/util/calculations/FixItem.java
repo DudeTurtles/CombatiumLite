@@ -27,12 +27,13 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
-import static com.combatium.util.active.ReachUtil.getCooldown;
+import static com.combatium.util.calculations.ItemDataHandler.checkItemDataDouble;
 
 
 public class FixItem {
-    private static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
-    private static final NamespacedKey REACH = new NamespacedKey("combatium", "reach");
+    public static final NamespacedKey ATTACK_SPEED = new NamespacedKey("combatium", "attack_speed");
+    public static final NamespacedKey REACH = new NamespacedKey("combatium", "reach");
+    public static final NamespacedKey ATTACK_DAMAGE = new NamespacedKey("combatium", "attack_damage");
     private static final java.lang.invoke.VarHandle API_ITEM_STACK_CRAFT_DELEGATE_FIELD;
 
     static {
@@ -97,30 +98,32 @@ public class FixItem {
         return meta;
     }
 
-    public static ItemMeta fixAttackSpeedAndDamage(ItemStack item, Player player) {
+    public static ItemMeta fixAttackSpeed(ItemStack item, Player player) {
         if (item == null || item.getItemMeta() == null || !ReachUtil.Tools.contains(item.getType())) {
             return null;
         }
 
         ItemMeta meta = item.getItemMeta();
         boolean altered = false;
+        double dataAttackSpeed = (CombatiumLite.supportExternalWeaponMods) ? checkItemDataDouble(ATTACK_SPEED, item, defaultAttackSpeed(item.getType())) : defaultAttackSpeed(item.getType());
 
         if (CombatiumLite.combatifySupport) {
             if (isCombatifyPlayer(player)) {
                 if (meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
-                    meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed(item.getType()) - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                    meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, dataAttackSpeed - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                     meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                     altered = true;
                 } else {
                     AttributeModifier modifier = meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).iterator().next();
-                    if (modifier.getAmount() != attackSpeed(item.getType()) - 2.5) {
+                    if (modifier.getAmount() != dataAttackSpeed - 2.5) {
                         meta.removeAttributeModifier(Attribute.ATTACK_SPEED, modifier);
-                        meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed(item.getType()) - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                        meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, dataAttackSpeed - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                         altered = true;
                     }
                 }
             } else {
-                double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / getCooldown(item.getType(), 0)) - 1.25) : (20d / getCooldown(item.getType(), 0)) - 2.5;
+                int attackCooldown = (int) Math.round(20d / dataAttackSpeed);
+                double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / attackCooldown) - 1.25) : (20d / attackCooldown) - 2.5;
                 if (meta.getAttributeModifiers().get(Attribute.ATTACK_SPEED).isEmpty()) {
                     meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                     meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
@@ -135,19 +138,21 @@ public class FixItem {
                 }
             }
         } else {
+            int attackCooldown = (int) Math.round(20d / dataAttackSpeed);
             if (meta.getAttributeModifiers(Attribute.ATTACK_SPEED) == null) {
-                double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / getCooldown(item.getType(), 0)) - 1.25) : (20d / getCooldown(item.getType(), 0)) - 2.5;
+                double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / attackCooldown) - 1.25) : (20d / attackCooldown) - 2.5;
                 meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
                 meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 altered = true;
+            } else {
+                AttributeModifier modifier = meta.getAttributeModifiers(Attribute.ATTACK_SPEED).iterator().next();
+                double attackSpeed = CombatiumLite.cooldownShowsFullCharge ? ((10d / attackCooldown) - 1.25) : (20d / attackCooldown) - 2.5;
+                if (modifier.getAmount() != attackSpeed) {
+                    meta.removeAttributeModifier(Attribute.ATTACK_SPEED, modifier);
+                    meta.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED, attackSpeed, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                    altered = true;
+                }
             }
-        }
-
-        if (meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE) == null) {
-            double attackDamage = PlayerHitUtil.attackDamage(item, null) - 1;
-            meta.addAttributeModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier(ATTACK_SPEED, attackDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-            altered = true;
         }
 
         return altered ? meta : null;
@@ -158,9 +163,23 @@ public class FixItem {
             return null;
         }
 
-
         ItemMeta meta = item.getItemMeta();
-        if (meta.getAttributeModifiers(Attribute.ENTITY_INTERACTION_RANGE) == null) {
+
+        if (CombatiumLite.supportExternalWeaponMods) {
+            double dataReach = checkItemDataDouble(REACH, item, ReachUtil.getReach(item.getType()));
+            if (meta.getAttributeModifiers(Attribute.ENTITY_INTERACTION_RANGE) == null) {
+                meta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE, new AttributeModifier(REACH, dataReach - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                return meta;
+            } else {
+                AttributeModifier modifier = meta.getAttributeModifiers(Attribute.ENTITY_INTERACTION_RANGE).iterator().next();
+                if (modifier.getAmount() != dataReach - 2.5) {
+                    meta.removeAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE, modifier);
+                    meta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE, new AttributeModifier(REACH, dataReach - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+                    return meta;
+                }
+            }
+        } else if (meta.getAttributeModifiers(Attribute.ENTITY_INTERACTION_RANGE) == null) {
             meta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE, new AttributeModifier(REACH, ReachUtil.getReach(item.getType()) - 2.5, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             return meta;
@@ -176,9 +195,9 @@ public class FixItem {
         }
 
         ItemMeta meta = item.getItemMeta();
-        double attackSpeed = attackSpeed(item.getType());
-        double attackDamage = PlayerHitUtil.attackDamage(item, null);
-        double reach = ReachUtil.getReach(item.getType());
+        double attackSpeed = (CombatiumLite.supportExternalWeaponMods) ? checkItemDataDouble(ATTACK_SPEED, item, defaultAttackSpeed(item.getType())) : defaultAttackSpeed(item.getType());
+        double attackDamage = (CombatiumLite.supportExternalWeaponMods) ? checkItemDataDouble(ATTACK_DAMAGE, item, PlayerHitUtil.attackDamage(item, null)) : PlayerHitUtil.attackDamage(item, null);
+        double reach = (CombatiumLite.supportExternalWeaponMods) ? checkItemDataDouble(REACH, item, ReachUtil.getReach(item.getType())) : ReachUtil.getReach(item.getType());
 
         //Checks if the lore is already updated
         if (meta.lore() != null && !Objects.requireNonNull(meta.lore()).isEmpty()) {
@@ -201,7 +220,7 @@ public class FixItem {
         return df.format(value);
     }
 
-    public static double attackSpeed(Material item) {
+    public static double defaultAttackSpeed(Material item) {
         return switch (item) {
             case MACE -> 1;
             case WOODEN_HOE, WOODEN_AXE, STONE_AXE, GOLDEN_AXE, IRON_AXE, DIAMOND_AXE, NETHERITE_AXE, WOODEN_SHOVEL,
@@ -210,6 +229,13 @@ public class FixItem {
             case GOLDEN_HOE, DIAMOND_HOE, NETHERITE_HOE -> 3.5;
             default -> 2.5;
         };
+    }
+
+    public static double attackSpeed(ItemStack item) {
+        if (item == null) return 2.5;
+        if (item.getItemMeta() == null) return defaultAttackSpeed(item.getType());
+
+        return checkItemDataDouble(ATTACK_SPEED, item, defaultAttackSpeed(item.getType()));
     }
 
     public static boolean isSword(Material item) {

@@ -7,6 +7,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class AirSwingListener implements PacketListener {
     @Override
@@ -16,9 +17,9 @@ public class AirSwingListener implements PacketListener {
         InteractPacketWrapper packet = new InteractPacketWrapper(event);
         if (packet.getAction() == InteractPacketWrapper.InteractAction.AIR_SWING) {
             Player player = event.getPlayer();
-            ReachUtil.resetCooldown(player, true, Material.AIR);
+            ReachUtil.resetCooldown(player, true, new ItemStack(Material.AIR));
 
-            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand().getType(), ReachUtil.getHaste(event.getPlayer()))
+            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand(), ReachUtil.getHaste(event.getPlayer()))
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }

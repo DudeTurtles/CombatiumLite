@@ -64,6 +64,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static double shieldProtectionArc;
     public static boolean sprintFix;
     public static boolean combatifySupport;
+    public static boolean supportExternalWeaponMods;
     BukkitTask pingTask;
 
     @Override
@@ -89,6 +90,7 @@ public final class CombatiumLite extends JavaPlugin {
         hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
         sprintFix = getConfig().getBoolean("pvp.sprintFix", false);
         combatifySupport = getConfig().getBoolean("pvp.combatifySupport", false);
+        supportExternalWeaponMods = getConfig().getBoolean("pvp.supportExternalWeaponMods", false);
         saturationChanges = getConfig().getBoolean("pvp.saturationChanges", true);
         updateLore = getConfig().getBoolean("pvp.updateLore", true);
         updateItemReach = getConfig().getBoolean("pvp.updateItemReach", true);
@@ -191,6 +193,8 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Fix Sweep On Throw: " + fixSweepOnThrow);
         logger.log(java.util.logging.Level.INFO, "Shield Protection Arc: " + shieldProtectionArc);
         logger.log(java.util.logging.Level.INFO, "Sprint Fix: " + sprintFix);
+        logger.log(java.util.logging.Level.INFO, "Combatify Support: " + combatifySupport);
+        logger.log(java.util.logging.Level.INFO, "Support External Weapon Mods: " + supportExternalWeaponMods);
     }
 
     public static CombatiumLite getInstance() {

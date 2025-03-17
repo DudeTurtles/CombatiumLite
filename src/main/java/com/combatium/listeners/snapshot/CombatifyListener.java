@@ -40,9 +40,9 @@ public class CombatifyListener implements Listener, PluginMessageListener {
         if (channel.equals("combatify:miss_attack")) {
             //CombatiumLite.logger.info(player.getName() + " has missed");
 
-            ReachUtil.resetCooldown(player, true, player.getInventory().getItemInMainHand().getType());
+            ReachUtil.resetCooldown(player, true, player.getInventory().getItemInMainHand());
 
-            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand().getType(), ReachUtil.getHaste(player))
+            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand(), ReachUtil.getHaste(player))
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }

@@ -31,7 +31,7 @@ public class ScheduledHit {
         ItemStack weapon = attacker.getInventory().getItemInMainHand();
 
         if (!isValidHit(attacker, target)) {
-            resetCooldown(attacker, true, weapon.getType());
+            resetCooldown(attacker, true, weapon);
             return;
         }
         PlayerDamageEntity.playerDamageEntityEvent(attacker, target, weapon, damageCause, true);

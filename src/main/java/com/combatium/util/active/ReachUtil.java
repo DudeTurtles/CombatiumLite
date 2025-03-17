@@ -9,6 +9,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 import java.util.*;
 
@@ -34,7 +35,7 @@ public class ReachUtil {
     private static final NamespacedKey combatifyReach = new NamespacedKey("combatify", "charged_reach");
     private static final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
 
-    public static void resetCooldown(Player player, boolean wasMiss, Material item) {
+    public static void resetCooldown(Player player, boolean wasMiss, ItemStack item) {
         rateLimit(player);
 
         if (wasMiss) {
@@ -53,7 +54,7 @@ public class ReachUtil {
         else return 0;
     }
 
-    public static boolean isOverCharged(Player player, Material item, int haste) {
+    public static boolean isOverCharged(Player player, ItemStack item, int haste) {
         int cooldown = cooldownTime.get(player);
 
         if (!playerCooldowns.containsKey(player)) {
@@ -64,7 +65,7 @@ public class ReachUtil {
         return playerCooldowns.get(player) + (cooldown + getCooldown(item, haste)) <= Scheduler.getCurrentTick();
     }
 
-    private static boolean checkOvercharge(Player player, Material item, int haste) {
+    private static boolean checkOvercharge(Player player, ItemStack item, int haste) {
         int cooldown = cooldownTime.get(player);
 
         if (!playerCooldowns.containsKey(player)) {
@@ -92,7 +93,6 @@ public class ReachUtil {
             return;
         }
 
-        Material type = player.getInventory().getItemInMainHand().getType();
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
         if (player.isBlocking()) {
             playerCooldowns.put(player, Scheduler.getCurrentTick());
@@ -102,7 +102,7 @@ public class ReachUtil {
         int haste = getHaste(player);
 
 
-        if (checkOvercharge(player, type, haste) && !player.isSneaking()) {
+        if (checkOvercharge(player, player.getInventory().getItemInMainHand(), haste) && !player.isSneaking()) {
             AttributeInstance attribute = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
             if (attribute.getModifier(chargedReach) == null) attribute.addModifier(chargedReachModifier);
         } else {
@@ -116,7 +116,7 @@ public class ReachUtil {
     }
 
     //Cooldown time in ticks (3.5 | 3 | 2.5 | 2 | 1)
-    public static int getCooldown(Material item, int haste) {
+    public static int getCooldown(ItemStack item, int haste) {
         double attackSpeed = attackSpeed(item);
         double hasteSpeed = (attackSpeed + 1.5) * 0.1 * haste;
         return (int) Math.round(20 / (attackSpeed + hasteSpeed));
@@ -131,7 +131,7 @@ public class ReachUtil {
     }
 
     public static double getReach(Player player) {
-        return getReach(player.getInventory().getItemInMainHand().getType()) + (isOverCharged(player, player.getInventory().getItemInMainHand().getType(), getHaste(player)) ? 1 : 0);
+        return getReach(player.getInventory().getItemInMainHand().getType()) + (isOverCharged(player, player.getInventory().getItemInMainHand(), getHaste(player)) ? 1 : 0);
     }
 
     public static int getHaste(Player player) {

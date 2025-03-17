@@ -23,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 import java.util.Objects;
 
-import static com.combatium.CombatiumLite.logger;
 import static com.combatium.util.active.PlayerDamageEntity.hasProcessed;
 import static com.combatium.util.calculations.PlayerHitUtil.getFinalDamage;
 
@@ -57,7 +56,6 @@ public class EntityDamageByEntityListener implements Listener {
                     }
                 }
                 hasProcessed.put(attacker, false);
-                logger.info("Processed damage: " + event.getDamage() + " Processed final damage: " + event.getFinalDamage() );
                 return;
             }
 

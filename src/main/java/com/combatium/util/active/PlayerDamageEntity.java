@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.combatium.CombatiumLite.logger;
 import static com.combatium.util.active.MaceUtil.macePostHit;
 import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.FixItem.isSword;
@@ -154,7 +153,6 @@ public class PlayerDamageEntity {
     private static void dealDamage(LivingEntity entity, float damage, float finalDamage, ItemStack weapon, Player cause) {
         hasProcessed.put(cause, true);
         DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
-        logger.info("Damage " + damage + " with expected final damage " + finalDamage);
         entity.damage(damage, damageSource);
     }
 

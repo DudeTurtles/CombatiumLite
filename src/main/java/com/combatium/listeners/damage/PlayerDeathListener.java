@@ -14,6 +14,15 @@ public class PlayerDeathListener implements Listener {
     private static final Map<UUID, Integer> lastDeath = new HashMap<>();
     private static final Map<UUID, Boolean> cancelled = new HashMap<>();
 
+    /*
+     * Ok, I know this code seems absolutely ridiculous, but you gotta trust me, it is absolutely necessary.
+     * Paper / Spigot is dum as fuck, and does a death check on damage events which get cancelled. This leads to
+     * player deaths getting called twice since it gets called for the actual damage, and the cancelled event.
+     * Unfortunately, if I cancel either death, the player either doesn't die, or only dies client side.
+     * This fix helps keep death messages normal, and, hopefully, prevents plugins from getting hit with the double deaths.
+     * That being said, please put any death listeners at a priority between LOWEST and MONITOR to ensure compatibility.
+     */
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeathStart(PlayerDeathEvent event) {
         if (lastDeath.containsKey(event.getPlayer().getUniqueId()) && Math.abs(Scheduler.getCurrentTick() - lastDeath.get(event.getEntity().getUniqueId())) <= 1) {

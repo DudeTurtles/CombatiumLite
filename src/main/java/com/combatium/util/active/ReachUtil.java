@@ -66,12 +66,12 @@ public class ReachUtil {
     }
 
     private static boolean checkOvercharge(Player player, ItemStack item, int haste) {
-        int cooldown = cooldownTime.get(player);
-
-        if (!playerCooldowns.containsKey(player)) {
+        if (!cooldownTime.containsKey(player) || !playerCooldowns.containsKey(player)) {
             resetCooldown(player, false, item);
             return false;
         }
+
+        int cooldown = cooldownTime.get(player);
 
         if (CombatiumLite.improvedChargedHits) cooldown -= PingManager.getPingTicks(player);
 

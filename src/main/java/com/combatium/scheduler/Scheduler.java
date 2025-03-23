@@ -9,6 +9,7 @@ import com.combatium.util.hitThroughTransparent.HitManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.GameRule;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
@@ -84,6 +85,7 @@ public class Scheduler {
         if (regenTick == regenTickDelay) {
             regenTick = 0;
             for (Player player : Bukkit.getOnlinePlayers()) {
+                if (Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION))) continue;
                 if (player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() &&
                         player.getFoodLevel() > 7 && player.getHealth() > 0) {
                     if (player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() - 1) {

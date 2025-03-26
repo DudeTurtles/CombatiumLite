@@ -94,7 +94,7 @@ public class ReachUtil {
         }
 
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
-        if (player.isBlocking()) {
+        if (player.isBlocking() && isCharged(player)) {
             playerCooldowns.put(player, Scheduler.getCurrentTick());
             cooldownTime.put(player, 0);
         }

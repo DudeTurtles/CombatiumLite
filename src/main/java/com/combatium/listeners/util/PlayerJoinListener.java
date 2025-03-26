@@ -23,5 +23,6 @@ public class PlayerJoinListener implements Listener {
         ReachUtil.resetCooldown(event.getPlayer(), false, new ItemStack(Material.AIR));
         if (CombatiumLite.hitThroughTransparent) HitManager.updatePlayerData(event.getPlayer());
         event.getPlayer().setShieldBlockingDelay(0);
+        event.getPlayer().setMaximumNoDamageTicks(0);
     }
 }

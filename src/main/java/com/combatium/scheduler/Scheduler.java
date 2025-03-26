@@ -54,9 +54,6 @@ public class Scheduler {
     }
 
     public void tick() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.setNoDamageTicks(0);
-        }
         //Update the reach of each player
         for (Player player : Bukkit.getOnlinePlayers()) {
             ReachUtil.updatePlayerReach(player);

@@ -21,6 +21,7 @@ public class ProjectileHitListener implements Listener {
     @EventHandler
     public void onSnowball(ProjectileHitEvent event) {
         if (event.getHitEntity() instanceof LivingEntity entity) {
+            if (!(event.getHitEntity() instanceof Player)) entity.setMaximumNoDamageTicks(0);
             if (event.getEntity() instanceof Egg || event.getEntity() instanceof Snowball || event.getEntity() instanceof EnderPearl) {
                 net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) entity).getHandle();
                 net.minecraft.world.entity.projectile.Projectile nmsProjectile = ((CraftProjectile) event.getEntity()).getHandle();

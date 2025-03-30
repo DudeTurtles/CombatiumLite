@@ -6,6 +6,7 @@ import com.combatium.util.calculations.PlayerHitUtil;
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftProjectile;
@@ -57,8 +58,10 @@ public class ProjectileHitListener implements Listener {
                 double d1 = -doubleDoubleImmutablePair.rightDouble();
 
                 try {
-                    nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
-                } catch (NoSuchMethodError e) {
+                    if (entity instanceof Player p) {
+                        if (p.getGameMode() != GameMode.SPECTATOR && p.getGameMode() != GameMode.CREATIVE) nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
+                    } else nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
+            } catch (NoSuchMethodError e) {
                     nmsEntity.hurt(nmsEntity.damageSources().genericKill(), 0.000000001f);
                     logger.severe("Failed to apply proper damage. Please report this to the CombatiumLite developers.");
                     logger.severe("This is not a critical error, but it may affect gameplay.");
@@ -67,7 +70,6 @@ public class ProjectileHitListener implements Listener {
                 KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, false, 0, true);
                 if (event.getEntity().getShooter() instanceof LivingEntity attacker1) PlayerHitUtil.thornsCheck(entity, attacker1);
             }
-            if (!(event.getHitEntity() instanceof Player)) Bukkit.getScheduler().runTaskLater(CombatiumLite.getInstance(), () -> entity.setNoDamageTicks(0), 1);
         }
     }
 }

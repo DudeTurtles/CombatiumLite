@@ -26,7 +26,7 @@ import static com.combatium.util.active.PlayerDamageEntity.hasProcessed;
 import static com.combatium.util.calculations.PlayerHitUtil.getFinalDamage;
 
 public class EntityDamageByEntityListener implements Listener {
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void entityDamageByEntity(EntityDamageByEntityEvent event) {
         /*
          * Maintain killing hits to ensure death messages are not modified

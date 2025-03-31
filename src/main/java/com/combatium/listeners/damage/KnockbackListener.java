@@ -54,7 +54,7 @@ public class KnockbackListener implements Listener {
                 }
             }
 
-            if (angle != 999) isBlocked = (angle < blockAngle - 180) || blockAngle >= 360;
+            if (angle != 999) isBlocked = (angle < Math.toRadians(blockAngle - 180)) || blockAngle >= 360;
         }
 
         double strength = (event.getKnockbackStrength() / (1 - Objects.requireNonNull(event.getEntity().getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue()));
@@ -73,7 +73,6 @@ public class KnockbackListener implements Listener {
                         return;
                     }
                 } else if (lastDamager instanceof Egg || lastDamager instanceof Snowball) {
-                    event.getEntity().getWorld().playSound(event.getEntity().getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
                     event.setCancelled(true);
                     return;
                 }

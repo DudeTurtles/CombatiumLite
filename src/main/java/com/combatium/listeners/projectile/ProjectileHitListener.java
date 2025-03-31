@@ -38,7 +38,7 @@ public class ProjectileHitListener implements Listener {
 
                 boolean isBlocking = false;
                 boolean isSwordBlocking = false;
-                if (event.getEntity() instanceof Player player) {
+                if (event.getHitEntity() instanceof Player player) {
                     if (CombatiumLite.swordBlocking) isSwordBlocking = isSword(player.getActiveItem().getType());
                     isBlocking = player.isBlocking();
                 }
@@ -49,8 +49,6 @@ public class ProjectileHitListener implements Listener {
 
                 if (isBlocked) {
                     event.getEntity().getWorld().playSound(event.getEntity().getLocation(), Sound.ITEM_SHIELD_BLOCK, 1, 1);
-                    event.setCancelled(true);
-                    return;
                 }
 
                 DoubleDoubleImmutablePair doubleDoubleImmutablePair = nmsProjectile.calculateHorizontalHurtKnockbackDirection(nmsEntity, nmsProjectile.damageSources().generic());
@@ -61,13 +59,13 @@ public class ProjectileHitListener implements Listener {
                     if (entity instanceof Player p) {
                         if (p.getGameMode() != GameMode.SPECTATOR && p.getGameMode() != GameMode.CREATIVE) nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
                     } else nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
-            } catch (NoSuchMethodError e) {
+                } catch (NoSuchMethodError e) {
                     nmsEntity.hurt(nmsEntity.damageSources().genericKill(), 0.000000001f);
                     logger.severe("Failed to apply proper damage. Please report this to the CombatiumLite developers.");
                     logger.severe("This is not a critical error, but it may affect gameplay.");
                     logger.severe("Error: " + e.getMessage());
                 }
-                KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, false, 0, true);
+                KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, isBlocked, 0, true);
                 if (event.getEntity().getShooter() instanceof LivingEntity attacker1) PlayerHitUtil.thornsCheck(entity, attacker1);
             }
         }

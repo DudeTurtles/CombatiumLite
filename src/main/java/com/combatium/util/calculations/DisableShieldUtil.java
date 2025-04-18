@@ -20,9 +20,9 @@ public class DisableShieldUtil {
             cooldown += 10 * cleavingLevel;
         }
         Material activeItem = hitPlayer.getActiveItem().getType();
-        hitPlayer.clearActiveItem();
         if (CombatiumLite.swordBlocking) hitPlayer.setCooldown(activeItem, cooldown);
         else hitPlayer.setCooldown(Material.SHIELD, cooldown);
+        hitPlayer.clearActiveItem();
         hitPlayer.getLocation().getWorld().playSound(hitPlayer.getLocation(), ITEM_SHIELD_BREAK, 1, 1);
     }
 

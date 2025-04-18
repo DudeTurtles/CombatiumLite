@@ -31,9 +31,7 @@ import java.util.logging.Level;
 
 public class CombatiumLiteBootstrap implements PluginBootstrap {
     public static TypedKey<Enchantment> CLEAVING;
-
-    @Override
-    public void bootstrap(BootstrapContext context) {
+    static {
         try {
             Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
             unsafeField.setAccessible(true);
@@ -63,6 +61,10 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void bootstrap(BootstrapContext context) {
         CLEAVING = EnchantmentKeys.create(Key.key("cleaving"));
 
         var lifecycleManager = context.getLifecycleManager();

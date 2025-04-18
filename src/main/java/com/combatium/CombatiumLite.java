@@ -44,7 +44,6 @@ import org.bukkit.scheduler.BukkitTask;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -260,6 +259,16 @@ public final class CombatiumLite extends JavaPlugin {
         PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
         patcher.accept(newMap);
         components.set(item, newMap);
+    }
+    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Item... items) throws NoSuchFieldException, IllegalAccessException {
+        Field components = Item.class.getDeclaredField("components");
+        components.setAccessible(true);
+
+        for (Item item : items) {
+            PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
+            patcher.accept(newMap);
+            components.set(item, newMap);
+        }
     }
     public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach) {
         return patchedDataComponentMap -> {

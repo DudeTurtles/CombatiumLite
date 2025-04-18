@@ -32,7 +32,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.UseCooldown;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -88,29 +90,6 @@ public final class CombatiumLite extends JavaPlugin {
                 ResourceLocation.withDefaultNamespace("effect.weakness"),
                 -0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 
-        try {
-            Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
-            removeFinalMarker(streamCodec);
-
-            streamCodec.set(null, ItemStack.OPTIONAL_STREAM_CODEC.map(stack -> {
-                if (!stack.isEmpty()) {
-                    DataComponentMap prototype = stack.getPrototype();
-                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
-                        ItemStack newStack = stack.copy();
-                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
-                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
-                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
-                        }
-                        stack = newStack;
-                    }
-                }
-                return stack;
-            }, Function.identity()));
-            // Patch components here
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException("Failed to update default components!" + e, e);
-        }
-
         //Check for config options
         saveDefaultConfig();
         backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
@@ -141,6 +120,32 @@ public final class CombatiumLite extends JavaPlugin {
         ReachUtil.setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
         ReachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
+
+        try {
+            Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
+            removeFinalMarker(streamCodec);
+
+            streamCodec.set(null, ItemStack.OPTIONAL_STREAM_CODEC.map(stack -> {
+                if (!stack.isEmpty()) {
+                    DataComponentMap prototype = stack.getPrototype();
+                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                        ItemStack newStack = stack.copy();
+                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
+                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
+                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
+                        }
+                        stack = newStack;
+                    }
+                }
+                return stack;
+            }, Function.identity()));
+            // Patch components here
+            if (stackablePotions) applyDefaultComponents(size(16), Items.POTION);
+            applyDefaultComponents(size(64).andThen(cooldown(0.2F)), Items.SNOWBALL);
+            applyDefaultComponents(cooldown(0.2F), Items.EGG);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException("Failed to update default components!" + e, e);
+        }
 
         printConfig();
 
@@ -177,8 +182,8 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new ProjectileThrowListener(), this);
         pluginManager.registerEvents(new EntityAttackListener(visualCooldownChanges, updateItemReach), this);
         pluginManager.registerEvents(new PlayerInteractListenerFix(visualCooldownChanges, updateItemReach), this);
-        pluginManager.registerEvents(new ItemPickupListener(stackablePotions, visualCooldownChanges, updateItemReach), this);
-        pluginManager.registerEvents(new InventoryClickListener(stackablePotions, visualCooldownChanges, updateItemReach), this);
+        pluginManager.registerEvents(new ItemPickupListener(visualCooldownChanges, updateItemReach), this);
+        pluginManager.registerEvents(new InventoryClickListener(visualCooldownChanges, updateItemReach), this);
         pluginManager.registerEvents(new CraftItemListener(visualCooldownChanges, updateItemReach), this);
         pluginManager.registerEvents(new TickListener(new Scheduler(this, regenTickDelay)), this);
         pluginManager.registerEvents(new DispenseTridentListener(), this);
@@ -258,5 +263,11 @@ public final class CombatiumLite extends JavaPlugin {
             builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build().withTooltip(false));
         };
+    }
+    public static Consumer<PatchedDataComponentMap> size(int stackSize) {
+        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.MAX_STACK_SIZE, stackSize);
+    }
+    public static Consumer<PatchedDataComponentMap> cooldown(float seconds) {
+        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.USE_COOLDOWN, new UseCooldown(seconds));
     }
 }

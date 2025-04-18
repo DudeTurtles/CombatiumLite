@@ -52,18 +52,6 @@ public class FixItem {
         }
     }
 
-    public static ItemMeta fixSnowball(ItemStack item) {
-        if (item.getItemMeta() == null) {
-            return item.getItemMeta();
-        }
-        ItemMeta meta = item.getItemMeta();
-        if (item.getType() == Material.SNOWBALL) {
-            meta.setMaxStackSize(64);
-            return meta;
-        }
-        return null;
-    }
-
     public static ItemStack makeSwordBlock(ItemStack item) {
         if (!isSword(item.getType())) return null;
         Consumable consumable = Consumable.builder().

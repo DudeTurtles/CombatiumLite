@@ -13,26 +13,17 @@ import static com.combatium.CombatiumLite.fasterLiquidDrinking;
 import static com.combatium.CombatiumLite.updateLore;
 
 public class ItemPickupListener implements Listener {
-    Boolean stackablePotions;
     Boolean visualAttackSpeed;
     Boolean optimizations;
 
-    public ItemPickupListener(Boolean stackablePotions, Boolean visualAttackSpeed, Boolean optimizations) {
-        this.stackablePotions = stackablePotions;
+    public ItemPickupListener(Boolean visualAttackSpeed, Boolean optimizations) {
         this.visualAttackSpeed = visualAttackSpeed;
         this.optimizations = optimizations;
     }
 
     @EventHandler
     public void onItemPickup(EntityPickupItemEvent event) {
-        if (event.getItem().getItemStack().getType() == Material.SNOWBALL) {
-            event.getItem().getItemStack().setItemMeta(FixItem.fixSnowball(event.getItem().getItemStack()));
-        } else if (stackablePotions && event.getItem().getItemStack().getType() == Material.POTION) {
-            ItemMeta meta = FixItem.fixPotions(event.getItem().getItemStack());
-            if (meta != null) {
-                event.getItem().getItemStack().setItemMeta(meta);
-            }
-        } else if(visualAttackSpeed) {
+        if(visualAttackSpeed) {
             ItemMeta meta = FixItem.fixAttackSpeed(event.getItem().getItemStack(), (event.getEntity() instanceof Player player) ? player : null);
             if (meta != null) {
                 event.getItem().getItemStack().setItemMeta(meta);

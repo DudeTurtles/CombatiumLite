@@ -4,7 +4,6 @@ import com.combatium.util.active.TridentTracker;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Material;
 import org.bukkit.craftbukkit.entity.CraftAbstractArrow;
 import org.bukkit.craftbukkit.entity.CraftProjectile;
 import org.bukkit.craftbukkit.entity.CraftWindCharge;
@@ -33,11 +32,7 @@ public class ProjectileThrowListener implements Listener {
                 Vec3 projected = project(entityMomentum, currentMomentum);
                 proj.setDeltaMovement(currentMomentum.add(projected));
 
-                if (event.getEntity() instanceof org.bukkit.entity.Snowball) {
-                    player.setCooldown(Material.SNOWBALL, 3);
-                } else if (event.getEntity() instanceof org.bukkit.entity.Egg) {
-                    player.setCooldown(Material.EGG, 3);
-                } else if (event.getEntity() instanceof Trident trident && trident.getItemStack().containsEnchantment(org.bukkit.enchantments.Enchantment.LOYALTY)) {
+                if (event.getEntity() instanceof Trident trident && trident.getItemStack().containsEnchantment(org.bukkit.enchantments.Enchantment.LOYALTY)) {
                     TridentTracker.addTrident(trident);
                 }
             }

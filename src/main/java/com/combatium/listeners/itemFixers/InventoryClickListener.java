@@ -13,12 +13,10 @@ import static com.combatium.CombatiumLite.fasterLiquidDrinking;
 import static com.combatium.CombatiumLite.updateLore;
 
 public class InventoryClickListener implements Listener {
-    Boolean stackablePotions;
     Boolean visualAttackSpeed;
     Boolean optimizations;
 
-    public InventoryClickListener(Boolean stackablePotions, Boolean visualAttackSpeed, Boolean optimizations) {
-        this.stackablePotions = stackablePotions;
+    public InventoryClickListener(Boolean visualAttackSpeed, Boolean optimizations) {
         this.visualAttackSpeed = visualAttackSpeed;
         this.optimizations = optimizations;
     }
@@ -28,14 +26,7 @@ public class InventoryClickListener implements Listener {
         if (event.getCurrentItem() == null) {
             return;
         }
-        if (event.getCurrentItem().getType() == Material.SNOWBALL) {
-            event.getCurrentItem().setItemMeta(FixItem.fixSnowball(event.getCurrentItem()));
-        } else if (stackablePotions && event.getCurrentItem().getType() == Material.POTION) {
-            ItemMeta meta = FixItem.fixPotions(event.getCurrentItem());
-            if (meta != null) {
-                event.getCurrentItem().setItemMeta(meta);
-            }
-        } else if(visualAttackSpeed) {
+        if(visualAttackSpeed) {
             ItemMeta meta = FixItem.fixAttackSpeed(event.getCurrentItem(), (event.getWhoClicked() instanceof Player) ? (Player) event.getWhoClicked() : null);
             if (meta != null) {
                 event.getCurrentItem().setItemMeta(meta);

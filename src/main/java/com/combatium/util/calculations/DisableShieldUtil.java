@@ -23,11 +23,7 @@ public class DisableShieldUtil {
         hitPlayer.clearActiveItem();
         if (CombatiumLite.swordBlocking) hitPlayer.setCooldown(activeItem, cooldown);
         else hitPlayer.setCooldown(Material.SHIELD, cooldown);
-        for (Entity entity : hitPlayer.getNearbyEntities(10, 10, 10)) {
-            if (entity instanceof Player nearbyPlayer) {
-                nearbyPlayer.playSound(nearbyPlayer.getLocation(), ITEM_SHIELD_BREAK, 1, 1);
-            }
-        }
+        hitPlayer.getLocation().getWorld().playSound(hitPlayer.getLocation(), ITEM_SHIELD_BREAK, 1, 1);
     }
 
     public static int getCleavingLevel(ItemStack weapon) {

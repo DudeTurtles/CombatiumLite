@@ -56,7 +56,7 @@ public class PlayerHitUtil {
             }
             if (meta.hasEnchant(Enchantment.SWEEPING_EDGE) && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 float sweepLevel = meta.getEnchantLevel(Enchantment.SWEEPING_EDGE);
-                return ((damage + 1f) * (sweepLevel / (2f * (sweepLevel + 1f))));
+                return 1 + (damage * (sweepLevel / (2f * (sweepLevel + 1f))));
             } else if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 return 0;
             }

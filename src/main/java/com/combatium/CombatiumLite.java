@@ -22,15 +22,23 @@ import com.combatium.util.ping.PingRunnable;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
@@ -74,6 +82,29 @@ public final class CombatiumLite extends JavaPlugin {
         MobEffects.WEAKNESS.value().addAttributeModifier(Attributes.ATTACK_DAMAGE,
                 ResourceLocation.withDefaultNamespace("effect.weakness"),
                 -0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+
+        try {
+            Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
+            removeFinalMarker(streamCodec);
+
+            streamCodec.set(null, ItemStack.OPTIONAL_STREAM_CODEC.map(stack -> {
+                if (!stack.isEmpty()) {
+                    DataComponentMap prototype = stack.getPrototype();
+                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                        ItemStack newStack = stack.copy();
+                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
+                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
+                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
+                        }
+                        stack = newStack;
+                    }
+                }
+                return stack;
+            }, Function.identity()));
+            // Patch components here
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException("Failed to update default components!" + e, e);
+        }
 
         //Check for config options
         saveDefaultConfig();
@@ -197,5 +228,21 @@ public final class CombatiumLite extends JavaPlugin {
 
     public static CombatiumLite getInstance() {
         return INSTANCE;
+    }
+
+    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Item item) throws NoSuchFieldException, IllegalAccessException {
+        Field components = Item.class.getDeclaredField("components");
+        components.setAccessible(true);
+
+        removeFinalMarker(components);
+
+        PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
+        patcher.accept(newMap);
+        components.set(item, newMap);
+    }
+    public static void removeFinalMarker(Field field) throws NoSuchFieldException, IllegalAccessException {
+        Field fieldModifiers = Field.class.getDeclaredField("modifiers");
+        fieldModifiers.setAccessible(true);
+        fieldModifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
     }
 }

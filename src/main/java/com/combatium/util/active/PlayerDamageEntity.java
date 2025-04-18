@@ -164,7 +164,7 @@ public class PlayerDamageEntity {
          * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) resetCooldown(player, false, getWeaponType(weapon, player));
-        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(weapon, haste) - 2, originalDamage, damageCause);
+        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(weapon, haste) - 3, originalDamage, damageCause);
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {

@@ -22,32 +22,17 @@ import com.combatium.util.ping.PingRunnable;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.component.PatchedDataComponentMap;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.component.UseCooldown;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import sun.misc.Unsafe;
-
-import java.lang.reflect.Field;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.combatium.util.ItemPatcher.patch;
 
 @SuppressWarnings("unused")
 public final class CombatiumLite extends JavaPlugin {
@@ -56,7 +41,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static Logger logger = Logger.getLogger("[CombatiumLite]");
     public static boolean backShotsPlus;
     public static boolean visualCooldownChanges;
-    public static boolean stackablePotions;
     public static boolean updateItemReach;
     public static boolean updateLore;
     public static boolean cooldownShowsFullCharge;
@@ -81,8 +65,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean combatifySupport;
     public static boolean supportExternalWeaponMods;
     BukkitTask pingTask;
-    public static final ResourceLocation BASE_ATTACK_SPEED_CTS_ID = ResourceLocation.withDefaultNamespace("base_attack_speed_cts");
-    public static final ResourceLocation BASE_ATTACK_REACH_ID = ResourceLocation.withDefaultNamespace("base_attack_reach");
 
     @Override
     public void onEnable() {
@@ -96,7 +78,6 @@ public final class CombatiumLite extends JavaPlugin {
         //Check for config options
         saveDefaultConfig();
         backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
-        stackablePotions = getConfig().getBoolean("pvp.stackablePotions", true);
         visualCooldownChanges = getConfig().getBoolean("pvp.visualCooldownChanges", true);
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
         swordBlockingDisplay = getConfig().getBoolean("pvp.swordBlockingDisplay", false);
@@ -124,41 +105,7 @@ public final class CombatiumLite extends JavaPlugin {
         ReachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
 
-        try {
-            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-            unsafeField.setAccessible(true);
-            Unsafe unsafe = (Unsafe) unsafeField.get(null);
-            Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
-            Object staticBase = unsafe.staticFieldBase(streamCodec);
-            long staticOffset = unsafe.staticFieldOffset(streamCodec);
-            var original = streamCodec.get(null); // or use unsafe.getObject(...)
-            logger.log(Level.INFO, "Original stream codec: " + original);
-            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = ((StreamCodec<RegistryFriendlyByteBuf, ItemStack>) original).map(stack -> {
-                if (!stack.isEmpty()) {
-                    DataComponentMap prototype = stack.getPrototype();
-                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
-                        ItemStack newStack = stack.copy();
-                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
-                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
-                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
-                        }
-                        stack = newStack;
-                    }
-                }
-                return stack;
-            }, Function.identity());
-
-            unsafe.putObject(staticBase, staticOffset, patched);
-            logger.log(Level.INFO, "Patched stream codec: " + streamCodec.get(null));
-
-            // Patch components here
-            if (stackablePotions) applyDefaultComponents(size(16), Items.POTION);
-            applyDefaultComponents(size(64).andThen(cooldown(0.2F)), Items.SNOWBALL);
-            applyDefaultComponents(cooldown(0.2F), Items.EGG);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            logger.log(Level.SEVERE, "Failed to update default components!" + e);
-        }
-
+        patch();
         printConfig();
 
         if (pingImprovements) {
@@ -223,7 +170,6 @@ public final class CombatiumLite extends JavaPlugin {
     private static void printConfig() {
         logger.log(java.util.logging.Level.INFO, "=== CombatiumLite Config ===");
         logger.log(java.util.logging.Level.INFO, "Back Shots Plus: " + backShotsPlus);
-        logger.log(java.util.logging.Level.INFO, "Stackable Potions: " + stackablePotions);
         logger.log(java.util.logging.Level.INFO, "Visual Cooldown Changes: " + visualCooldownChanges);
         logger.log(java.util.logging.Level.INFO, "Sword Blocking: " + swordBlocking);
         logger.log(java.util.logging.Level.INFO, "Weaker Spam Crits: " + weakerSpamCrits);
@@ -250,39 +196,5 @@ public final class CombatiumLite extends JavaPlugin {
 
     public static CombatiumLite getInstance() {
         return INSTANCE;
-    }
-
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Item item) throws NoSuchFieldException, IllegalAccessException {
-        Field components = Item.class.getDeclaredField("components");
-        components.setAccessible(true);
-
-        PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
-        patcher.accept(newMap);
-        components.set(item, newMap);
-    }
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Item... items) throws NoSuchFieldException, IllegalAccessException {
-        Field components = Item.class.getDeclaredField("components");
-        components.setAccessible(true);
-
-        for (Item item : items) {
-            PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
-            patcher.accept(newMap);
-            components.set(item, newMap);
-        }
-    }
-    public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach) {
-        return patchedDataComponentMap -> {
-            ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
-            builder.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-            builder.add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_CTS_ID, speed, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-            builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-            patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build().withTooltip(false));
-        };
-    }
-    public static Consumer<PatchedDataComponentMap> size(int stackSize) {
-        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.MAX_STACK_SIZE, stackSize);
-    }
-    public static Consumer<PatchedDataComponentMap> cooldown(float seconds) {
-        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.USE_COOLDOWN, new UseCooldown(seconds));
     }
 }

@@ -25,6 +25,8 @@ import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.PatchedDataComponentMap;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -39,11 +41,13 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
@@ -122,10 +126,15 @@ public final class CombatiumLite extends JavaPlugin {
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
 
         try {
+            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            Unsafe unsafe = (Unsafe) unsafeField.get(null);
             Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
-            removeFinalMarker(streamCodec);
-
-            streamCodec.set(null, ItemStack.OPTIONAL_STREAM_CODEC.map(stack -> {
+            Object staticBase = unsafe.staticFieldBase(streamCodec);
+            long staticOffset = unsafe.staticFieldOffset(streamCodec);
+            var original = streamCodec.get(null); // or use unsafe.getObject(...)
+            logger.log(Level.INFO, "Original stream codec: " + original);
+            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = ((StreamCodec<RegistryFriendlyByteBuf, ItemStack>) original).map(stack -> {
                 if (!stack.isEmpty()) {
                     DataComponentMap prototype = stack.getPrototype();
                     if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
@@ -138,13 +147,17 @@ public final class CombatiumLite extends JavaPlugin {
                     }
                 }
                 return stack;
-            }, Function.identity()));
+            }, Function.identity());
+
+            unsafe.putObject(staticBase, staticOffset, patched);
+            logger.log(Level.INFO, "Patched stream codec: " + streamCodec.get(null));
+
             // Patch components here
             if (stackablePotions) applyDefaultComponents(size(16), Items.POTION);
             applyDefaultComponents(size(64).andThen(cooldown(0.2F)), Items.SNOWBALL);
             applyDefaultComponents(cooldown(0.2F), Items.EGG);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException("Failed to update default components!" + e, e);
+            logger.log(Level.SEVERE, "Failed to update default components!" + e);
         }
 
         printConfig();
@@ -244,16 +257,9 @@ public final class CombatiumLite extends JavaPlugin {
         Field components = Item.class.getDeclaredField("components");
         components.setAccessible(true);
 
-        removeFinalMarker(components);
-
         PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
         patcher.accept(newMap);
         components.set(item, newMap);
-    }
-    public static void removeFinalMarker(Field field) throws NoSuchFieldException, IllegalAccessException {
-        Field fieldModifiers = Field.class.getDeclaredField("modifiers");
-        fieldModifiers.setAccessible(true);
-        fieldModifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
     }
     public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach) {
         return patchedDataComponentMap -> {

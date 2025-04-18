@@ -13,18 +13,56 @@ import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys;
 import io.papermc.paper.registry.set.RegistrySet;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.PatchedDataComponentMap;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.ItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlotGroup;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.logging.Level;
 
 public class CombatiumLiteBootstrap implements PluginBootstrap {
     public static TypedKey<Enchantment> CLEAVING;
 
     @Override
     public void bootstrap(BootstrapContext context) {
+        try {
+            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            Unsafe unsafe = (Unsafe) unsafeField.get(null);
+            Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
+            Object staticBase = unsafe.staticFieldBase(streamCodec);
+            long staticOffset = unsafe.staticFieldOffset(streamCodec);
+            var original = streamCodec.get(null); // or use unsafe.getObject(...)
+            CombatiumLite.logger.log(Level.INFO, "Original stream codec: " + original);
+            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = ((StreamCodec<RegistryFriendlyByteBuf, ItemStack>) original).map(stack -> {
+                if (!stack.isEmpty()) {
+                    DataComponentMap prototype = stack.getPrototype();
+                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                        ItemStack newStack = stack.copy();
+                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
+                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
+                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
+                        }
+                        stack = newStack;
+                    }
+                }
+                return stack;
+            }, Function.identity());
+
+            unsafe.putObject(staticBase, staticOffset, patched);
+            CombatiumLite.logger.log(Level.INFO, "Patched stream codec: " + streamCodec.get(null));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
         CLEAVING = EnchantmentKeys.create(Key.key("cleaving"));
 
         var lifecycleManager = context.getLifecycleManager();

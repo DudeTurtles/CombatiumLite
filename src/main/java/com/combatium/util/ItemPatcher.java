@@ -1,31 +1,24 @@
 package com.combatium.util;
 
-import com.combatium.CombatiumLite;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.PatchedDataComponentMap;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.UseCooldown;
-import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.logging.Level;
 
 import static com.combatium.CombatiumLite.logger;
@@ -36,32 +29,6 @@ public class ItemPatcher {
 
     public static void patch() {
         try {
-            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-            unsafeField.setAccessible(true);
-            Unsafe unsafe = (Unsafe) unsafeField.get(null);
-            Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
-            Object staticBase = unsafe.staticFieldBase(streamCodec);
-            long staticOffset = unsafe.staticFieldOffset(streamCodec);
-            var original = streamCodec.get(null); // or use unsafe.getObject(...)
-            logger.log(Level.INFO, "Original stream codec: " + original);
-            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = ((StreamCodec<RegistryFriendlyByteBuf, ItemStack>) original).map(stack -> {
-                if (!stack.isEmpty()) {
-                    DataComponentMap prototype = stack.getPrototype();
-                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
-                        ItemStack newStack = stack.copy();
-                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
-                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
-                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
-                        }
-                        stack = newStack;
-                    }
-                }
-                return stack;
-            }, Function.identity());
-
-            unsafe.putObject(staticBase, staticOffset, patched);
-            logger.log(Level.INFO, "Patched stream codec: " + streamCodec.get(null));
-
             // Patch components here
             applyDefaultComponents(size(16), Items.POTION);
             applyDefaultComponents(size(64).andThen(cooldown(0.2F)), Items.SNOWBALL);

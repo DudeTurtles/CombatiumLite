@@ -16,7 +16,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,7 @@ public class PlayerHitUtil {
     private static final Map<Player, Double> lastTickDamage = new HashMap<>();
 
     public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, double blockAmount, EntityDamageEvent.DamageCause damageCause) {
-        float damage = (float) attackDamage(weapon, attacker);
+        float damage = (float) attackDamage(attacker);
 
         ItemMeta meta = weapon.getItemMeta();
         if (meta != null && meta.hasEnchants()) {
@@ -140,22 +139,11 @@ public class PlayerHitUtil {
         return directionVector.dot(balls) * Math.PI;
     }
 
-    public static double attackDamage(ItemStack weapon, @Nullable Player player) {
+    public static double attackDamage(Player player) {
         if (player != null && CombatiumLite.swapAccuracy && lastTickDamage.containsKey(player)) return lastTickDamage.get(player);
 
-        return (CombatiumLite.supportExternalWeaponMods) ? ItemDataHandler.checkItemDataDouble(FixItem.ATTACK_DAMAGE, weapon, defaultAttackDamage(weapon.getType())) : defaultAttackDamage(weapon.getType());
-    }
-
-    private static double defaultAttackDamage(Material type) {
-        return switch (type) {
-            case IRON_HOE, IRON_SHOVEL, DIAMOND_HOE, WOODEN_PICKAXE, GOLDEN_PICKAXE -> 3;
-            case WOODEN_SWORD, GOLDEN_SWORD, STONE_SWORD, DIAMOND_SHOVEL, NETHERITE_HOE -> 4;
-            case IRON_SWORD, WOODEN_AXE, GOLDEN_AXE, STONE_AXE, NETHERITE_SHOVEL -> 5;
-            case DIAMOND_SWORD, IRON_AXE, MACE -> 6;
-            case NETHERITE_SWORD, DIAMOND_AXE, TRIDENT -> 7;
-            case NETHERITE_AXE -> 8;
-            default -> 2;
-        };
+        assert player != null;
+        return Objects.requireNonNull(player.getAttribute(Attribute.ATTACK_DAMAGE)).getValue();
     }
 
     public static void setBackShots(Boolean backShots) {
@@ -187,59 +175,6 @@ public class PlayerHitUtil {
                 (boots != null ? boots.getEnchantmentLevel(Enchantment.PROTECTION) : 0);
 
         return 1 - (prot * 0.04f);
-    }
-
-    // Get the base damage given the final damage of a weapon
-    public static float invertFinalDamage(float damage, LivingEntity entity, ItemStack weapon, boolean isErrorDamage) {
-        int resistance = entity.getPotionEffect(RESISTANCE) == null ? 0 : Objects.requireNonNull(entity.getPotionEffect(RESISTANCE)).getAmplifier();
-
-        float armor = (float) Objects.requireNonNull(entity.getAttribute(Attribute.ARMOR)).getValue();
-        float toughness = (float) Objects.requireNonNull(entity.getAttribute(Attribute.ARMOR_TOUGHNESS)).getValue();
-
-        float potionPassPercent = 1 - ( resistance * 0.2f);
-        float protPassPercent = (float) getProtPassPercent(entity);
-
-        float midPointDamage = ((armor * (toughness + 8)) / 5) * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH));
-
-        // Updated calculation to account for breach enchantment
-        float armorBlockPercent = ((Math.max(((armor) / 5), (armor - ((4 * midPointDamage) / (toughness + 8))))) / 25);
-        float armorPassPercent = (1 - (armorBlockPercent * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH))));
-        float armorPassthrough = (midPointDamage * armorPassPercent);
-
-        float midPointFinal = (armorPassthrough * protPassPercent * potionPassPercent);
-
-        /*
-         * Error damage is the issue when dealing damage to a player, if you ignore shields, the damage is dealt as
-         * Damage + Final Damage, where damage is the raw damage, and final damage is the damage after armor and resistance
-         * are accounted for. This function calculates the input damage, needed to deal the desired final damage.
-         */
-        if (isErrorDamage) {
-            if (damage < (midPointFinal + midPointDamage)) {
-                // Damage is less than the midpoint, use the 4 * raw damage / (toughness + 8) formula
-                float a = (4 * potionPassPercent * protPassPercent * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH))) / (25 * (toughness + 8));
-                float b = 1 + potionPassPercent * protPassPercent - ((potionPassPercent * protPassPercent * armor * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH))) / 25);
-                float c = -1 * damage;
-                float sqrt = (float) Math.sqrt(b * b - 4f * a * c);
-
-                return ((b + sqrt) / (2 * a) > damage) ? (sqrt - b) / (2 * a) : (b + sqrt) / (2 * a);
-            } else {
-                // Damage is greater than the midpoint, use the armor / 5 formula
-                return damage / (protPassPercent * potionPassPercent * (1 - ((armor / 125) * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH)))) + 1);
-            }
-        } else {
-            if (damage < midPointFinal) {
-                // Damage is less than the midpoint, use the 4 * raw damage / (toughness + 8) formula
-                float a = (4f * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH))) / (toughness + 8f);
-                float b = 25 - (armor * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH)));
-                float c = -1 * ((25 * damage) / (protPassPercent * potionPassPercent));
-                float sqrt = (float) Math.sqrt(b * b - 4 * a * c);
-
-                return ((b + sqrt) / (2 * a) > damage) ? (sqrt - b) / (2 * a) : (b + sqrt) / (2 * a);
-            } else {
-                // Damage is greater than the midpoint, use the armor / 5 formula
-                return damage / (protPassPercent * potionPassPercent * (1 - ((armor / 125) * (1 - 0.15f * weapon.getEnchantmentLevel(Enchantment.BREACH)))));
-            }
-        }
     }
 
     public static int getFireProt(LivingEntity entity) {

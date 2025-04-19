@@ -61,7 +61,57 @@ public class ItemPatcher {
             applyDefaultComponents(size(16).andThen(useDuration(1)), Items.POTION);
             applyDefaultComponents(size(64).andThen(cooldown(0.2F)), Items.SNOWBALL);
             applyDefaultComponents(cooldown(0.2F), Items.EGG);
+
+            /*
+            public static final Set<Material> Tools = Collections.unmodifiableSet(EnumSet.of(Material.TRIDENT,
+            Material.WOODEN_AXE, Material.STONE_AXE, Material.GOLDEN_AXE, Material.IRON_AXE,
+            Material.DIAMOND_AXE, Material.NETHERITE_AXE, Material.WOODEN_SWORD, Material.STONE_SWORD,
+            Material.GOLDEN_SWORD, Material.IRON_SWORD, Material.NETHERITE_SWORD, Material.WOODEN_HOE,
+            Material.STONE_HOE, Material.IRON_HOE, Material.GOLDEN_HOE, Material.DIAMOND_HOE, Material.NETHERITE_HOE, Material.WOODEN_SHOVEL,
+            Material.STONE_SHOVEL, Material.GOLDEN_SHOVEL, Material.IRON_SHOVEL, Material.DIAMOND_SHOVEL, Material.NETHERITE_SHOVEL,
+            Material.WOODEN_PICKAXE, Material.STONE_PICKAXE, Material.GOLDEN_PICKAXE, Material.IRON_PICKAXE, Material.DIAMOND_PICKAXE,
+            Material.NETHERITE_PICKAXE, Material.MACE));
+             */
+
+            // Add weapons / drinking time
+            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), Items.WOODEN_SWORD);
+            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), Items.GOLDEN_SWORD);
+            applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), Items.STONE_SWORD);
+            applyDefaultComponents(weapon(3.0F, 0.5F, 0.5F), Items.IRON_SWORD);
             applyDefaultComponents(weapon(4.0F, 0.5F, 0.5F), Items.DIAMOND_SWORD);
+            applyDefaultComponents(weapon(5.0F, 0.5F, 0.5F), Items.NETHERITE_SWORD);
+
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.WOODEN_AXE);
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.GOLDEN_AXE);
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.STONE_AXE);
+            applyDefaultComponents(weapon(4.0F, -0.5F, 0.0F), Items.IRON_AXE);
+            applyDefaultComponents(weapon(5.0F, -0.5F, 0.0F), Items.DIAMOND_AXE);
+            applyDefaultComponents(weapon(6.0F, -0.5F, 0.0F), Items.NETHERITE_AXE);
+
+            applyDefaultComponents(weapon(0.0F, -0.5F, 1.0F), Items.WOODEN_HOE);
+            applyDefaultComponents(weapon(0.0F, 1.0F, 1.0F), Items.GOLDEN_HOE);
+            applyDefaultComponents(weapon(0.0F, 0.0F, 1.0F), Items.STONE_HOE);
+            applyDefaultComponents(weapon(1.0F, 0.5F, 1.0F), Items.IRON_HOE);
+            applyDefaultComponents(weapon(1.0F, 1.0F, 1.0F), Items.DIAMOND_HOE);
+            applyDefaultComponents(weapon(2.0F, 1.0F, 1.0F), Items.NETHERITE_HOE);
+
+            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), Items.WOODEN_SHOVEL);
+            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), Items.GOLDEN_SHOVEL);
+            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), Items.STONE_SHOVEL);
+            applyDefaultComponents(weapon(1.0F, -0.5F, 0.0F), Items.IRON_SHOVEL);
+            applyDefaultComponents(weapon(2.0F, -0.5F, 0.0F), Items.DIAMOND_SHOVEL);
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.NETHERITE_SHOVEL);
+
+            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), Items.WOODEN_PICKAXE);
+            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), Items.GOLDEN_PICKAXE);
+            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), Items.STONE_PICKAXE);
+            applyDefaultComponents(weapon(2.0F, 0.0F, 0.0F), Items.IRON_PICKAXE);
+            applyDefaultComponents(weapon(3.0F, 0.0F, 0.0F), Items.DIAMOND_PICKAXE);
+            applyDefaultComponents(weapon(4.0F, 0.0F, 0.0F), Items.NETHERITE_PICKAXE);
+
+            applyDefaultComponents(weapon(5.0F, -0.5F, 1.0F), Items.TRIDENT);
+            applyDefaultComponents(weapon(4.0F, -1.50F, 0.0F), Items.MACE);
+
         } catch (NoSuchFieldException | IllegalAccessException e) {
             logger.log(Level.SEVERE, "Failed to update default components!" + e);
         }

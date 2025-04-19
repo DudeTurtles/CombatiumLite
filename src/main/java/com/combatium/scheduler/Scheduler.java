@@ -114,7 +114,7 @@ public class Scheduler {
 
         if (CombatiumLite.swapAccuracy) {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                PlayerHitUtil.setLastTickDamage(player, PlayerHitUtil.attackDamage(player.getInventory().getItemInMainHand(), null));
+                PlayerHitUtil.setLastTickDamage(player, player.getAttribute(Attribute.ATTACK_DAMAGE).getValue());
                 PlayerDamageEntity.setLastTickWeapon(player, player.getInventory().getItemInMainHand());
             }
         }

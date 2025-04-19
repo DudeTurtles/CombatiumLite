@@ -43,12 +43,6 @@ pvp:
   # Default: false
   combatifySupport: false
 
-  # If the plugin should support external weapon mods.
-  # This will frequently check if the weapon data has been changed, and will update the weapon to have
-  # the proper attack speed, damage, and reach. This is useful for servers which have custom weapons.
-  # Default: false
-  supportExternalWeaponMods: false
-
   # If the saturation changes from the combat tests should be implemented.
   # This makes it so that eating food doesn't increase saturation each time, but instead
   # increases it to the maximum saturation of the food. This means that eating multiple
@@ -58,38 +52,10 @@ pvp:
   # Default: true
   saturationChanges: true
 
-  # If potions should stack to 16
-  # Default: true
-  stackablePotions: true
-
-  # If weapon cooldowns/ attack speeds should be updated to more accurately show
-  # the cooldown of the weapon.
-  # Default: true
-  visualCooldownChanges: true
-
-  # If the cooldown of a weapon should show when a charged attack is ready.
-  # If false, cooldown will show when a weapon can make any attack.
-  # When true, cooldowns will show when you can make a charged attack,
-  # and non-charged attack can be made at half cooldown.
-  # (Cooldowns are based on time, visual cooldowns won't be accurate if you attack faster than the cooldown or miss)
-  # This is how it is displayed in the original snapshot.
-  # Default: true
-  cooldownShowsFullCharge: true
-
-  # If the weapon attributes shown on the weapon should be updated to show
-  # the changed attack speed, damage, as well as reach.
-  # Default: true
-  updateLore: true
-
   # If tridents which have loyalty should return when they hit the void.
   # While not a significant part of combat, this is a feature in CTS.
   # Default: true
   tridentsReturnFromVoid: true
-
-  # If the weapons should hold attribute modifiers for reach.
-  # Should remain true unless you have a plugin which modifies the reach of weapons.
-  # Default: true
-  updateItemReach: true
 
   # If the animations server side should be improved to more accurately match CTS.
   # Makes it so arm swing animations only play when a player can attack, so attacks
@@ -129,12 +95,6 @@ pvp:
   # weapon which was swapped to.
   # Default: true
   swapAccuracy: true
-
-  # If the time to consume a liquid item should be reduced. This is part of CTS, and it reduces all liquids
-  # consume times to one second, or 20 ticks. This makes potions more useful after the implementation of eating
-  # interruptions.
-  # Default: true
-  fasterLiquidDrinking: true
 
   # If when the player misses an attack, if they have sweeping edge, should the sweep attack still be applied.
   # This is a feature in CTS, and is enabled by default.

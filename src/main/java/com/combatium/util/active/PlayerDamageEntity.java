@@ -67,7 +67,7 @@ public class PlayerDamageEntity {
             double angle = getAngle(player, entity);
             ItemStack shield = p.getActiveItem();
 
-            if (supportExternalWeaponMods && shield != null && shield.getItemMeta() != null) {
+            if (shield != null && shield.getItemMeta() != null) {
                 blockAmount = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_AMOUNT, PersistentDataType.DOUBLE, 5.0);
                 knockbackReduction = shield.getItemMeta().getPersistentDataContainer().getOrDefault(KNOCKBACK_REDUCTION, PersistentDataType.DOUBLE, 0.5);
                 blockAngle = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_ANGLE, PersistentDataType.DOUBLE, CombatiumLite.shieldProtectionArc);
@@ -164,7 +164,7 @@ public class PlayerDamageEntity {
          * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) resetCooldown(player, false, getWeaponType(weapon, player));
-        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(weapon, haste) - 3, originalDamage, damageCause);
+        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(player, haste) - 3, originalDamage, damageCause);
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {

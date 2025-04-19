@@ -39,22 +39,30 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
             Object staticBase = unsafe.staticFieldBase(streamCodec);
             long staticOffset = unsafe.staticFieldOffset(streamCodec);
-            var original = streamCodec.get(null); // or use unsafe.getObject(...)
+            StreamCodec<RegistryFriendlyByteBuf, ItemStack> original = (StreamCodec<RegistryFriendlyByteBuf, ItemStack>) streamCodec.get(null); // or use unsafe.getObject(...)
             CombatiumLite.logger.log(Level.INFO, "Original stream codec: " + original);
-            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = ((StreamCodec<RegistryFriendlyByteBuf, ItemStack>) original).map(stack -> {
-                if (!stack.isEmpty()) {
-                    DataComponentMap prototype = stack.getPrototype();
-                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
-                        ItemStack newStack = stack.copy();
-                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
-                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
-                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
-                        }
-                        stack = newStack;
-                    }
+            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = new StreamCodec<>() {
+                @Override
+                public ItemStack decode(RegistryFriendlyByteBuf buffer) {
+                    return original.decode(buffer);
                 }
-                return stack;
-            }, Function.identity());
+
+                @Override
+                public void encode(RegistryFriendlyByteBuf buffer, ItemStack stack) {
+                    if (!stack.isEmpty()) {
+                        DataComponentMap prototype = stack.getPrototype();
+                        if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                            ItemStack newStack = stack.copy();
+                            if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
+                                patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
+                                patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
+                            }
+                            stack = newStack;
+                        }
+                    }
+                    original.encode(buffer, stack);
+                }
+            };
 
             unsafe.putObject(staticBase, staticOffset, patched);
             CombatiumLite.logger.log(Level.INFO, "Patched stream codec: " + streamCodec.get(null));

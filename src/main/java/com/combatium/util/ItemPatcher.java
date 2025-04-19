@@ -5,6 +5,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -65,11 +66,12 @@ public class ItemPatcher {
             builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build().withTooltip(false));
             List<Component> lore = new ArrayList<>();
+            Style commonStyle = CommonComponents.space().getStyle().withItalic(false).withColor(ChatFormatting.GRAY);
             lore.add(CommonComponents.space());
-            lore.add(Component.literal("When in Main Hand:").withStyle(ChatFormatting.GRAY));
-            lore.add(CommonComponents.space().append(Component.literal((damage + 2) + " Attack Damage").withStyle(ChatFormatting.DARK_GREEN)));
-            lore.add(CommonComponents.space().append(Component.literal((speed + 1.25) + " Attack Speed").withStyle(ChatFormatting.DARK_GREEN)));
-            lore.add(CommonComponents.space().append(Component.literal((reach + 2.5) + " Attack Reach").withStyle(ChatFormatting.DARK_GREEN)));
+            lore.add(Component.literal("When in Main Hand:").setStyle(commonStyle));
+            lore.add(CommonComponents.space().append(Component.literal((damage + 2) + " Attack Damage").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
+            lore.add(CommonComponents.space().append(Component.literal((speed + 2.5) + " Attack Speed").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
+            lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal((reach + 2.5) + " Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
 
             patchedDataComponentMap.set(DataComponents.LORE, new ItemLore(lore));
         };

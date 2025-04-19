@@ -16,6 +16,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.UseCooldown;
@@ -55,7 +56,9 @@ public class ItemPatcher {
     public static void patch() {
         try {
             // Patch components here
-            applyDefaultComponents(size(16), Items.POTION);
+            applyDefaultComponents(useDuration(1), Items.MUSHROOM_STEW, Items.RABBIT_STEW, Items.BEETROOT_SOUP,
+                    Items.SUSPICIOUS_STEW, Items.SPLASH_POTION, Items.LINGERING_POTION, Items.MILK_BUCKET, Items.HONEY_BOTTLE, Items.OMINOUS_BOTTLE);
+            applyDefaultComponents(size(16).andThen(useDuration(1)), Items.POTION);
             applyDefaultComponents(size(64).andThen(cooldown(0.2F)), Items.SNOWBALL);
             applyDefaultComponents(cooldown(0.2F), Items.EGG);
             applyDefaultComponents(weapon(4.0F, 0.5F, 0.5F), Items.DIAMOND_SWORD);
@@ -85,17 +88,26 @@ public class ItemPatcher {
         Field components = Item.class.getDeclaredField("components");
         components.setAccessible(true);
 
+        Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
+        metaData.setAccessible(true);
         for (Item item : items) {
             PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
             patcher.accept(newMap);
             components.set(item, newMap);
 
             if (CraftItemType.minecraftToBukkitNew(item) instanceof CraftItemType<?> craftItemType) {
-                Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
-                metaData.setAccessible(true);
                 metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
             }
         }
+    }
+    public static Consumer<PatchedDataComponentMap> useDuration(float useSeconds) {
+        return patchedDataComponentMap -> {
+            Consumable consumable = patchedDataComponentMap.get(DataComponents.CONSUMABLE);
+            if (consumable != null) {
+                Consumable newConsumable = new Consumable(useSeconds, consumable.animation(), consumable.sound(), consumable.hasConsumeParticles(), consumable.onConsumeEffects());
+                patchedDataComponentMap.set(DataComponents.CONSUMABLE, newConsumable);
+            }
+        };
     }
     public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach) {
         return patchedDataComponentMap -> {

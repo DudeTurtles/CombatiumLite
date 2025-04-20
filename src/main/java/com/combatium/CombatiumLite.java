@@ -67,6 +67,9 @@ public final class CombatiumLite extends JavaPlugin {
         INSTANCE = this;
         pluginManager = getServer().getPluginManager();
         logger = getLogger();
+        MobEffects.DAMAGE_BOOST.value().addAttributeModifier(Attributes.ATTACK_DAMAGE,
+                ResourceLocation.withDefaultNamespace("effect.strength"),
+                0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
         MobEffects.WEAKNESS.value().addAttributeModifier(Attributes.ATTACK_DAMAGE,
                 ResourceLocation.withDefaultNamespace("effect.weakness"),
                 -0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);

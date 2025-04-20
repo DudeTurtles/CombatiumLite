@@ -89,16 +89,14 @@ public class LiarListener implements PacketListener {
         return attribute.sanitizeValue(attributeInstanceFinalValue);
     }
     private static int CTSMath(double attackSpeed, double mod) {
-        double d = attackSpeed - mod;
-        if (d <= 0)
-            d += mod;
-        d = Mth.clamp(d, 0.1, 1024.0);
-        d = 1.0 / d * 20.0 + 0.5;
-        System.out.println((int) d);
-        return (int) (d);
+        double finalSpeed = attackSpeed - mod;
+        if (finalSpeed <= 0)
+            finalSpeed += mod;
+        finalSpeed = Mth.clamp(finalSpeed, 0.1, 1024.0);
+        finalSpeed = 1.0 / finalSpeed * 20.0 + 0.5;
+        return (int) (finalSpeed);
     }
     private static int vanillaMath(double attackSpeed) {
-        System.out.println((int) (1.0 / attackSpeed * 20.0));
         return (int) (1.0 / attackSpeed * 20.0);
     }
 }

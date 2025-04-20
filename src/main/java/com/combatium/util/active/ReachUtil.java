@@ -91,11 +91,11 @@ public class ReachUtil {
         var attrib = Objects.requireNonNull(e.getAttribute(Attribute.ATTACK_SPEED));
         double attackSpeed = attrib.getValue();
         double mod = !CombatiumLite.hasteFix ? 1.5 : calculateValueFromBase(1.5, attrib.getModifiers(), attrib.getAttribute());
+        attackSpeed -= mod;
         if (attackSpeed <= 0)
             attackSpeed += mod;
         attackSpeed = Mth.clamp(attackSpeed, 0.1, 1024.0);
         attackSpeed = 1.0 / attackSpeed * 20.0 + 0.5;
-        System.out.println((int) attackSpeed);
         return (int) (attackSpeed);
     }
     public static double calculateValueFromBase(double attributeInstanceBaseValue, Collection<AttributeModifier> modifiers, Attribute attribute) {

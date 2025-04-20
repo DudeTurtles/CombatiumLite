@@ -28,9 +28,12 @@ public class ProjectileThrowListener implements Listener {
 
                 Vec3 knownMovement = p.getKnownMovement();
                 Vec3 currentMomentum = proj.getDeltaMovement().subtract(knownMovement.x, p.onGround() ? 0.0 : knownMovement.y, knownMovement.z);
-                Vec3 entityMomentum = p.onGround ? knownMovement : knownMovement.multiply(1.0, 0.0, 1.0);
+
+                Vec3 entityMomentum = p.onGround ? p.getDeltaMovement() : p.getDeltaMovement().multiply(1.0, 0.0, 1.0);
                 Vec3 projected = project(entityMomentum, currentMomentum);
                 proj.setDeltaMovement(currentMomentum.add(projected));
+
+                proj.setDeltaMovement(currentMomentum);
 
                 if (event.getEntity() instanceof Trident trident && trident.getItemStack().containsEnchantment(org.bukkit.enchantments.Enchantment.LOYALTY)) {
                     TridentTracker.addTrident(trident);

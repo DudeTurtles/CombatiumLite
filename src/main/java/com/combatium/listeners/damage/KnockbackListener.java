@@ -67,8 +67,8 @@ public class KnockbackListener implements Listener {
             if (event.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent damageEvent) {
                 Entity lastDamager = damageEvent.getDamager();
                 if (lastDamager instanceof AbstractArrow arrow) {
-                    event.getEntity().getWorld().playSound(event.getEntity().getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
                     if (arrow.getPierceLevel() < 1) {
+                        event.getEntity().getWorld().playSound(event.getEntity().getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
                         event.setCancelled(true);
                         return;
                     }

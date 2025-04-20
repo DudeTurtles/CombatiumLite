@@ -3,7 +3,6 @@ package com.combatium.listeners.snapshot;
 import com.combatium.CombatiumLite;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.active.SweepingEdgeUtil;
-import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,9 +39,9 @@ public class CombatifyListener implements Listener, PluginMessageListener {
         if (channel.equals("combatify:miss_attack")) {
             //CombatiumLite.logger.info(player.getName() + " has missed");
 
-            ReachUtil.resetCooldown(player, true, player.getInventory().getItemInMainHand());
+            ReachUtil.resetCooldown(player, true);
 
-            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand())
+            if (ReachUtil.isOverCharged(player, 0.0F)
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }

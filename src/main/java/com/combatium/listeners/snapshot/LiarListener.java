@@ -33,11 +33,8 @@ public class LiarListener implements PacketListener {
                 double mod = !CombatiumLite.hasteFix ? 1.5 : calculateValueFromBase(1.5, property.getModifiers(), property.getAttribute());
                 double newSpeed = speed - mod;
                 if (newSpeed <= 0) newSpeed += mod;
+                newSpeed /= 2;
                 for (; newSpeed > 0; newSpeed -= 0.0001) {
-                    if (vanillaMath(newSpeed / 2) == CTSMath(speed, mod) * 2) {
-                        modifierMap.put(properties.indexOf(property), new WrapperPlayServerUpdateAttributes.PropertyModifier(ResourceLocation.minecraft(ItemPatcher.BASE_ATTACK_SPEED_CTS_ID.getPath()), (newSpeed / 2) - 2.5, WrapperPlayServerUpdateAttributes.PropertyModifier.Operation.ADDITION));
-                        break;
-                    }
                     if (vanillaMath(newSpeed) == CTSMath(speed, mod) * 2) {
                         modifierMap.put(properties.indexOf(property), new WrapperPlayServerUpdateAttributes.PropertyModifier(ResourceLocation.minecraft(ItemPatcher.BASE_ATTACK_SPEED_CTS_ID.getPath()), newSpeed - 2.5, WrapperPlayServerUpdateAttributes.PropertyModifier.Operation.ADDITION));
                         break;
@@ -97,9 +94,11 @@ public class LiarListener implements PacketListener {
             d += mod;
         d = Mth.clamp(d, 0.1, 1024.0);
         d = 1.0 / d * 20.0 + 0.5;
+        System.out.println((int) d);
         return (int) (d);
     }
     private static int vanillaMath(double attackSpeed) {
+        System.out.println((int) (1.0 / attackSpeed * 20.0));
         return (int) (1.0 / attackSpeed * 20.0);
     }
 }

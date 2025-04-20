@@ -1,6 +1,7 @@
 package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
+import com.combatium.util.active.ReachUtil;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
@@ -32,7 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
-import static com.combatium.util.active.ReachUtil.isOverCharged;
 import static org.bukkit.potion.PotionEffectType.*;
 
 public class PlayerHitUtil {
@@ -80,7 +80,7 @@ public class PlayerHitUtil {
         }
 
         if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            damage *= (isOverCharged(attacker, weapon) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
+            damage *= (ReachUtil.isOverCharged(attacker, 0.0F) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {
             damage *= 1.5f;

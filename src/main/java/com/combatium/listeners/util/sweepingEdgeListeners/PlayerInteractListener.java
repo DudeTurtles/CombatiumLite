@@ -40,8 +40,8 @@ public class PlayerInteractListener implements Listener {
         }
 
         if (event.getAction().isLeftClick()) {
-            if (ReachUtil.isCharged(event.getPlayer())) {
-                if (CombatiumLite.sweepOnMiss && event.getAction() == LEFT_CLICK_AIR && ReachUtil.isOverCharged(event.getPlayer(), event.getPlayer().getInventory().getItemInMainHand()) &&
+            if (ReachUtil.isCharged(event.getPlayer(), 0.0F)) {
+                if (CombatiumLite.sweepOnMiss && event.getAction() == LEFT_CLICK_AIR && ReachUtil.isOverCharged(event.getPlayer(), 0.0F) &&
                         (SweepingEdgeUtil.getSweepingLevel(event.getPlayer()) > 0)) {
                     if (fixSweepOnThrow) {
                         scheduleSweep(event.getPlayer());
@@ -51,7 +51,7 @@ public class PlayerInteractListener implements Listener {
                 }
 
                 if (!(isRateLimited(event.getPlayer()))) {
-                    ReachUtil.resetCooldown(event.getPlayer(), true, event.getPlayer().getInventory().getItemInMainHand());
+                    ReachUtil.resetCooldown(event.getPlayer(), true);
                 } else {
                     AnimationListener.cancelAnim(event.getPlayer());
                 }

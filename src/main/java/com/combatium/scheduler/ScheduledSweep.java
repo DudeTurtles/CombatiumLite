@@ -12,7 +12,7 @@ public record ScheduledSweep(Player player) {
     public void execute() {
         if (isPotentialFalseInput(player, 1)) return;
         SweepingEdgeUtil.Sweep(player, null);
-        ReachUtil.resetCooldown(player, true, null);
+        ReachUtil.resetCooldown(player, true);
         net.minecraft.world.entity.LivingEntity nmsAttacker = ((CraftLivingEntity) player).getHandle();
         nmsAttacker.swing(nmsAttacker.swingingArm, true);
     }

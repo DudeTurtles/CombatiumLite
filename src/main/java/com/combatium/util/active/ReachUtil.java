@@ -12,8 +12,6 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.craftbukkit.attribute.CraftAttribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffectType;
 import java.util.*;
 
 import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
@@ -21,23 +19,27 @@ import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlay
 public class ReachUtil {
     private static final Map<Player, Integer> playerCooldowns = new HashMap<>();
     private static final Map<Player, Integer> cooldownTime = new HashMap<>();
+    private static final List<Player> playersWhoMissed = new ArrayList<>();
     private static final Map<Player, Integer> rateLimit = new HashMap<>();
     private static int missTime = 4;
     private static int rateLimitTicks= 3;
     private static final NamespacedKey chargedReach = new NamespacedKey("combatify", "charged_reach");
     private static final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
 
-    public static void resetCooldown(Player player, boolean wasMiss, ItemStack item) {
+    public static void resetCooldown(Player player, boolean wasMiss) {
         rateLimit(player);
 
-        if (wasMiss) {
-            playerCooldowns.put(player, Scheduler.getCurrentTick());
-            cooldownTime.put(player, missTime);
+        playerCooldowns.put(player, Scheduler.getCurrentTick());
+        cooldownTime.put(player, getCooldown(player) * 2);
+        if (wasMiss) playersWhoMissed.add(player);
+    }
+
+    public static double getChargePercent(Player player, float baseTime) {
+        if (!playerCooldowns.containsKey(player)) {
+            resetCooldown(player, false);
+            return 0;
         }
-        else {
-            playerCooldowns.put(player, Scheduler.getCurrentTick());
-            cooldownTime.put(player, getCooldown(player));
-        }
+        return Mth.clamp(((Scheduler.getCurrentTick() - playerCooldowns.get(player)) + baseTime) / cooldownTime.get(player), 0.0F, 1.0F) * 2;
     }
 
     public static int earlyHit(Player player) {
@@ -46,38 +48,17 @@ public class ReachUtil {
         else return 0;
     }
 
-    public static boolean isOverCharged(Player player, ItemStack item) {
-        int cooldown = cooldownTime.get(player);
-
-        if (!playerCooldowns.containsKey(player)) {
-            resetCooldown(player, false, item);
-            return false;
-        }
-
-        return playerCooldowns.get(player) + (cooldown + getCooldown(player)) <= Scheduler.getCurrentTick();
+    public static boolean isOverCharged(Player player, float baseTime) {
+        return getChargePercent(player, baseTime) > 1.95;
     }
 
-    private static boolean checkOvercharge(Player player, ItemStack item) {
-        if (!cooldownTime.containsKey(player) || !playerCooldowns.containsKey(player)) {
-            resetCooldown(player, false, item);
-            return false;
+    public static boolean isCharged(Player player, float baseTime) {
+        if (getChargePercent(player, 1.0F) < 1.0) {
+            if (!playerCooldowns.containsKey(player)) return false;
+            return playersWhoMissed.contains(player) && (Scheduler.getCurrentTick() - playerCooldowns.get(player) + baseTime) > missTime;
         }
 
-        int cooldown = cooldownTime.get(player);
-
-        if (CombatiumLite.improvedChargedHits) cooldown -= PingManager.getPingTicks(player);
-
-        return playerCooldowns.get(player) + (cooldown + getCooldown(player)) <= Scheduler.getCurrentTick();
-    }
-
-    public static boolean isCharged(Player player) {
-        if (!playerCooldowns.containsKey(player)) {
-            playerCooldowns.put(player, Scheduler.getCurrentTick());
-            cooldownTime.put(player, 0);
-            return false;
-        }
-
-        return Scheduler.getCurrentTick() >= playerCooldowns.get(player) + cooldownTime.get(player);
+        return true;
     }
 
     public static void updatePlayerReach(Player player) {
@@ -86,12 +67,12 @@ public class ReachUtil {
         }
 
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
-        if (player.isBlocking() && isCharged(player)) {
+        if (player.isBlocking() && isCharged(player, 0.0F)) {
             playerCooldowns.put(player, Scheduler.getCurrentTick());
             cooldownTime.put(player, 0);
         }
 
-        if (checkOvercharge(player, player.getInventory().getItemInMainHand()) && !player.isSneaking()) {
+        if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) : 0.0F)) && !player.isSneaking()) {
             AttributeInstance attribute = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
             assert attribute != null;
             if (attribute.getModifier(chargedReach) == null) attribute.addModifier(chargedReachModifier);
@@ -114,6 +95,7 @@ public class ReachUtil {
             attackSpeed += mod;
         attackSpeed = Mth.clamp(attackSpeed, 0.1, 1024.0);
         attackSpeed = 1.0 / attackSpeed * 20.0 + 0.5;
+        System.out.println((int) attackSpeed);
         return (int) (attackSpeed);
     }
     public static double calculateValueFromBase(double attributeInstanceBaseValue, Collection<AttributeModifier> modifiers, Attribute attribute) {
@@ -148,14 +130,7 @@ public class ReachUtil {
     }
 
     public static double getReach(Player player) {
-        return getReach(player.getInventory().getItemInMainHand().getType()) + (isOverCharged(player, player.getInventory().getItemInMainHand()) ? 1 : 0);
-    }
-
-    public static int getHaste(Player player) {
-        if (player.hasPotionEffect(PotionEffectType.HASTE)) {
-            return Objects.requireNonNull(player.getPotionEffect(PotionEffectType.HASTE)).getAmplifier();
-        }
-        return 0;
+        return getReach(player.getInventory().getItemInMainHand().getType()) + (isOverCharged(player, 1.0F) ? 1 : 0);
     }
 
     public static boolean isRateLimited(Player player) {

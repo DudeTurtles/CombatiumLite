@@ -42,7 +42,7 @@ public class CombatifyListener implements Listener, PluginMessageListener {
 
             ReachUtil.resetCooldown(player, true, player.getInventory().getItemInMainHand());
 
-            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand(), ReachUtil.getHaste(player))
+            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand())
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }

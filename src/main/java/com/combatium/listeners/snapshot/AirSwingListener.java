@@ -19,7 +19,7 @@ public class AirSwingListener implements PacketListener {
             Player player = event.getPlayer();
             ReachUtil.resetCooldown(player, true, new ItemStack(Material.AIR));
 
-            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand(), ReachUtil.getHaste(event.getPlayer()))
+            if (ReachUtil.isOverCharged(player, player.getInventory().getItemInMainHand())
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }

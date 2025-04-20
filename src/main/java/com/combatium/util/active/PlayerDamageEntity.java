@@ -141,7 +141,7 @@ public class PlayerDamageEntity {
             KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, knockbackReduction, false);
         }
 
-        if (ReachUtil.isOverCharged(player, weapon, ReachUtil.getHaste(player)) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
+        if (ReachUtil.isOverCharged(player, weapon) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             SweepingEdgeUtil.Sweep(player, entity);
         }
@@ -164,7 +164,7 @@ public class PlayerDamageEntity {
          * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) resetCooldown(player, false, getWeaponType(weapon, player));
-        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(player, haste) - 3, originalDamage, damageCause);
+        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(player) - 3, originalDamage, damageCause);
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {

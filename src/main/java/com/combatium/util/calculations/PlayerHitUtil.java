@@ -1,57 +1,68 @@
 package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
-import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.craftbukkit.entity.CraftEntityType;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
 
-import static com.combatium.util.active.ReachUtil.getHaste;
 import static com.combatium.util.active.ReachUtil.isOverCharged;
 import static org.bukkit.potion.PotionEffectType.*;
 
 public class PlayerHitUtil {
     private static Boolean backShots;
     private static final Map<Player, Double> lastTickDamage = new HashMap<>();
+    private static final NamespacedKey enchantedDamageBonus = new NamespacedKey("combatium", "magic_damage_bonus");
 
     public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, double blockAmount, EntityDamageEvent.DamageCause damageCause) {
         float damage = (float) attackDamage(attacker);
+        float enchantedDamage = 0;
 
         ItemMeta meta = weapon.getItemMeta();
         if (meta != null && meta.hasEnchants()) {
             if (meta.hasEnchant(Enchantment.SHARPNESS)) {
-                damage += ((meta.getEnchantLevel(Enchantment.SHARPNESS) / 2.0f) + 0.5f);
+                enchantedDamage += ((meta.getEnchantLevel(Enchantment.SHARPNESS) / 2.0f) + 0.5f);
             }
-            if (meta.hasEnchant(Enchantment.IMPALING) && (damagedEntity.isInWaterOrRain())) {
-                damage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
+            if (meta.hasEnchant(Enchantment.IMPALING) && (damagedEntity.isInWaterOrRain() || isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING))) {
+                enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
             }
             if (DisableShieldUtil.getCleavingLevel(weapon) > 0) {
-                damage += 1 + DisableShieldUtil.getCleavingLevel(weapon);
+                enchantedDamage += 1 + DisableShieldUtil.getCleavingLevel(weapon);
             }
-            if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && (damagedEntity instanceof Spider || damagedEntity instanceof Silverfish ||
-                    damagedEntity instanceof Bee || damagedEntity instanceof Endermite)) {
-                damage += (2.5f * meta.getEnchantLevel(Enchantment.BANE_OF_ARTHROPODS));
+            if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS)) {
+                enchantedDamage += (2.5f * meta.getEnchantLevel(Enchantment.BANE_OF_ARTHROPODS));
             }
-            if (meta.hasEnchant(Enchantment.SMITE) && (damagedEntity instanceof Zombie || damagedEntity instanceof Skeleton ||
-                    damagedEntity instanceof WitherSkeleton || damagedEntity instanceof Stray || damagedEntity instanceof Phantom ||
-                    damagedEntity instanceof ZombieHorse || damagedEntity instanceof SkeletonHorse || damagedEntity instanceof Wither ||
-                    damagedEntity instanceof Zoglin || damagedEntity instanceof ZombifiedPiglin)) {
-                damage += (2.5f * meta.getEnchantLevel(Enchantment.SMITE));
+            if (meta.hasEnchant(Enchantment.SMITE) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_SMITE)) {
+                enchantedDamage += (2.5f * meta.getEnchantLevel(Enchantment.SMITE));
+            }
+            if (enchantedDamage > 0) {
+                damage = (float) enchantedDamage(attacker, enchantedDamage);
             }
             if (meta.hasEnchant(Enchantment.SWEEPING_EDGE) && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 float sweepLevel = meta.getEnchantLevel(Enchantment.SWEEPING_EDGE);
@@ -59,14 +70,6 @@ public class PlayerHitUtil {
             } else if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 return 0;
             }
-        }
-
-        //Calculate damage from critical hits, strength, and weakness
-        if (attacker.hasPotionEffect(STRENGTH)) {
-            damage *= 1.2f + (0.2f * Objects.requireNonNull(attacker.getPotionEffect(STRENGTH)).getAmplifier());
-        }
-        if (attacker.hasPotionEffect(WEAKNESS)) {
-            damage *= 0.8f - (0.2f * Objects.requireNonNull(attacker.getPotionEffect(WEAKNESS)).getAmplifier());
         }
 
         if (weapon.getType() == Material.MACE) {
@@ -77,7 +80,7 @@ public class PlayerHitUtil {
         }
 
         if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            damage *= (isOverCharged(attacker, weapon, getHaste(attacker)) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
+            damage *= (isOverCharged(attacker, weapon) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {
             damage *= 1.5f;
@@ -93,6 +96,10 @@ public class PlayerHitUtil {
         }
 
         return damage;
+    }
+
+    public static boolean isEntityInTag(Entity entity, TagKey<EntityType<?>> tag) {
+        return CraftEntityType.bukkitToMinecraft(entity.getType()).is(tag);
     }
 
     //Calculate the damage values after armor and resistance are accounted for
@@ -117,12 +124,9 @@ public class PlayerHitUtil {
         if (!(weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchants())) return false;
         ItemMeta meta = weapon.getItemMeta();
         if (meta.hasEnchant(Enchantment.SHARPNESS)) return true;
-        if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain()) return true;
-        if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && (damagedEntity instanceof Spider || damagedEntity instanceof Silverfish ||
-                damagedEntity instanceof Bee || damagedEntity instanceof Endermite)) return true;
-        return meta.hasEnchant(Enchantment.SMITE) && (damagedEntity instanceof Zombie || damagedEntity instanceof Skeleton || damagedEntity instanceof WitherSkeleton ||
-                damagedEntity instanceof Stray || damagedEntity instanceof Phantom || damagedEntity instanceof ZombieHorse || damagedEntity instanceof SkeletonHorse ||
-                damagedEntity instanceof Wither || damagedEntity instanceof Zoglin || damagedEntity instanceof ZombifiedPiglin);
+        if (meta.hasEnchant(Enchantment.IMPALING) && (damagedEntity.isInWaterOrRain() || isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING))) return true;
+        if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS)) return true;
+        return meta.hasEnchant(Enchantment.SMITE) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_SMITE);
     }
 
     public static boolean wasBackShots(Player attacker, Entity damagedEntity) {
@@ -139,11 +143,28 @@ public class PlayerHitUtil {
         return directionVector.dot(balls) * Math.PI;
     }
 
-    public static double attackDamage(Player player) {
-        if (player != null && CombatiumLite.swapAccuracy && lastTickDamage.containsKey(player)) return lastTickDamage.get(player);
+    public static double attackDamage(Player attacker) {
+        if (attacker.isRiptiding()) {
+            try {
+                Field autoSpinAttack = net.minecraft.world.entity.LivingEntity.class.getDeclaredField("autoSpinAttackDmg");
+                autoSpinAttack.setAccessible(true);
+                return autoSpinAttack.getFloat(((CraftPlayer) attacker).getHandle());
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                CombatiumLite.logger.log(Level.SEVERE, "Failed to retrieve riptide damage!" + e, e);
+            }
+        }
+        if (CombatiumLite.swapAccuracy && lastTickDamage.containsKey(attacker)) return lastTickDamage.get(attacker);
 
-        assert player != null;
-        return Objects.requireNonNull(player.getAttribute(Attribute.ATTACK_DAMAGE)).getValue();
+        return Objects.requireNonNull(attacker.getAttribute(Attribute.ATTACK_DAMAGE)).getValue();
+    }
+
+    private static double enchantedDamage(Player attacker, float enchantedDamage) {
+        if (attacker.isRiptiding()) return enchantedDamage + attackDamage(attacker);
+        var attrib = Objects.requireNonNull(attacker.getAttribute(Attribute.ATTACK_DAMAGE));
+        attrib.addTransientModifier(new AttributeModifier(enchantedDamageBonus, enchantedDamage, AttributeModifier.Operation.ADD_NUMBER));
+        double res = attrib.getValue();
+        attrib.removeModifier(enchantedDamageBonus);
+        return res;
     }
 
     public static void setBackShots(Boolean backShots) {

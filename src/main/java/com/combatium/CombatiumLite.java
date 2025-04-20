@@ -9,6 +9,7 @@ import com.combatium.listeners.projectile.ProjectileThrowListener;
 import com.combatium.listeners.regen.EntityRegainHealthListener;
 import com.combatium.listeners.snapshot.AirSwingListener;
 import com.combatium.listeners.snapshot.KickListener;
+import com.combatium.listeners.snapshot.LiarListener;
 import com.combatium.listeners.util.*;
 import com.combatium.listeners.util.ping.AttributeChangeListener;
 import com.combatium.listeners.util.ping.JoinQuitListener;
@@ -49,6 +50,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean swordBlocking;
     public static boolean swordBlockingDisplay;
     public static boolean weakerSpamCrits;
+    public static boolean hasteFix;
     public static boolean pingImprovements;
     public static boolean swapAccuracy;
     public static boolean hitThroughTransparent;
@@ -75,6 +77,7 @@ public final class CombatiumLite extends JavaPlugin {
         swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
         swordBlockingDisplay = getConfig().getBoolean("pvp.swordBlockingDisplay", false);
         weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
+        hasteFix = getConfig().getBoolean("pvp.hasteFix", false);
         hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
         sprintFix = getConfig().getBoolean("pvp.sprintFix", false);
         combatifySupport = getConfig().getBoolean("pvp.combatifySupport", false);
@@ -107,6 +110,7 @@ public final class CombatiumLite extends JavaPlugin {
 
             PacketEvents.getAPI().getEventManager().registerListener(new AirSwingListener(), PacketListenerPriority.LOWEST);
             PacketEvents.getAPI().getEventManager().registerListener(new KickListener(), PacketListenerPriority.LOWEST);
+            PacketEvents.getAPI().getEventManager().registerListener(new LiarListener(), PacketListenerPriority.LOWEST);
             pluginManager.registerEvents(new JoinQuitListener(), this);
             PacketEvents.getAPI().getSettings()
                     .checkForUpdates(false)

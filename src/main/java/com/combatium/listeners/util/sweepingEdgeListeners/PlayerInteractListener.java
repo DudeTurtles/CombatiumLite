@@ -40,7 +40,7 @@ public class PlayerInteractListener implements Listener {
         }
 
         if (event.getAction().isLeftClick()) {
-            if (ReachUtil.isCharged(event.getPlayer(), 0.0F)) {
+            if (ReachUtil.isCharged(event.getPlayer(), 1.0F)) {
                 if (CombatiumLite.sweepOnMiss && event.getAction() == LEFT_CLICK_AIR && ReachUtil.isOverCharged(event.getPlayer(), 0.0F) &&
                         (SweepingEdgeUtil.getSweepingLevel(event.getPlayer()) > 0)) {
                     if (fixSweepOnThrow) {

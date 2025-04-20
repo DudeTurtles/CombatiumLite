@@ -14,17 +14,11 @@ public class ScheduledHit {
     Player attacker;
     LivingEntity target;
     EntityDamageEvent.DamageCause damageCause;
-    int scheduleTime;
 
-    public ScheduledHit(Player attacker, LivingEntity target, EntityDamageEvent.DamageCause damageCause, int inTicks) {
+    public ScheduledHit(Player attacker, LivingEntity target, EntityDamageEvent.DamageCause damageCause) {
         this.attacker = attacker;
         this.target = target;
         this.damageCause = damageCause;
-        this.scheduleTime = Scheduler.getCurrentTick() + inTicks;
-    }
-
-    public int getScheduleTime() {
-        return scheduleTime;
     }
 
     public void execute() {

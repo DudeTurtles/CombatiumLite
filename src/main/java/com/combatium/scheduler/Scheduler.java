@@ -67,7 +67,7 @@ public class Scheduler {
 
         //Checks if any scheduled hits should be run
         for (ScheduledHit hit : scheduledHits) {
-            if (currentTick == hit.getScheduleTime()) {
+            if (ReachUtil.isCharged(hit.attacker, -1)) {
                 hit.execute();
                 toRemove.add(hit);
             }

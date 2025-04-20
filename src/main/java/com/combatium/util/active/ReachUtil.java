@@ -32,6 +32,7 @@ public class ReachUtil {
         playerCooldowns.put(player, Scheduler.getCurrentTick());
         cooldownTime.put(player, getCooldown(player) * 2);
         if (wasMiss) playersWhoMissed.add(player);
+        else playersWhoMissed.remove(player);
     }
 
     public static double getChargePercent(Player player, float baseTime) {
@@ -40,12 +41,6 @@ public class ReachUtil {
             return 0;
         }
         return Mth.clamp(((Scheduler.getCurrentTick() - playerCooldowns.get(player)) + baseTime) / cooldownTime.get(player), 0.0F, 1.0F) * 2;
-    }
-
-    public static int earlyHit(Player player) {
-        int ticksRemaining = cooldownTime.get(player) - (Scheduler.getCurrentTick() - playerCooldowns.get(player));
-        if (((double) ticksRemaining) / ((double) cooldownTime.get(player)) <= 0.2) return ticksRemaining + 1;
-        else return 0;
     }
 
     public static boolean isOverCharged(Player player, float baseTime) {
@@ -84,6 +79,7 @@ public class ReachUtil {
     public static void removePlayer(Player player) {
         playerCooldowns.remove(player);
         cooldownTime.remove(player);
+        playersWhoMissed.remove(player);
     }
 
     //Cooldown time in ticks (3.5 | 3 | 2.5 | 2 | 1)

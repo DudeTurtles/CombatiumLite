@@ -76,9 +76,8 @@ public class EntityDamageByEntityListener implements Listener {
             } else {
                 if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod && !isCombatifyPlayer(attacker)) {
                     //Grace period for early hits
-                    int earlyTicks = ReachUtil.earlyHit(attacker);
-                    if (earlyTicks > 0) {
-                        ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, EntityDamageEvent.DamageCause.ENTITY_ATTACK, earlyTicks);
+                    if (ReachUtil.getChargePercent(attacker, 0.0F) < 1.0F && ReachUtil.getChargePercent(attacker, 1.0F) > 0.8F) {
+                        ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, EntityDamageEvent.DamageCause.ENTITY_ATTACK);
                         Scheduler.scheduleHit(scheduledHit);
                     }
                 }

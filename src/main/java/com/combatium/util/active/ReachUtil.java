@@ -31,8 +31,9 @@ public class ReachUtil {
 
         playerCooldowns.put(player, Scheduler.getCurrentTick());
         cooldownTime.put(player, getCooldown(player) * 2);
-        if (wasMiss) playersWhoMissed.add(player);
-        else playersWhoMissed.remove(player);
+        if (wasMiss) {
+            if (!playersWhoMissed.contains(player)) playersWhoMissed.add(player);
+        } else playersWhoMissed.remove(player);
     }
 
     public static double getChargePercent(Player player, float baseTime) {
@@ -48,7 +49,7 @@ public class ReachUtil {
     }
 
     public static boolean isCharged(Player player, float baseTime) {
-        if (getChargePercent(player, 1.0F) < 1.0) {
+        if (getChargePercent(player, baseTime) < 1.0) {
             if (!playerCooldowns.containsKey(player)) return false;
             return playersWhoMissed.contains(player) && (Scheduler.getCurrentTick() - playerCooldowns.get(player) + baseTime) > missTime;
         }

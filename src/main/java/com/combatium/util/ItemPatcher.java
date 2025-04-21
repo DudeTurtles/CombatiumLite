@@ -164,7 +164,7 @@ public class ItemPatcher {
             ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
             builder.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             builder.add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_CTS_ID, speed, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-            builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+            if (reach != 0) builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build().withTooltip(false));
             List<Component> lore = new ArrayList<>();
             Style commonStyle = CommonComponents.space().getStyle().withItalic(false).withColor(ChatFormatting.GRAY);
@@ -172,7 +172,7 @@ public class ItemPatcher {
             lore.add(Component.literal("When in Main Hand:").setStyle(commonStyle));
             lore.add(CommonComponents.space().append(Component.literal(format(damage + 2) + " Attack Damage").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
             lore.add(CommonComponents.space().append(Component.literal(format(speed + 2.5) + " Attack Speed").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
-            lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(reach + 2.5) + " Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
+            if (reach != 0) lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(reach + 2.5) + " Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
 
             patchedDataComponentMap.set(DataComponents.LORE, new ItemLore(lore));
         };

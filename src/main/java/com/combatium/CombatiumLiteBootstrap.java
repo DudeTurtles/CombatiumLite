@@ -1,5 +1,7 @@
 package com.combatium;
 
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -13,9 +15,11 @@ import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys;
 import io.papermc.paper.registry.set.RegistrySet;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.enchantments.Enchantment;
@@ -35,10 +39,12 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
             unsafeField.setAccessible(true);
             Unsafe unsafe = (Unsafe) unsafeField.get(null);
-            Field streamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
-            Object staticBase = unsafe.staticFieldBase(streamCodec);
-            long staticOffset = unsafe.staticFieldOffset(streamCodec);
-            StreamCodec<RegistryFriendlyByteBuf, ItemStack> original = (StreamCodec<RegistryFriendlyByteBuf, ItemStack>) streamCodec.get(null); // or use unsafe.getObject(...)
+            Field optionalStreamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
+            Object staticBase = unsafe.staticFieldBase(optionalStreamCodec);
+            long staticOffset = unsafe.staticFieldOffset(optionalStreamCodec);
+            Field streamCodec = ItemStack.class.getDeclaredField("STREAM_CODEC");
+            Field listStreamCodec = ItemStack.class.getDeclaredField("OPTIONAL_LIST_STREAM_CODEC");
+            StreamCodec<RegistryFriendlyByteBuf, ItemStack> original = (StreamCodec<RegistryFriendlyByteBuf, ItemStack>) optionalStreamCodec.get(null); // or use unsafe.getObject(...)
             CombatiumLite.logger.log(Level.INFO, "Original stream codec: " + original);
             StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = new StreamCodec<>() {
                 @Override
@@ -64,7 +70,35 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             };
 
             unsafe.putObject(staticBase, staticOffset, patched);
-            CombatiumLite.logger.log(Level.INFO, "Patched stream codec: " + streamCodec.get(null));
+
+            staticBase = unsafe.staticFieldBase(streamCodec);
+            staticOffset = unsafe.staticFieldOffset(streamCodec);
+            unsafe.putObject(staticBase, staticOffset, new StreamCodec<RegistryFriendlyByteBuf, ItemStack>() {
+                @Override
+                public ItemStack decode(RegistryFriendlyByteBuf buffer) {
+                    ItemStack itemStack = patched.decode(buffer);
+                    if (itemStack.isEmpty()) {
+                        throw new DecoderException("Empty ItemStack not allowed");
+                    } else {
+                        return itemStack;
+                    }
+                }
+
+                @Override
+                public void encode(RegistryFriendlyByteBuf buffer, ItemStack value) {
+                    if (value.isEmpty()) {
+                        throw new EncoderException("Empty ItemStack not allowed");
+                    } else {
+                        patched.encode(buffer, value);
+                    }
+                }
+            });
+
+            staticBase = unsafe.staticFieldBase(listStreamCodec);
+            staticOffset = unsafe.staticFieldOffset(listStreamCodec);
+            unsafe.putObject(staticBase, staticOffset, patched.apply(ByteBufCodecs.collection(NonNullList::createWithCapacity)));
+
+            CombatiumLite.logger.log(Level.INFO, "Patched stream codec: " + optionalStreamCodec.get(null));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

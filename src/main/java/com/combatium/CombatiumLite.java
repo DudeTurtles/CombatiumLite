@@ -134,10 +134,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new PlayerInteractListener(), this);
         pluginManager.registerEvents(new PlayerJoinListener(), this);
         pluginManager.registerEvents(new ProjectileThrowListener(), this);
-        pluginManager.registerEvents(new EntityAttackListener(), this);
         pluginManager.registerEvents(new PlayerInteractListenerFix(), this);
-        pluginManager.registerEvents(new ItemPickupListener(), this);
-        pluginManager.registerEvents(new InventoryClickListener(), this);
         pluginManager.registerEvents(new CraftItemListener(), this);
         pluginManager.registerEvents(new TickListener(new Scheduler(this, regenTickDelay)), this);
         pluginManager.registerEvents(new DispenseTridentListener(), this);

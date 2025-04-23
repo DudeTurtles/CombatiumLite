@@ -1,7 +1,3 @@
-snapshot:
-  kick_enabled: false
-  kick_message: "You are joining a <gold>Combatium</gold> server.<newline><newline>Join with 1.21.2+ vanilla or Combatify."
-
 pvp:
   # If hitting a player from behind should deal more damage
   # similar to a critical hit. Can't stack with critical hits.

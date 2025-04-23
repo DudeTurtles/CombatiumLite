@@ -18,13 +18,18 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.PatchedDataComponentMap;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.enchantment.ConditionalEffect;
@@ -44,6 +49,7 @@ import java.util.logging.Level;
 import static com.combatium.util.ItemPatcher.addAttributeTooltips;
 
 public class CombatiumLiteBootstrap implements PluginBootstrap {
+    public static final String COMBATIUM_ORIGINAL = "combatium$original_components";
     public static TypedKey<Enchantment> CLEAVING;
     static {
         try {
@@ -60,7 +66,18 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = new StreamCodec<>() {
                 @Override
                 public ItemStack decode(RegistryFriendlyByteBuf buffer) {
-                    return original.decode(buffer);
+                    ItemStack stack = original.decode(buffer);
+                    CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+                    if (customData != null && customData.contains(COMBATIUM_ORIGINAL)) {
+                        try {
+                            Tag tag = customData.copyTag().get(COMBATIUM_ORIGINAL);
+                            DataComponentPatch patch = DataComponentPatch.CODEC.parse(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), tag).getOrThrow();
+                            stack.applyComponents(patch);
+                        } catch (Throwable ignored) {
+
+                        }
+                    }
+                    return stack;
                 }
 
                 @Override
@@ -86,6 +103,10 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                         newStack.set(DataComponents.LORE, newLore);
                         newStack.set(DataComponents.ATTRIBUTE_MODIFIERS, newStack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).withTooltip(false));
                     }
+                    Tag tag = DataComponentPatch.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), stack.getComponentsPatch()).getOrThrow();
+                    CustomData customItemData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                    customItemData.update(customDataTag -> customDataTag.put(COMBATIUM_ORIGINAL, tag));
+                    newStack.set(DataComponents.CUSTOM_DATA, customItemData);
                     original.encode(buffer, newStack);
                 }
             };

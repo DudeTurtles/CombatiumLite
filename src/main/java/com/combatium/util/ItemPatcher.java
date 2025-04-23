@@ -21,6 +21,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.UseCooldown;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.craftbukkit.inventory.CraftItemMetas;
@@ -186,18 +187,19 @@ public class ItemPatcher {
                         mutableBoolean.setFalse();
                     }
 
-                    addModifierTooltip(tooltipAdder, player, attribute, modifier);
+                    addModifierTooltip(tooltipAdder, stack, player, attribute, modifier);
                 });
             }
         }
     }
 
-    private static void addModifierTooltip(Consumer<net.minecraft.network.chat.Component> tooltipAdder, @Nullable ServerPlayer player, Holder<Attribute> attribute, AttributeModifier modifier) {
+    private static void addModifierTooltip(Consumer<net.minecraft.network.chat.Component> tooltipAdder, ItemStack stack, @Nullable ServerPlayer player, Holder<Attribute> attribute, AttributeModifier modifier) {
         double amount = modifier.amount();
         boolean flag = false;
         if (player != null) {
             if (modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) {
                 amount += player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);
+                amount = EnchantmentHelper.modifyDamage(player.serverLevel(), stack, player, player.damageSources().playerAttack(player), (float) amount);
                 flag = true;
             } else if (modifier.is(ItemPatcher.BASE_ATTACK_SPEED_CTS_ID)) {
                 amount += player.getAttributeBaseValue(Attributes.ATTACK_SPEED) - 1.5;

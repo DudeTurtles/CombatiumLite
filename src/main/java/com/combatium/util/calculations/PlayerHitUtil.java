@@ -2,11 +2,15 @@ package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
 import com.combatium.util.active.ReachUtil;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -51,13 +55,13 @@ public class PlayerHitUtil {
         if (meta != null && meta.hasEnchants()) {
             ServerPlayer player = ((CraftPlayer)attacker).getHandle();
             enchantedDamage = EnchantmentHelper.modifyDamage(player.serverLevel(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
-            if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain() && !isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING)) enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
+            enchantedDamage = getImpalingDamage(player, damagedEntity, meta, enchantedDamage);
             if (enchantedDamage != 0) {
                 damage = (float) enchantedDamage(attacker, enchantedDamage);
             }
             if (meta.hasEnchant(Enchantment.SWEEPING_EDGE) && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 float sweepLevel = meta.getEnchantLevel(Enchantment.SWEEPING_EDGE);
-                return 1 + (damage * (sweepLevel / (2f * (sweepLevel + 1f))));
+                return 1 + (damage * /*player.getAttributeValue(Attributes.SWEEPING_DAMAGE_RATIO)*/(sweepLevel / (2f * (sweepLevel + 1f))));
             } else if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 return 0;
             }
@@ -116,8 +120,18 @@ public class PlayerHitUtil {
         float damage = (float) attackDamage(player.getBukkitEntity());
         ItemMeta meta = weapon.getItemMeta();
         float enchantedDamage = EnchantmentHelper.modifyDamage(player.serverLevel(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
-        if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain() && !isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING)) enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
+        enchantedDamage = getImpalingDamage(player, damagedEntity, meta, enchantedDamage);
         return enchantedDamage != 0;
+    }
+
+    private static float getImpalingDamage(ServerPlayer player, Entity damagedEntity, ItemMeta meta, float enchantedDamage) {
+        Holder.Reference<net.minecraft.world.item.enchantment.Enchantment> impaling = player.serverLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(ResourceLocation.withDefaultNamespace("impaling")).orElse(null);
+        if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain() && (impaling == null || impaling.value()
+                .getEffects(EnchantmentEffectComponents.DAMAGE).stream().noneMatch(conditionalEffect -> {
+                    LootContext context = net.minecraft.world.item.enchantment.Enchantment.damageContext(player.serverLevel(), meta.getEnchantLevel(Enchantment.IMPALING), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player));
+                    return conditionalEffect.matches(context);
+                }))) enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
+        return enchantedDamage;
     }
 
     public static boolean wasBackShots(Player attacker, Entity damagedEntity) {

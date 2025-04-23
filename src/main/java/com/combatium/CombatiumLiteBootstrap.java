@@ -72,7 +72,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                         try {
                             Tag tag = customData.copyTag().get(COMBATIUM_ORIGINAL);
                             DataComponentPatch patch = DataComponentPatch.CODEC.parse(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), tag).getOrThrow();
-                            stack.applyComponents(patch);
+                            if (stack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) patchedDataComponentMap.restorePatch(patch);
                         } catch (Throwable ignored) {
 
                         }
@@ -105,8 +105,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                     }
                     Tag tag = DataComponentPatch.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), stack.getComponentsPatch()).getOrThrow();
                     CustomData customItemData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-                    customItemData.update(customDataTag -> customDataTag.put(COMBATIUM_ORIGINAL, tag));
-                    newStack.set(DataComponents.CUSTOM_DATA, customItemData);
+                    newStack.set(DataComponents.CUSTOM_DATA, customItemData.update(customDataTag -> customDataTag.put(COMBATIUM_ORIGINAL, tag)));
                     original.encode(buffer, newStack);
                 }
             };

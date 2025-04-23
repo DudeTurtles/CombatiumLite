@@ -136,7 +136,7 @@ public class ReachUtil {
     }
 
     public static void rateLimit(Player player) {
-        rateLimit.put(player, Scheduler.getCurrentTick() + rateLimitTicks);
+        rateLimit.put(player, Scheduler.getCurrentTick() + Math.min(rateLimitTicks, getCooldown(player)));
     }
 
     public static void setRateLimitTicks(int ticks) {

@@ -1,14 +1,11 @@
 package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
-import com.destroystokyo.paper.MaterialSetTag;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import javax.annotation.Nullable;
 
 import static org.bukkit.Sound.ITEM_SHIELD_BREAK;
 
@@ -28,7 +25,7 @@ public class DisableShieldUtil {
 
     public static int getCleavingLevel(ItemStack weapon) {
         for (Enchantment enchantment : weapon.getEnchantments().keySet()) {
-            if (enchantment.toString().contains("cleaving")) {
+            if (enchantment.getKey().equals(NamespacedKey.minecraft("cleaving"))) {
                 return weapon.getEnchantmentLevel(enchantment);
             }
         }

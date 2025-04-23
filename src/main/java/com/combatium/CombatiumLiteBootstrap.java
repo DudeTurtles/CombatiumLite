@@ -8,6 +8,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
 import io.papermc.paper.registry.data.EnchantmentRegistryEntry;
+import io.papermc.paper.registry.data.PaperEnchantmentRegistryEntry;
 import io.papermc.paper.registry.event.RegistryEvents;
 import io.papermc.paper.registry.keys.EnchantmentKeys;
 import io.papermc.paper.registry.keys.tags.EnchantmentTagKeys;
@@ -17,20 +18,30 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.enchantment.ConditionalEffect;
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
+import net.minecraft.world.item.enchantment.LevelBasedValue;
+import net.minecraft.world.item.enchantment.effects.AddValue;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
+
+import static com.combatium.util.ItemPatcher.addAttributeTooltips;
 
 public class CombatiumLiteBootstrap implements PluginBootstrap {
     public static TypedKey<Enchantment> CLEAVING;
@@ -64,6 +75,19 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                             }
                             stack = newStack;
                         }
+                    }
+                    ServerPlayer player = Bukkit.getOnlinePlayers().stream().findFirst().map(bukkit -> ((CraftPlayer)bukkit).getHandle()).orElse(null);
+                    ItemLore originalLore = stack.getOrDefault(DataComponents.LORE, ItemLore.EMPTY);
+                    List<net.minecraft.network.chat.Component> lines = new ArrayList<>();
+                    List<net.minecraft.network.chat.Component> styledLines = originalLore.styledLines();
+                    addAttributeTooltips(lines::add, stack, player);
+                    lines.addAll(originalLore.lines());
+                    ItemLore newLore = new ItemLore(lines, styledLines);
+                    if (!newLore.equals(originalLore)) {
+                        ItemStack newStack = stack.copy();
+                        newStack.set(DataComponents.LORE, newLore);
+                        newStack.set(DataComponents.ATTRIBUTE_MODIFIERS, newStack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).withTooltip(false));
+                        stack = newStack;
                     }
                     original.encode(buffer, stack);
                 }
@@ -109,10 +133,10 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         CLEAVING = EnchantmentKeys.create(Key.key("cleaving"));
 
         var lifecycleManager = context.getLifecycleManager();
-        lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.freeze().newHandler(event -> {
-            event.registry().register(
-                    CLEAVING,
-                    b -> b.description(Component.text("Cleaving"))
+        lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.freeze().newHandler(event -> event.registry().register(
+                CLEAVING,
+                b -> {
+                    b.description(Component.translatable("enchantment.minecraft.cleaving", "Cleaving"))
                             .primaryItems(event.getOrCreateTag(ItemTypeTagKeys.AXES))
                             .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.AXES))
                             .anvilCost(4)
@@ -122,14 +146,23 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                                     RegistryKey.ENCHANTMENT,
                                     EnchantmentKeys.SHARPNESS,
                                     EnchantmentKeys.BANE_OF_ARTHROPODS,
-                                    EnchantmentKeys.SMITE)
+                                    EnchantmentKeys.SMITE,
+                                    EnchantmentKeys.IMPALING)
                             )
                             .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(1, 11))
                             .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(12, 11))
-                            .activeSlots(EquipmentSlotGroup.HAND)
-            );
-
-        }));
+                            .activeSlots(EquipmentSlotGroup.HAND);
+                    try {
+                        Field effects = PaperEnchantmentRegistryEntry.class.getDeclaredField("effects");
+                        effects.setAccessible(true);
+                        PatchedDataComponentMap patchedEffects = new PatchedDataComponentMap((DataComponentMap) effects.get(b));
+                        patchedEffects.set(EnchantmentEffectComponents.DAMAGE, Collections.singletonList(new ConditionalEffect<>(new AddValue(LevelBasedValue.perLevel(2, 1)), Optional.empty())));
+                        effects.set(b, patchedEffects);
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        CombatiumLite.logger.log(Level.SEVERE, "Failed to set effects! Exception: " + e, e);
+                    }
+                }
+        )));
 
         Set<TypedKey<Enchantment>> singleton = Collections.singleton(CLEAVING);
         lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.postFlatten(RegistryKey.ENCHANTMENT), event -> {

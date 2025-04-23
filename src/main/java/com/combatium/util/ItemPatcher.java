@@ -2,15 +2,17 @@ package com.combatium.util;
 
 import com.google.common.base.Suppliers;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
@@ -18,17 +20,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.UseCooldown;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.commons.lang3.function.TriFunction;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.craftbukkit.inventory.CraftItemMetas;
 import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -165,16 +166,7 @@ public class ItemPatcher {
             builder.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             builder.add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_CTS_ID, speed, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             if (reach != 0) builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-            patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build().withTooltip(false));
-            List<Component> lore = new ArrayList<>();
-            Style commonStyle = CommonComponents.space().getStyle().withItalic(false).withColor(ChatFormatting.GRAY);
-            lore.add(CommonComponents.space());
-            lore.add(Component.literal("When in Main Hand:").setStyle(commonStyle));
-            lore.add(CommonComponents.space().append(Component.literal(format(damage + 2) + " Attack Damage").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
-            lore.add(CommonComponents.space().append(Component.literal(format(speed + 2.5) + " Attack Speed").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
-            if (reach != 0) lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(reach + 2.5) + " Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
-
-            patchedDataComponentMap.set(DataComponents.LORE, new ItemLore(lore));
+            patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build());
         };
     }
     public static Consumer<PatchedDataComponentMap> size(int stackSize) {
@@ -183,8 +175,85 @@ public class ItemPatcher {
     public static Consumer<PatchedDataComponentMap> cooldown(float seconds) {
         return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.USE_COOLDOWN, new UseCooldown(seconds));
     }
-    private static String format(double value) {
-        DecimalFormat df = new DecimalFormat("0.#");
-        return df.format(value);
+    public static void addAttributeTooltips(Consumer<net.minecraft.network.chat.Component> tooltipAdder, ItemStack stack, @Nullable ServerPlayer player) {
+        ItemAttributeModifiers itemAttributeModifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+        if (itemAttributeModifiers.showInTooltip()) {
+            for (net.minecraft.world.entity.EquipmentSlotGroup equipmentSlotGroup : net.minecraft.world.entity.EquipmentSlotGroup.values()) {
+                MutableBoolean mutableBoolean = new MutableBoolean(true);
+                stack.forEachModifier(equipmentSlotGroup, (attribute, modifier) -> {
+                    if (mutableBoolean.isTrue()) {
+                        tooltipAdder.accept(CommonComponents.EMPTY);
+                        tooltipAdder.accept(net.minecraft.network.chat.Component.translatable("item.modifiers." + equipmentSlotGroup.getSerializedName()).withStyle(ChatFormatting.GRAY).withStyle(Style.EMPTY.withItalic(false)));
+                        mutableBoolean.setFalse();
+                    }
+
+                    addModifierTooltip(tooltipAdder, stack, player, attribute, modifier);
+                });
+            }
+        }
+    }
+
+    private static void addModifierTooltip(Consumer<net.minecraft.network.chat.Component> tooltipAdder, ItemStack stack, @Nullable ServerPlayer player, Holder<Attribute> attribute, AttributeModifier modifier) {
+        double amount = modifier.amount();
+        boolean flag = false;
+        if (player != null) {
+            if (modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) {
+                amount += player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);
+                amount = EnchantmentHelper.modifyDamage(player.serverLevel(), stack, player, player.damageSources().playerAttack(player), (float) amount);
+                flag = true;
+            } else if (modifier.is(ItemPatcher.BASE_ATTACK_SPEED_CTS_ID)) {
+                amount += player.getAttributeBaseValue(Attributes.ATTACK_SPEED) - 1.5;
+                flag = true;
+            } else if (modifier.is(ItemPatcher.BASE_ATTACK_REACH_ID)) {
+                amount += player.getAttributeBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
+                flag = true;
+            }
+        }
+
+        double d;
+        if (modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE || modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
+            d = amount * 100.0;
+        } else if (attribute.is(Attributes.KNOCKBACK_RESISTANCE)) {
+            d = amount * 10.0;
+        } else {
+            d = amount;
+        }
+        net.minecraft.network.chat.Component attributeComponent = net.minecraft.network.chat.Component.translatable(attribute.value().getDescriptionId());
+        if (attribute.is(Attributes.ENTITY_INTERACTION_RANGE)) attributeComponent = net.minecraft.network.chat.Component.translatableWithFallback("attribute.name.attack_reach", "Attack Reach");
+
+        if (flag) {
+            tooltipAdder.accept(
+                    CommonComponents.space()
+                            .append(
+                                    net.minecraft.network.chat.Component.translatable(
+                                            "attribute.modifier.equals." + modifier.operation().id(),
+                                            ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(d),
+                                            attributeComponent
+                                    )
+                            )
+                            .withStyle(ChatFormatting.DARK_GREEN)
+                            .withStyle(Style.EMPTY.withItalic(false))
+            );
+        } else if (amount > 0.0) {
+            tooltipAdder.accept(
+                    net.minecraft.network.chat.Component.translatable(
+                                    "attribute.modifier.plus." + modifier.operation().id(),
+                                    ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(d),
+                                    attributeComponent
+                            )
+                            .withStyle(attribute.value().getStyle(true))
+                            .withStyle(Style.EMPTY.withItalic(false))
+            );
+        } else if (amount < 0.0) {
+            tooltipAdder.accept(
+                    net.minecraft.network.chat.Component.translatable(
+                                    "attribute.modifier.take." + modifier.operation().id(),
+                                    ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(-d),
+                                    net.minecraft.network.chat.Component.translatable(attribute.value().getDescriptionId())
+                            )
+                            .withStyle(attribute.value().getStyle(false))
+                            .withStyle(Style.EMPTY.withItalic(false))
+            );
+        }
     }
 }

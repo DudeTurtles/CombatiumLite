@@ -5,7 +5,6 @@ import com.combatium.util.active.KnockbackUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;

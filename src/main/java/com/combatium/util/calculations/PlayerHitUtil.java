@@ -46,6 +46,7 @@ public class PlayerHitUtil {
 
         ItemMeta meta = weapon.getItemMeta();
         if (meta != null && meta.hasEnchants()) {
+            // TODO: Don't hardcode this
             if (meta.hasEnchant(Enchantment.SHARPNESS)) {
                 enchantedDamage += ((meta.getEnchantLevel(Enchantment.SHARPNESS) / 2.0f) + 0.5f);
             }

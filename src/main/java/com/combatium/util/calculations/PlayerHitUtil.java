@@ -2,15 +2,18 @@ package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
 import com.combatium.util.active.ReachUtil;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftEntityType;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -42,27 +45,14 @@ public class PlayerHitUtil {
 
     public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, double blockAmount, EntityDamageEvent.DamageCause damageCause) {
         float damage = (float) attackDamage(attacker);
-        float enchantedDamage = 0;
+        float enchantedDamage;
 
         ItemMeta meta = weapon.getItemMeta();
         if (meta != null && meta.hasEnchants()) {
-            // TODO: Don't hardcode this
-            if (meta.hasEnchant(Enchantment.SHARPNESS)) {
-                enchantedDamage += ((meta.getEnchantLevel(Enchantment.SHARPNESS) / 2.0f) + 0.5f);
-            }
-            if (meta.hasEnchant(Enchantment.IMPALING) && (damagedEntity.isInWaterOrRain() || isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING))) {
-                enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
-            }
-            if (DisableShieldUtil.getCleavingLevel(weapon) > 0) {
-                enchantedDamage += 1 + DisableShieldUtil.getCleavingLevel(weapon);
-            }
-            if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS)) {
-                enchantedDamage += (2.5f * meta.getEnchantLevel(Enchantment.BANE_OF_ARTHROPODS));
-            }
-            if (meta.hasEnchant(Enchantment.SMITE) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_SMITE)) {
-                enchantedDamage += (2.5f * meta.getEnchantLevel(Enchantment.SMITE));
-            }
-            if (enchantedDamage > 0) {
+            ServerPlayer player = ((CraftPlayer)attacker).getHandle();
+            enchantedDamage = EnchantmentHelper.modifyDamage(player.serverLevel(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
+            if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain() && !isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING)) enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
+            if (enchantedDamage != 0) {
                 damage = (float) enchantedDamage(attacker, enchantedDamage);
             }
             if (meta.hasEnchant(Enchantment.SWEEPING_EDGE) && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
@@ -121,13 +111,13 @@ public class PlayerHitUtil {
         return (float) (rawDamage * armorPassPercent * protPassPercent * potionPassPercent);
     }
 
-    public static boolean dealsEnchantDamage(ItemStack weapon, Entity damagedEntity) {
+    public static boolean dealsEnchantDamage(ItemStack weapon, ServerPlayer player, Entity damagedEntity) {
         if (!(weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchants())) return false;
+        float damage = (float) attackDamage(player.getBukkitEntity());
         ItemMeta meta = weapon.getItemMeta();
-        if (meta.hasEnchant(Enchantment.SHARPNESS)) return true;
-        if (meta.hasEnchant(Enchantment.IMPALING) && (damagedEntity.isInWaterOrRain() || isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING))) return true;
-        if (meta.hasEnchant(Enchantment.BANE_OF_ARTHROPODS) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS)) return true;
-        return meta.hasEnchant(Enchantment.SMITE) && isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_SMITE);
+        float enchantedDamage = EnchantmentHelper.modifyDamage(player.serverLevel(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
+        if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain() && !isEntityInTag(damagedEntity, EntityTypeTags.SENSITIVE_TO_IMPALING)) enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
+        return enchantedDamage != 0;
     }
 
     public static boolean wasBackShots(Player attacker, Entity damagedEntity) {

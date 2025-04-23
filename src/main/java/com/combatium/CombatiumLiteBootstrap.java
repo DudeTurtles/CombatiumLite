@@ -65,31 +65,28 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
 
                 @Override
                 public void encode(RegistryFriendlyByteBuf buffer, ItemStack stack) {
+                    ItemStack newStack = stack.copy();
                     if (!stack.isEmpty()) {
                         DataComponentMap prototype = stack.getPrototype();
                         if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
-                            ItemStack newStack = stack.copy();
                             if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
                                 patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
                                 patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
                             }
-                            stack = newStack;
                         }
                     }
                     ServerPlayer player = Bukkit.getOnlinePlayers().stream().findFirst().map(bukkit -> ((CraftPlayer)bukkit).getHandle()).orElse(null);
-                    ItemLore originalLore = stack.getOrDefault(DataComponents.LORE, ItemLore.EMPTY);
+                    ItemLore originalLore = newStack.getOrDefault(DataComponents.LORE, ItemLore.EMPTY);
                     List<net.minecraft.network.chat.Component> lines = new ArrayList<>();
                     List<net.minecraft.network.chat.Component> styledLines = originalLore.styledLines();
-                    addAttributeTooltips(lines::add, stack, player);
+                    addAttributeTooltips(lines::add, newStack, player);
                     lines.addAll(originalLore.lines());
                     ItemLore newLore = new ItemLore(lines, styledLines);
                     if (!newLore.equals(originalLore)) {
-                        ItemStack newStack = stack.copy();
                         newStack.set(DataComponents.LORE, newLore);
                         newStack.set(DataComponents.ATTRIBUTE_MODIFIERS, newStack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).withTooltip(false));
-                        stack = newStack;
                     }
-                    original.encode(buffer, stack);
+                    original.encode(buffer, newStack);
                 }
             };
 

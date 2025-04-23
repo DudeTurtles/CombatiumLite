@@ -129,7 +129,7 @@ public class PlayerDamageEntity {
             else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
         }
 
-        if (dealsEnchantDamage(weapon, entity)) nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 5));
+        if (dealsEnchantDamage(weapon, nmsPlayer, entity)) nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 5));
 
         if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 

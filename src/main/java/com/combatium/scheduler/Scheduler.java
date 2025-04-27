@@ -82,33 +82,31 @@ public class Scheduler {
         if (regenTick == regenTickDelay) {
             regenTick = 0;
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION))) continue;
-                if (player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() &&
-                        player.getFoodLevel() > 7 && player.getHealth() > 0) {
-                    if (player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() - 1) {
-                        player.setHealth(player.getHealth() + 1);
-                    } else {
-                        player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue());
-                    }
-                    if (random.nextBoolean()) {
-                        FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1);
-                        Bukkit.getPluginManager().callEvent(event);
-                        if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
-                    }
+                if (Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION)) ||
+                        !(player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() &&
+                                player.getFoodLevel() > 7 && player.getHealth() > 0)) continue;
+
+                if (player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() - 1) {
+                    player.setHealth(player.getHealth() + 1);
+                } else {
+                    player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue());
                 }
+
+                if (!random.nextBoolean()) continue;
+                FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1);
+                Bukkit.getPluginManager().callEvent(event);
+                if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
+
             }
         } else {
             regenTick++;
         }
 
         //Check for players using sword block
-        if (CombatiumLite.swordBlockingDisplay) {
-            if (CombatiumLite.swordBlocking) {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (isSword(player.getActiveItem().getType()))
-                        player.sendActionBar(Component.text("Blocking").color(NamedTextColor.GREEN));
-                    else player.sendActionBar(Component.text(""));
-                }
+        if (CombatiumLite.swordBlockingDisplay && CombatiumLite.swordBlocking) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (isSword(player.getActiveItem().getType())) player.sendActionBar(Component.text("Blocking").color(NamedTextColor.GREEN));
+                else player.sendActionBar(Component.text(""));
             }
         }
 

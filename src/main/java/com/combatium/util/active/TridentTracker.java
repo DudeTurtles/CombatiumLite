@@ -17,11 +17,10 @@ public class TridentTracker {
                 trident.getShooter() instanceof BlockProjectileSource || trident.hasDealtDamage()));
 
         for (Trident trident : tridents) {
-            if (trident.getLocation().getY() <= trident.getWorld().getMinHeight()) {
-                trident.setVelocity(trident.getVelocity().multiply(0));
-                trident.setGravity(false);
-                trident.setHasDealtDamage(true);
-            }
+            if (trident.getLocation().getY() > trident.getWorld().getMinHeight()) continue;
+            trident.setVelocity(trident.getVelocity().multiply(0));
+            trident.setGravity(false);
+            trident.setHasDealtDamage(true);
         }
     }
 

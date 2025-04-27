@@ -153,11 +153,6 @@ public class PlayerDamageEntity {
             entity.setFireTicks(fireProt > 7 ? 0 : (int) ((80 * weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT) * (1 - (0.15 * fireProt)))));
         }
 
-        int haste = 0;
-        if (player.hasPotionEffect(PotionEffectType.HASTE)) {
-            haste = Objects.requireNonNull(player.getPotionEffect(PotionEffectType.HASTE)).getAmplifier();
-        }
-
         /*
          * Set cooldown at the end to ensure things like full charge checks function properly. Trust me, I know it's a little
          * stupid, but it works. Since weapon swapping uses the cooldown of the weapon you swapped from, this is necessary to

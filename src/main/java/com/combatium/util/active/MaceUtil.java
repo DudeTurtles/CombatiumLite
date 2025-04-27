@@ -23,15 +23,13 @@ public class MaceUtil {
             attacker.getWorld().playSound(attacker, Sound.ITEM_MACE_SMASH_AIR, SoundCategory.PLAYERS, 1.0f, 1.0f);
         }
 
-        target.getNearbyEntities(3.5, 3.5, 3.5).forEach(entity -> {
-            if (entity instanceof LivingEntity le) {
-                Vector direction = entity.getLocation().subtract(target.getLocation()).toVector();
-                double d = getKnockback(attacker, le, direction);
-                Vector vector = direction.normalize().multiply(d);
-                if (d > 0) {
-                    vector.setY(0.7f);
-                    le.setVelocity(le.getVelocity().add(vector));
-                }
+        target.getLocation().getNearbyLivingEntities(3.5, 3.5, 3.5).forEach(entity -> {
+            Vector direction = entity.getLocation().subtract(target.getLocation()).toVector();
+            double d = getKnockback(attacker, entity, direction);
+            Vector vector = direction.normalize().multiply(d);
+            if (d > 0) {
+                vector.setY(0.7f);
+                entity.setVelocity(entity.getVelocity().add(vector));
             }
         });
 

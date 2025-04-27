@@ -21,14 +21,11 @@ public class SweepingEdgeUtil {
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying()) return;
 
         addParticle(player);
+        DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withDamageLocation(player.getLocation()).withDirectEntity(player).build();
 
         if (hit != null) {
-            //Damage value doesn't matter since it will be recalculated later
-            DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withDamageLocation(player.getLocation()).withDirectEntity(player).build();
-
-            hit.getNearbyEntities(1, 0.25, 1).stream()
-                    .filter(entity -> entity instanceof LivingEntity && entity != player)
-                    .map(entity -> (LivingEntity) entity)
+            hit.getLocation().getNearbyLivingEntities(1, 0.25, 1).stream()
+                    .filter(entity -> entity != player)
                     .forEach(entity -> {
                         EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(player, entity, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, damageSource, 2);
                         Bukkit.getServer().getPluginManager().callEvent(event);
@@ -45,7 +42,6 @@ public class SweepingEdgeUtil {
                 entities.add((LivingEntity) entity);
             }
 
-            DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withDamageLocation(player.getLocation()).withDirectEntity(player).build();
             for (LivingEntity entity : entities) {
                 EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(player, entity, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, damageSource, 2);
                 Bukkit.getServer().getPluginManager().callEvent(event);

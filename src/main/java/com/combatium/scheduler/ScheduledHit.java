@@ -11,9 +11,9 @@ import static com.combatium.util.active.ReachUtil.resetCooldown;
 import static com.combatium.util.calculations.ValidHitChecks.isValidHit;
 
 public class ScheduledHit {
-    Player attacker;
-    LivingEntity target;
-    EntityDamageEvent.DamageCause damageCause;
+    public Player attacker;
+    public LivingEntity target;
+    public EntityDamageEvent.DamageCause damageCause;
 
     public ScheduledHit(Player attacker, LivingEntity target, EntityDamageEvent.DamageCause damageCause) {
         this.attacker = attacker;

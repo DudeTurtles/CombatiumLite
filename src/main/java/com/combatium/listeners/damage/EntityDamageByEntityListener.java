@@ -33,25 +33,19 @@ public class EntityDamageByEntityListener implements Listener {
          * Magic damage is only changed when dealing with arrows, which is handled elsewhere
          * Ensure event is cancellable
          */
-        if (event.getDamageSource().getDamageType() == DamageType.GENERIC_KILL || event.getDamageSource().getDamageType() == DamageType.INDIRECT_MAGIC || event.getDamageSource().getDamageType() == DamageType.THORNS || event.isCancelled()) {
+        DamageType damageType = event.getDamageSource().getDamageType();
+        if (damageType == DamageType.GENERIC_KILL || damageType == DamageType.INDIRECT_MAGIC || damageType == DamageType.THORNS || event.isCancelled()) {
             return;
         }
 
         if (event.getDamager() instanceof Player attacker && event.getEntity() instanceof LivingEntity victim) {
             if (hasProcessed(attacker)) {
-                if (victim instanceof Player) {
-                    if (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0) {
-                        event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
-                        event.setDamage(getFinalDamage(victim, (float) event.getDamage(), attacker.getInventory().getItemInMainHand()));
-                        if (victim.getAbsorptionAmount() > 0) {
-                            if (victim.getAbsorptionAmount() > event.getDamage()) {
-                                event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, event.getDamage() * (-1));
-                                victim.setAbsorptionAmount(victim.getAbsorptionAmount() - event.getDamage());
-                            } else {
-                                event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, victim.getAbsorptionAmount() * (-1));
-                                victim.setAbsorptionAmount(0);
-                            }
-                        }
+                if (victim instanceof Player && (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0)) {
+                    event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
+                    event.setDamage(getFinalDamage(victim, (float) event.getDamage(), attacker.getInventory().getItemInMainHand()));
+                    if (victim.getAbsorptionAmount() > 0) {
+                        event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, Math.min(victim.getAbsorptionAmount(), event.getDamage()));
+                        victim.setAbsorptionAmount(Math.max(0, victim.getAbsorptionAmount() - event.getDamage(EntityDamageEvent.DamageModifier.ABSORPTION)));
                     }
                 }
                 hasProcessed.put(attacker, false);

@@ -16,40 +16,41 @@ import static java.lang.Double.min;
 
 public class KnockbackUtil {
     public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, double knockbackReduction, boolean checkVertical) {
-        if (entity instanceof Player p && (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR)) return;
+        if (entity instanceof Player p && (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR))
+            return;
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
         knockbackRes = min(1.0, knockbackRes + (isBlocked ? knockbackReduction : 0.0));
         Entity nmsEntity = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) entity).getHandle();
 
         strength *= 1.0 - knockbackRes;
-        if (strength > 0.0F) {
-            try {
-                Vector delta = entity.getVelocity();
-                Vector diff = (new Vector(x, 0.0, z)).normalize().multiply(strength);
+        if (strength <= 0.0F) return;
+        try {
+            Vector delta = entity.getVelocity();
+            Vector diff = (new Vector(x, 0.0, z)).normalize().multiply(strength);
 
-                double vertical = delta.getY();
-                boolean onGround = entity.isOnGround();
+            double vertical = delta.getY();
+            boolean onGround = entity.isOnGround();
 
-                if (entity instanceof Player && CombatiumLite.pingImprovements) {
-                    PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
-                    if (playerPingData != null) onGround = playerPingData.isOnGround(entity.getVelocity().getY());
-                }
-
-                Vector velocity = new Vector(delta.getX() / 2.0 - diff.getX(), (onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, vertical + (strength * 0.5)))), delta.getZ() / 2.0 - diff.getZ());
-                nmsEntity.hasImpulse = true;
-                entity.setVelocity(velocity);
-            } catch (Exception e) {
-                logger.warning("=== Please Report This to the Developer ===");
-                logger.warning("Error applying knockback to entity: " + entity.getName());
-                logger.warning("Strength: " + strength);
-                logger.warning("X: " + x);
-                logger.warning("Z: " + z);
-                logger.warning("diff-X: " + (new Vector(x, 0.0, z)).normalize().multiply(strength).getX());
-                logger.warning("diff-Z: " + (new Vector(x, 0.0, z)).normalize().multiply(strength).getZ());
-                logger.warning("Entity Velocity: " + entity.getVelocity());
-                logger.warning("Knockback Resistance: " + knockbackRes);
-                logger.warning("===========================================");
+            if (entity instanceof Player && CombatiumLite.pingImprovements) {
+                PlayerPingData playerPingData = PingManager.getPlayerData(entity.getUniqueId());
+                if (playerPingData != null) onGround = playerPingData.isOnGround(entity.getVelocity().getY());
             }
+
+            Vector velocity = new Vector(delta.getX() / 2.0 - diff.getX(), (onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, vertical + (strength * 0.5)))), delta.getZ() / 2.0 - diff.getZ());
+            nmsEntity.hasImpulse = true;
+            entity.setVelocity(velocity);
+        } catch (Exception e) {
+            logger.warning("=== Please Report This to the Developer ===");
+            logger.warning("Error applying knockback to entity: " + entity.getName());
+            logger.warning("Strength: " + strength);
+            logger.warning("X: " + x);
+            logger.warning("Z: " + z);
+            logger.warning("diff-X: " + (new Vector(x, 0.0, z)).normalize().multiply(strength).getX());
+            logger.warning("diff-Z: " + (new Vector(x, 0.0, z)).normalize().multiply(strength).getZ());
+            logger.warning("Entity Velocity: " + entity.getVelocity());
+            logger.warning("Knockback Resistance: " + knockbackRes);
+            logger.warning("===========================================");
         }
+
     }
 }

@@ -15,7 +15,9 @@ import com.combatium.listeners.util.ping.JoinQuitListener;
 import com.combatium.listeners.util.ping.PingReceiveListener;
 import com.combatium.listeners.util.sweepingEdgeListeners.ItemDropListener;
 import com.combatium.listeners.util.sweepingEdgeListeners.PlayerInteractListener;
+import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.scheduler.Scheduler;
+import com.combatium.util.ItemPatcher;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
 import com.combatium.util.ping.PingRunnable;
@@ -31,8 +33,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import java.util.logging.Logger;
-
-import static com.combatium.util.ItemPatcher.patch;
 
 @SuppressWarnings("unused")
 public final class CombatiumLite extends JavaPlugin {
@@ -60,12 +60,13 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean sprintFix;
     public static boolean combatifySupport;
     BukkitTask pingTask;
+    public Scheduler scheduler;
+    private ReachUtil reachUtil;
 
     @Override
     public void onEnable() {
         INSTANCE = this;
         pluginManager = getServer().getPluginManager();
-        logger = getLogger();
         MobEffects.DAMAGE_BOOST.value().addAttributeModifier(Attributes.ATTACK_DAMAGE,
                 ResourceLocation.withDefaultNamespace("effect.strength"),
                 0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
@@ -73,6 +74,7 @@ public final class CombatiumLite extends JavaPlugin {
                 ResourceLocation.withDefaultNamespace("effect.weakness"),
                 -0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 
+        this.reachUtil = new ReachUtil();
         //Check for config options
         saveDefaultConfig();
         backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
@@ -94,11 +96,11 @@ public final class CombatiumLite extends JavaPlugin {
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
         fixSweepOnThrow = getConfig().getBoolean("pvp.fixSweepOnThrow", true);
         shieldProtectionArc = getConfig().getDouble("pvp.shieldProtectionArc", 130);
-        ReachUtil.setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
-        ReachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
+        getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
+        reachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
 
-        patch();
+        ItemPatcher.patch();
         printConfig();
 
         if (pingImprovements) {
@@ -123,6 +125,9 @@ public final class CombatiumLite extends JavaPlugin {
 
         PlayerHitUtil.setBackShots(backShotsPlus);
 
+        this.scheduler = new Scheduler(this, regenTickDelay);
+        this.scheduler.register(new InvulnerabilityScheduler(this.scheduler));
+
         pluginManager.registerEvents(new EntityDamageByEntityListener(), this);
         pluginManager.registerEvents(new EntityDamageListener(), this);
         pluginManager.registerEvents(new ProjectileHitListener(), this);
@@ -134,7 +139,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new ProjectileThrowListener(), this);
         pluginManager.registerEvents(new PlayerInteractListenerFix(), this);
         pluginManager.registerEvents(new CraftItemListener(), this);
-        pluginManager.registerEvents(new TickListener(new Scheduler(this, regenTickDelay)), this);
+        pluginManager.registerEvents(new TickListener(this.scheduler), this);
         pluginManager.registerEvents(new DispenseTridentListener(), this);
         pluginManager.registerEvents(new AnimationListener(), this);
         pluginManager.registerEvents(new KnockbackListener(), this);
@@ -157,7 +162,7 @@ public final class CombatiumLite extends JavaPlugin {
         getServer().getMessenger().unregisterIncomingPluginChannel(this);
     }
 
-    private static void printConfig() {
+    private void printConfig() {
         logger.log(java.util.logging.Level.INFO, "=== CombatiumLite Config ===");
         logger.log(java.util.logging.Level.INFO, "Back Shots Plus: " + backShotsPlus);
         logger.log(java.util.logging.Level.INFO, "Sword Blocking: " + swordBlocking);
@@ -180,5 +185,17 @@ public final class CombatiumLite extends JavaPlugin {
 
     public static CombatiumLite getInstance() {
         return INSTANCE;
+    }
+
+    public static Scheduler getScheduler() {
+        return getInstance().scheduler;
+    }
+
+    public static Logger getPluginLogger() {
+        return logger;
+    }
+
+    public static ReachUtil getReachUtil() {
+        return getInstance().reachUtil;
     }
 }

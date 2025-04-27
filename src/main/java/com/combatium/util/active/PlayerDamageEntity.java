@@ -2,7 +2,6 @@ package com.combatium.util.active;
 
 import com.combatium.CombatiumLite;
 import com.combatium.listeners.util.AnimationListener;
-import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.util.calculations.DisableShieldUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
 import com.destroystokyo.paper.MaterialSetTag;
@@ -25,16 +24,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.potion.PotionEffectType;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-
-import static com.combatium.CombatiumLite.*;
-import static com.combatium.util.active.MaceUtil.macePostHit;
-import static com.combatium.util.active.ReachUtil.resetCooldown;
-import static com.combatium.util.calculations.PlayerHitUtil.*;
-import static org.bukkit.Sound.ENTITY_PLAYER_ATTACK_CRIT;
 
 public class PlayerDamageEntity {
     private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
@@ -50,8 +41,8 @@ public class PlayerDamageEntity {
             try {
                 weapon.damage(1, entity);
             } catch (Exception ignored) {
-                logger.warning("Failed to damage weapon");
-                logger.warning("Error Message: " + ignored.getMessage());
+                CombatiumLite.getPluginLogger().warning("Failed to damage weapon");
+                CombatiumLite.getPluginLogger().warning("Error Message: " + ignored.getMessage());
             }
         }
 
@@ -64,7 +55,7 @@ public class PlayerDamageEntity {
         double blockAngle = 0;
 
         if (entity instanceof Player p && p.isBlocking()) {
-            double angle = getAngle(player, entity);
+            double angle = PlayerHitUtil.getAngle(player, entity);
             ItemStack shield = p.getActiveItem();
 
             if (shield != null && shield.getItemMeta() != null) {
@@ -88,7 +79,7 @@ public class PlayerDamageEntity {
             DisableShieldUtil.disableShield((Player) entity, weapon);
         }
 
-        double invulnerableDamage = InvulnerabilityScheduler.isInvulnerable(entity);
+        double invulnerableDamage = CombatiumLite.getScheduler().getInvulnerabilityScheduler().isInvulnerable(entity);
         float originalDamage = damage;
         boolean cancelKB = false;
         damage -= (float) invulnerableDamage;
@@ -96,7 +87,7 @@ public class PlayerDamageEntity {
 
         float finalDamage = PlayerHitUtil.getFinalDamage(entity, damage, weapon);
 
-        if (weapon.getType() == Material.MACE) cancelKB = macePostHit(weapon, player.getFallDistance(), player, entity);
+        if (weapon.getType() == Material.MACE) cancelKB = MaceUtil.macePostHit(weapon, player.getFallDistance(), player, entity);
 
         double strength;
         //Apply Knockback
@@ -120,7 +111,7 @@ public class PlayerDamageEntity {
 
         //Fix item crit particles and sounds
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-            player.getWorld().playSound(player.getLocation(), ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
             if (player.isSprinting() || player.getAttackCooldown() > 0) {
                 nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 4));
             }
@@ -129,7 +120,7 @@ public class PlayerDamageEntity {
             else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
         }
 
-        if (dealsEnchantDamage(weapon, nmsPlayer, entity)) nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 5));
+        if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, entity)) nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 5));
 
         if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 
@@ -141,7 +132,7 @@ public class PlayerDamageEntity {
             KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, knockbackReduction, false);
         }
 
-        if (ReachUtil.isOverCharged(player, 0.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
+        if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             SweepingEdgeUtil.Sweep(player, entity);
         }
@@ -149,7 +140,7 @@ public class PlayerDamageEntity {
         PlayerHitUtil.thornsCheck(entity, player);
 
         if (!isBlocked && weapon.containsEnchantment(Enchantment.FIRE_ASPECT)) {
-            int fireProt = getFireProt(entity);
+            int fireProt = PlayerHitUtil.getFireProt(entity);
             entity.setFireTicks(fireProt > 7 ? 0 : (int) ((80 * weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT) * (1 - (0.15 * fireProt)))));
         }
 
@@ -158,8 +149,8 @@ public class PlayerDamageEntity {
          * stupid, but it works. Since weapon swapping uses the cooldown of the weapon you swapped from, this is necessary to
          * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
-        if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) resetCooldown(player, false);
-        InvulnerabilityScheduler.setInvulnerable(entity, ReachUtil.getCooldown(player) - 3, originalDamage, damageCause);
+        if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) CombatiumLite.getReachUtil().resetCooldown(player, false);
+        CombatiumLite.getScheduler().getInvulnerabilityScheduler().setInvulnerable(entity, CombatiumLite.getReachUtil().getCooldown(player) - 3, originalDamage, damageCause);
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {
@@ -169,7 +160,7 @@ public class PlayerDamageEntity {
         DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
         entity.damage(damage, damageSource);
 
-        if (!sprintFix) {
+        if (!CombatiumLite.sprintFix) {
             nmsPlayer.setSprinting(false);
         } else {
             nmsPlayer.setSprinting(sprinting);

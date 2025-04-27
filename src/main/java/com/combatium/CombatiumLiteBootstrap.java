@@ -62,7 +62,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             Field streamCodec = ItemStack.class.getDeclaredField("STREAM_CODEC");
             Field listStreamCodec = ItemStack.class.getDeclaredField("OPTIONAL_LIST_STREAM_CODEC");
             StreamCodec<RegistryFriendlyByteBuf, ItemStack> original = (StreamCodec<RegistryFriendlyByteBuf, ItemStack>) optionalStreamCodec.get(null); // or use unsafe.getObject(...)
-            CombatiumLite.logger.log(Level.INFO, "Original stream codec: " + original);
+            CombatiumLite.getPluginLogger().log(Level.INFO, "Original stream codec: " + original);
             StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = new StreamCodec<>() {
                 @Override
                 public ItemStack decode(RegistryFriendlyByteBuf buffer) {
@@ -139,7 +139,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             staticOffset = unsafe.staticFieldOffset(listStreamCodec);
             unsafe.putObject(staticBase, staticOffset, patched.apply(ByteBufCodecs.collection(NonNullList::createWithCapacity)));
 
-            CombatiumLite.logger.log(Level.INFO, "Patched stream codec: " + optionalStreamCodec.get(null));
+            CombatiumLite.getPluginLogger().log(Level.INFO, "Patched stream codec: " + optionalStreamCodec.get(null));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -176,7 +176,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                         patchedEffects.set(EnchantmentEffectComponents.DAMAGE, Collections.singletonList(new ConditionalEffect<>(new AddValue(LevelBasedValue.perLevel(2, 1)), Optional.empty())));
                         effects.set(b, patchedEffects);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
-                        CombatiumLite.logger.log(Level.SEVERE, "Failed to set effects! Exception: " + e, e);
+                        CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to set effects! Exception: " + e, e);
                     }
                 }
         )));

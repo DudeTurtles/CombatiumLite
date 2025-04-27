@@ -32,6 +32,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -39,8 +40,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
-
-import static org.bukkit.potion.PotionEffectType.*;
 
 public class PlayerHitUtil {
     private static Boolean backShots;
@@ -75,7 +74,7 @@ public class PlayerHitUtil {
         }
 
         if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            damage *= (ReachUtil.isOverCharged(attacker, 0.0F) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
+            damage *= (CombatiumLite.getReachUtil().isOverCharged(attacker, 0.0F) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {
             damage *= 1.5f;
@@ -109,7 +108,7 @@ public class PlayerHitUtil {
         float armorPassPercent = (float) (1 - (armorBlockPercent * (1 - 0.15 * weapon.getEnchantmentLevel(Enchantment.BREACH))));
 
         //Get the percentage of damage dealt after resistance
-        int resistance = damagedEntity.getPotionEffect(RESISTANCE) == null ? 0 : Objects.requireNonNull(damagedEntity.getPotionEffect(RESISTANCE)).getAmplifier();
+        int resistance = damagedEntity.getPotionEffect(PotionEffectType.RESISTANCE) == null ? 0 : Objects.requireNonNull(damagedEntity.getPotionEffect(PotionEffectType.RESISTANCE)).getAmplifier();
         double potionPassPercent = 1 - ( resistance * 0.2);
 
         return (float) (rawDamage * armorPassPercent * protPassPercent * potionPassPercent);
@@ -155,7 +154,7 @@ public class PlayerHitUtil {
                 autoSpinAttack.setAccessible(true);
                 return autoSpinAttack.getFloat(((CraftPlayer) attacker).getHandle());
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                CombatiumLite.logger.log(Level.SEVERE, "Failed to retrieve riptide damage!" + e, e);
+                CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to retrieve riptide damage!" + e, e);
             }
         }
         if (CombatiumLite.swapAccuracy && lastTickDamage.containsKey(attacker)) return lastTickDamage.get(attacker);

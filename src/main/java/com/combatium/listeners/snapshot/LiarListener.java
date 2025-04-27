@@ -11,10 +11,7 @@ import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerUpdateAttributes;
 import net.minecraft.util.Mth;
 import org.bukkit.entity.Player;
-
 import java.util.*;
-
-import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
 
 public class LiarListener implements PacketListener {
     @Override
@@ -23,7 +20,7 @@ public class LiarListener implements PacketListener {
 
         WrapperPlayServerUpdateAttributes packet = new WrapperPlayServerUpdateAttributes(event);
         Player player = event.getPlayer();
-        if (isCombatifyPlayer(player)) return; // Add some way to apply haste fix for combatify players (specific packet?)
+        if (CombatifyListener.isCombatifyPlayer(player)) return; // Add some way to apply haste fix for combatify players (specific packet?)
         List<Integer> indexes = new ArrayList<>();
         Map<Integer, WrapperPlayServerUpdateAttributes.PropertyModifier> modifierMap = new HashMap<>();
         List<WrapperPlayServerUpdateAttributes.Property> properties = packet.getProperties();

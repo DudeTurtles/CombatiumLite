@@ -1,18 +1,17 @@
 package com.combatium.listeners.damage;
 
-import com.combatium.scheduler.Scheduler;
+import com.combatium.CombatiumLite;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class PlayerDeathListener implements Listener {
-    private static final Map<UUID, Integer> lastDeath = new HashMap<>();
-    private static final Map<UUID, Boolean> cancelled = new HashMap<>();
+    private final Map<UUID, Integer> lastDeath = new HashMap<>();
+    private final Map<UUID, Boolean> cancelled = new HashMap<>();
 
     /*
      * Ok, I know this code seems absolutely ridiculous, but you gotta trust me, it is absolutely necessary.
@@ -25,12 +24,12 @@ public class PlayerDeathListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeathStart(PlayerDeathEvent event) {
-        if (lastDeath.containsKey(event.getPlayer().getUniqueId()) && Math.abs(Scheduler.getCurrentTick() - lastDeath.get(event.getEntity().getUniqueId())) <= 1) {
+        if (lastDeath.containsKey(event.getPlayer().getUniqueId()) && Math.abs(CombatiumLite.getScheduler().getCurrentTick() - lastDeath.get(event.getEntity().getUniqueId())) <= 1) {
             cancelled.put(event.getPlayer().getUniqueId(), true);
             event.setCancelled(true);
             event.deathMessage(null);
         }
-        lastDeath.put(event.getPlayer().getUniqueId(), Scheduler.getCurrentTick());
+        lastDeath.put(event.getPlayer().getUniqueId(), CombatiumLite.getScheduler().getCurrentTick());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

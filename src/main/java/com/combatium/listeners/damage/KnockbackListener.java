@@ -2,6 +2,7 @@ package com.combatium.listeners.damage;
 
 import com.combatium.CombatiumLite;
 import com.combatium.util.active.KnockbackUtil;
+import com.combatium.util.active.PlayerDamageEntity;
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import net.minecraft.world.phys.Vec3;
@@ -17,14 +18,11 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
 import java.util.Objects;
 
-import static com.combatium.util.active.PlayerDamageEntity.*;
-import static io.papermc.paper.event.entity.EntityKnockbackEvent.Cause.*;
-
 public class KnockbackListener implements Listener {
     @EventHandler
     public void onKnockback(EntityKnockbackByEntityEvent event) {
         EntityKnockbackEvent.Cause cause = event.getCause();
-        if (!(cause == ENTITY_ATTACK || cause == SWEEP_ATTACK)) return;
+        if (!(cause == EntityKnockbackEvent.Cause.ENTITY_ATTACK || cause == EntityKnockbackEvent.Cause.SWEEP_ATTACK)) return;
 
         boolean isBlocked = false;
         double knockbackReduction = 0;
@@ -34,8 +32,8 @@ public class KnockbackListener implements Listener {
             ItemStack shield = p.getActiveItem();
 
             if (shield.getItemMeta() != null) {
-                knockbackReduction = shield.getItemMeta().getPersistentDataContainer().getOrDefault(KNOCKBACK_REDUCTION, PersistentDataType.DOUBLE, 0.5);
-                blockAngle = shield.getItemMeta().getPersistentDataContainer().getOrDefault(BLOCK_ANGLE, PersistentDataType.DOUBLE, CombatiumLite.shieldProtectionArc);
+                knockbackReduction = shield.getItemMeta().getPersistentDataContainer().getOrDefault(PlayerDamageEntity.KNOCKBACK_REDUCTION, PersistentDataType.DOUBLE, 0.5);
+                blockAngle = shield.getItemMeta().getPersistentDataContainer().getOrDefault(PlayerDamageEntity.BLOCK_ANGLE, PersistentDataType.DOUBLE, CombatiumLite.shieldProtectionArc);
             } else {
                 knockbackReduction = 0.5;
                 blockAngle = CombatiumLite.shieldProtectionArc;

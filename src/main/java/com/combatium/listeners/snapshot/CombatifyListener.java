@@ -11,7 +11,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +22,7 @@ public class CombatifyListener implements Listener, PluginMessageListener {
     public void onPlayerRegisterChannel(PlayerRegisterChannelEvent event) {
         if (event.getChannel().equals("combatify:remaining_use_ticks")) {
             Player player = event.getPlayer();
-            CombatiumLite.logger.info(player.getName() + " has joined with Combatify");
+            CombatiumLite.getPluginLogger().info(player.getName() + " has joined with Combatify");
             player.getAttribute(Attribute.ATTACK_SPEED).setBaseValue(4.0);
             combatifyPlayers.add(player.getUniqueId());
         }
@@ -39,9 +38,9 @@ public class CombatifyListener implements Listener, PluginMessageListener {
         if (channel.equals("combatify:miss_attack")) {
             //CombatiumLite.logger.info(player.getName() + " has missed");
 
-            ReachUtil.resetCooldown(player, true);
+            CombatiumLite.getReachUtil().resetCooldown(player, true);
 
-            if (ReachUtil.isOverCharged(player, 0.0F)
+            if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F)
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }

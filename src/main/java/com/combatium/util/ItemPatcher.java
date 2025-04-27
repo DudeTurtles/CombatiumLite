@@ -1,5 +1,6 @@
 package com.combatium.util;
 
+import com.combatium.CombatiumLite;
 import com.google.common.base.Suppliers;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -27,14 +28,11 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.craftbukkit.inventory.CraftItemMetas;
 import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.inventory.meta.ItemMeta;
-
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-
-import static com.combatium.CombatiumLite.logger;
 
 public class ItemPatcher {
     public static final ResourceLocation BASE_ATTACK_SPEED_CTS_ID = ResourceLocation.withDefaultNamespace("base_attack_speed_cts");
@@ -114,7 +112,7 @@ public class ItemPatcher {
             applyDefaultComponents(weapon(4.0F, -1.50F, 0.0F), Items.MACE);
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            logger.log(Level.SEVERE, "Failed to update default components!" + e);
+            CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to update default components!" + e);
         }
     }
 

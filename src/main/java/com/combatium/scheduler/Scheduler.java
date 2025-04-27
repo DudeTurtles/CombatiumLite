@@ -4,6 +4,7 @@ import com.combatium.CombatiumLite;
 import com.combatium.util.active.PlayerDamageEntity;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.active.TridentTracker;
+import com.combatium.util.calculations.FixItem;
 import com.combatium.util.calculations.PlayerHitUtil;
 import com.combatium.util.hitThroughTransparent.HitManager;
 import net.kyori.adventure.text.Component;
@@ -18,22 +19,21 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
 
-import static com.combatium.util.calculations.FixItem.isSword;
-
 public class Scheduler {
-    static Plugin plugin;
-    static int currentTick;
-    static int regenTick;
+    private final Plugin plugin;
+    private int currentTick;
+    private int regenTick;
     //The amount of ticks between each regen tick (Default 39)
-    static int regenTickDelay;
-    static ArrayList<ScheduledSweep> scheduledSweeps;
-    static ArrayList<ScheduledHit> scheduledHits;
-    static ArrayList<ScheduledHit> toRemove;
-    Random random = new Random();
+    private final int regenTickDelay;
+    private final ArrayList<ScheduledSweep> scheduledSweeps;
+    private final ArrayList<ScheduledHit> scheduledHits;
+    private final ArrayList<ScheduledHit> toRemove;
+    private final Random random = new Random();
+    private InvulnerabilityScheduler invulnerabilityScheduler;
 
     public Scheduler(Plugin plugin, int regenTickDelay) {
-        Scheduler.plugin = plugin;
-        Scheduler.regenTickDelay = regenTickDelay;
+        this.plugin = plugin;
+        this.regenTickDelay = regenTickDelay;
         currentTick = 0;
         regenTick = 0;
         scheduledSweeps = new ArrayList<>();
@@ -41,22 +41,23 @@ public class Scheduler {
         toRemove = new ArrayList<>();
     }
 
-    public static int getCurrentTick() {
+    public int getCurrentTick() {
         return currentTick;
     }
 
-    public static void scheduleHit(ScheduledHit hit) {
+    public void scheduleHit(ScheduledHit hit) {
         scheduledHits.add(hit);
     }
 
-    public static void scheduleSweep(Player player) {
+    public void scheduleSweep(Player player) {
         scheduledSweeps.add(new ScheduledSweep(player));
     }
 
     public void tick() {
         //Update the reach of each player
+        ReachUtil reachUtil = CombatiumLite.getReachUtil();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            ReachUtil.updatePlayerReach(player);
+            reachUtil.updatePlayerReach(player);
         }
 
         //Runs any scheduled Sweeping Edge hits
@@ -67,7 +68,7 @@ public class Scheduler {
 
         //Checks if any scheduled hits should be run
         for (ScheduledHit hit : scheduledHits) {
-            if (ReachUtil.isCharged(hit.attacker, -1)) {
+            if (reachUtil.isCharged(hit.attacker, -1)) {
                 hit.execute();
                 toRemove.add(hit);
             }
@@ -105,7 +106,7 @@ public class Scheduler {
         //Check for players using sword block
         if (CombatiumLite.swordBlockingDisplay && CombatiumLite.swordBlocking) {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (isSword(player.getActiveItem().getType())) player.sendActionBar(Component.text("Blocking").color(NamedTextColor.GREEN));
+                if (FixItem.isSword(player.getActiveItem().getType())) player.sendActionBar(Component.text("Blocking").color(NamedTextColor.GREEN));
                 else player.sendActionBar(Component.text(""));
             }
         }
@@ -128,5 +129,13 @@ public class Scheduler {
         }
 
         currentTick++;
+    }
+
+    public void register(InvulnerabilityScheduler invulnerabilityScheduler) {
+        this.invulnerabilityScheduler = invulnerabilityScheduler;
+    }
+
+    public InvulnerabilityScheduler getInvulnerabilityScheduler() {
+        return invulnerabilityScheduler;
     }
 }

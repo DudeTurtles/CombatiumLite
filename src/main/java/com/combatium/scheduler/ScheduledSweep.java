@@ -1,6 +1,6 @@
 package com.combatium.scheduler;
 
-import com.combatium.util.active.ReachUtil;
+import com.combatium.CombatiumLite;
 import com.combatium.util.active.SweepingEdgeUtil;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.Player;
@@ -12,7 +12,7 @@ public record ScheduledSweep(Player player) {
     public void execute() {
         if (isPotentialFalseInput(player, 1)) return;
         SweepingEdgeUtil.Sweep(player, null);
-        ReachUtil.resetCooldown(player, true);
+        CombatiumLite.getReachUtil().resetCooldown(player, true);
         net.minecraft.world.entity.LivingEntity nmsAttacker = ((CraftLivingEntity) player).getHandle();
         nmsAttacker.swing(nmsAttacker.swingingArm, true);
     }

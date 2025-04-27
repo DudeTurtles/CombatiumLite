@@ -1,7 +1,7 @@
 package com.combatium.util.active;
 
 import com.combatium.CombatiumLite;
-import com.combatium.scheduler.Scheduler;
+import com.combatium.listeners.snapshot.CombatifyListener;
 import com.combatium.util.ping.PingManager;
 import net.minecraft.util.Mth;
 import org.bukkit.Material;
@@ -14,57 +14,55 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import java.util.*;
 
-import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
-
 public class ReachUtil {
-    private static final Map<Player, Integer> playerCooldowns = new HashMap<>();
-    private static final Map<Player, Integer> cooldownTime = new HashMap<>();
-    private static final List<Player> playersWhoMissed = new ArrayList<>();
-    private static final Map<Player, Integer> rateLimit = new HashMap<>();
-    private static int missTime = 4;
-    private static int rateLimitTicks= 3;
-    private static final NamespacedKey chargedReach = new NamespacedKey("combatify", "charged_reach");
-    private static final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
+    private final Map<Player, Integer> playerCooldowns = new HashMap<>();
+    private final Map<Player, Integer> cooldownTime = new HashMap<>();
+    private final List<Player> playersWhoMissed = new ArrayList<>();
+    private final Map<Player, Integer> rateLimit = new HashMap<>();
+    private int missTime = 4;
+    private int rateLimitTicks= 3;
+    private final NamespacedKey chargedReach = new NamespacedKey("combatify", "charged_reach");
+    private final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
 
-    public static void resetCooldown(Player player, boolean wasMiss) {
+    public void resetCooldown(Player player, boolean wasMiss) {
         rateLimit(player);
 
-        playerCooldowns.put(player, Scheduler.getCurrentTick());
+        playerCooldowns.put(player, CombatiumLite.getScheduler().getCurrentTick());
         cooldownTime.put(player, getCooldown(player) * 2);
         if (wasMiss) {
             if (!playersWhoMissed.contains(player)) playersWhoMissed.add(player);
         } else playersWhoMissed.remove(player);
     }
 
-    public static double getChargePercent(Player player, float baseTime) {
+    public double getChargePercent(Player player, float baseTime) {
         if (!playerCooldowns.containsKey(player)) {
             resetCooldown(player, false);
             return 0;
         }
-        return Mth.clamp(((Scheduler.getCurrentTick() - playerCooldowns.get(player)) + baseTime) / cooldownTime.get(player), 0.0F, 1.0F) * 2;
+        return Mth.clamp(((CombatiumLite.getScheduler().getCurrentTick() - playerCooldowns.get(player)) + baseTime) / cooldownTime.get(player), 0.0F, 1.0F) * 2;
     }
 
-    public static boolean isOverCharged(Player player, float baseTime) {
+    public boolean isOverCharged(Player player, float baseTime) {
         return getChargePercent(player, baseTime) > 1.95;
     }
 
-    public static boolean isCharged(Player player, float baseTime) {
+    public boolean isCharged(Player player, float baseTime) {
         if (getChargePercent(player, baseTime) < 1.0) {
             if (!playerCooldowns.containsKey(player)) return false;
-            return playersWhoMissed.contains(player) && (Scheduler.getCurrentTick() - playerCooldowns.get(player) + baseTime) > missTime;
+            return playersWhoMissed.contains(player) && (CombatiumLite.getScheduler().getCurrentTick() - playerCooldowns.get(player) + baseTime) > missTime;
         }
 
         return true;
     }
 
-    public static void updatePlayerReach(Player player) {
-        if (isCombatifyPlayer(player)) {
+    public void updatePlayerReach(Player player) {
+        if (CombatifyListener.isCombatifyPlayer(player)) {
             return;
         }
 
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
         if (player.isBlocking() && isCharged(player, 0.0F)) {
-            playerCooldowns.put(player, Scheduler.getCurrentTick());
+            playerCooldowns.put(player, CombatiumLite.getScheduler().getCurrentTick());
             cooldownTime.put(player, 0);
         }
 
@@ -77,14 +75,14 @@ public class ReachUtil {
         }
     }
 
-    public static void removePlayer(Player player) {
+    public void removePlayer(Player player) {
         playerCooldowns.remove(player);
         cooldownTime.remove(player);
         playersWhoMissed.remove(player);
     }
 
     //Cooldown time in ticks (3.5 | 3 | 2.5 | 2 | 1)
-    public static int getCooldown(LivingEntity e) {
+    public int getCooldown(LivingEntity e) {
         var attrib = Objects.requireNonNull(e.getAttribute(Attribute.ATTACK_SPEED));
         double attackSpeed = attrib.getValue();
         double mod = !CombatiumLite.hasteFix ? 1.5 : calculateValueFromBase(1.5, attrib.getModifiers(), attrib.getAttribute());
@@ -95,7 +93,7 @@ public class ReachUtil {
         attackSpeed = 1.0 / attackSpeed * 20.0 + 0.5;
         return (int) (attackSpeed);
     }
-    public static double calculateValueFromBase(double attributeInstanceBaseValue, Collection<AttributeModifier> modifiers, Attribute attribute) {
+    public double calculateValueFromBase(double attributeInstanceBaseValue, Collection<AttributeModifier> modifiers, Attribute attribute) {
         List<AttributeModifier> multiplyBaseList = modifiers
                 .stream()
                 .filter(attributeModifier -> attributeModifier.getOperation() == AttributeModifier.Operation.ADD_SCALAR)
@@ -118,7 +116,7 @@ public class ReachUtil {
         return ((CraftAttribute)attribute).getHandle().sanitizeValue(attributeInstanceFinalValue);
     }
 
-    public static double getReach(Material material) {
+    public double getReach(Material material) {
         return switch (material) {
             case WOODEN_SWORD, STONE_SWORD, IRON_SWORD, DIAMOND_SWORD, NETHERITE_SWORD -> 3.0;
             case TRIDENT, WOODEN_HOE, STONE_HOE, IRON_HOE, GOLDEN_HOE, DIAMOND_HOE, NETHERITE_HOE -> 3.5;
@@ -126,24 +124,24 @@ public class ReachUtil {
         };
     }
 
-    public static double getReach(Player player) {
+    public double getReach(Player player) {
         return getReach(player.getInventory().getItemInMainHand().getType()) + (isOverCharged(player, 1.0F) ? 1 : 0);
     }
 
-    public static boolean isRateLimited(Player player) {
+    public boolean isRateLimited(Player player) {
         if (!rateLimit.containsKey(player) || !CombatiumLite.rateLimit) return false;
-        return rateLimit.get(player) >= Scheduler.getCurrentTick();
+        return rateLimit.get(player) >= CombatiumLite.getScheduler().getCurrentTick();
     }
 
-    public static void rateLimit(Player player) {
-        rateLimit.put(player, Scheduler.getCurrentTick() + Math.min(rateLimitTicks, getCooldown(player)));
+    public void rateLimit(Player player) {
+        rateLimit.put(player, CombatiumLite.getScheduler().getCurrentTick() + Math.min(rateLimitTicks, getCooldown(player)));
     }
 
-    public static void setRateLimitTicks(int ticks) {
+    public void setRateLimitTicks(int ticks) {
         rateLimitTicks = ticks;
     }
 
-    public static void setMissTime(int time) {
+    public void setMissTime(int time) {
         missTime = time;
     }
 }

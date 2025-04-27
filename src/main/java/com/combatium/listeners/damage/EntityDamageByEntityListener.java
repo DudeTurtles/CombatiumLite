@@ -1,12 +1,14 @@
 package com.combatium.listeners.damage;
 
 import com.combatium.CombatiumLite;
+import com.combatium.listeners.snapshot.CombatifyListener;
 import com.combatium.listeners.util.AnimationListener;
 import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.scheduler.ScheduledHit;
 import com.combatium.scheduler.Scheduler;
 import com.combatium.util.active.PlayerDamageEntity;
 import com.combatium.util.active.ReachUtil;
+import com.combatium.util.calculations.PlayerHitUtil;
 import org.bukkit.Material;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
@@ -21,11 +23,17 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
-import static com.combatium.listeners.snapshot.CombatifyListener.isCombatifyPlayer;
-import static com.combatium.util.active.PlayerDamageEntity.hasProcessed;
-import static com.combatium.util.calculations.PlayerHitUtil.getFinalDamage;
-
 public class EntityDamageByEntityListener implements Listener {
+    private final InvulnerabilityScheduler invulnerabilityScheduler;
+    private final Scheduler scheduler;
+    private final ReachUtil reachUtil;
+
+    public EntityDamageByEntityListener() {
+        this.invulnerabilityScheduler = CombatiumLite.getScheduler().getInvulnerabilityScheduler();
+        this.scheduler = CombatiumLite.getScheduler();
+        this.reachUtil = CombatiumLite.getReachUtil();
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void entityDamageByEntity(EntityDamageByEntityEvent event) {
         /*
@@ -39,21 +47,21 @@ public class EntityDamageByEntityListener implements Listener {
         }
 
         if (event.getDamager() instanceof Player attacker && event.getEntity() instanceof LivingEntity victim) {
-            if (hasProcessed(attacker)) {
+            if (PlayerDamageEntity.hasProcessed(attacker)) {
                 if (victim instanceof Player && (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0)) {
                     event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
-                    event.setDamage(getFinalDamage(victim, (float) event.getDamage(), attacker.getInventory().getItemInMainHand()));
+                    event.setDamage(PlayerHitUtil.getFinalDamage(victim, (float) event.getDamage(), attacker.getInventory().getItemInMainHand()));
                     if (victim.getAbsorptionAmount() > 0) {
                         event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, Math.min(victim.getAbsorptionAmount(), event.getDamage()));
                         victim.setAbsorptionAmount(Math.max(0, victim.getAbsorptionAmount() - event.getDamage(EntityDamageEvent.DamageModifier.ABSORPTION)));
                     }
                 }
-                hasProcessed.put(attacker, false);
+                PlayerDamageEntity.hasProcessed.put(attacker, false);
                 return;
             }
 
             ItemStack weapon = attacker.getInventory().getItemInMainHand();
-            if (ReachUtil.isRateLimited(attacker) && (event.getCause() != EntityDamageByEntityEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+            if (reachUtil.isRateLimited(attacker) && (event.getCause() != EntityDamageByEntityEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
                 AnimationListener.cancelAnim(attacker);
                 event.setCancelled(true);
                 return;
@@ -65,20 +73,20 @@ public class EntityDamageByEntityListener implements Listener {
             }
 
             //Checks if a player is charged, also allows sweep damage to be dealt due to sweep damage being a separate event
-            if (ReachUtil.isCharged(attacker, 0.0F)) {
+            if (reachUtil.isCharged(attacker, 0.0F)) {
                 PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, event.getCause(), true);
             } else {
-                if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod && !isCombatifyPlayer(attacker)) {
+                if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod && !CombatifyListener.isCombatifyPlayer(attacker)) {
                     //Grace period for early hits
-                    if (ReachUtil.getChargePercent(attacker, 0.0F) < 1.0F && ReachUtil.getChargePercent(attacker, 1.0F) > 0.8F) {
+                    if (reachUtil.getChargePercent(attacker, 0.0F) < 1.0F && reachUtil.getChargePercent(attacker, 1.0F) > 0.8F) {
                         ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, EntityDamageEvent.DamageCause.ENTITY_ATTACK);
-                        Scheduler.scheduleHit(scheduledHit);
+                        scheduler.scheduleHit(scheduledHit);
                     }
                 }
                 AnimationListener.cancelAnim(attacker);
             }
             event.setCancelled(true);
-            ReachUtil.rateLimit(attacker);
+            reachUtil.rateLimit(attacker);
             victim.setNoDamageTicks(0);
         } else if (event.getDamager() instanceof Trident trident) { // Updated trident damage calculation
             double damage = 8;
@@ -87,7 +95,7 @@ public class EntityDamageByEntityListener implements Listener {
             }
             event.setDamage(damage);
         } else if (event.getEntity() instanceof LivingEntity victim) { // Ensure replacement i-frames work for other cases
-            double invulDamage = InvulnerabilityScheduler.isInvulnerable(victim);
+            double invulDamage = invulnerabilityScheduler.isInvulnerable(victim);
 
             if (invulDamage >= event.getDamage()) {
                 event.setCancelled(true);
@@ -101,12 +109,12 @@ public class EntityDamageByEntityListener implements Listener {
             if (!(event.getDamager() instanceof Projectile)) { // Ensure i-frames are set when damage is not dealt by a projectile
                 int ticks;
                 if (event.getDamager() instanceof LivingEntity de && de.getActiveItem().getType() != Material.AIR) {
-                    ticks = ReachUtil.getCooldown(de);
+                    ticks = reachUtil.getCooldown(de);
                 } else {
                     ticks = 10;
                 }
 
-                InvulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage, event.getCause());
+                invulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage, event.getCause());
             }
         }
     }

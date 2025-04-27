@@ -10,16 +10,14 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import java.util.Objects;
-
-import static com.combatium.CombatiumLite.logger;
-import static java.lang.Double.min;
+import java.util.logging.Logger;
 
 public class KnockbackUtil {
     public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, double knockbackReduction, boolean checkVertical) {
         if (entity instanceof Player p && (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR))
             return;
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
-        knockbackRes = min(1.0, knockbackRes + (isBlocked ? knockbackReduction : 0.0));
+        knockbackRes = Math.min(1.0, knockbackRes + (isBlocked ? knockbackReduction : 0.0));
         Entity nmsEntity = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) entity).getHandle();
 
         strength *= 1.0 - knockbackRes;
@@ -40,6 +38,7 @@ public class KnockbackUtil {
             nmsEntity.hasImpulse = true;
             entity.setVelocity(velocity);
         } catch (Exception e) {
+            Logger logger = CombatiumLite.getPluginLogger();
             logger.warning("=== Please Report This to the Developer ===");
             logger.warning("Error applying knockback to entity: " + entity.getName());
             logger.warning("Strength: " + strength);

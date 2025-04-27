@@ -1,6 +1,6 @@
 package com.combatium.listeners.snapshot;
 
-import com.combatium.util.active.ReachUtil;
+import com.combatium.CombatiumLite;
 import com.combatium.util.active.SweepingEdgeUtil;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
@@ -15,9 +15,9 @@ public class AirSwingListener implements PacketListener {
         InteractPacketWrapper packet = new InteractPacketWrapper(event);
         if (packet.getAction() == InteractPacketWrapper.InteractAction.AIR_SWING) {
             Player player = event.getPlayer();
-            ReachUtil.resetCooldown(player, true);
+            CombatiumLite.getReachUtil().resetCooldown(player, true);
 
-            if (ReachUtil.isOverCharged(player, 0.0F)
+            if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F)
                     && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
                 SweepingEdgeUtil.Sweep(player, null);
             }

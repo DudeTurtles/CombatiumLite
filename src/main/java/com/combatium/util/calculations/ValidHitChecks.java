@@ -19,9 +19,9 @@ public class ValidHitChecks {
 
             return nmsPlayer.canInteractWithEntity(nmsVictim, Math.min(distance, 2));
         } catch (Exception e) {
-            CombatiumLite.logger.warning("Failed to check if " + attacker.getName() + " can interact with " + victim.getName());
-            CombatiumLite.logger.warning("Could not obtain Server Player");
-            CombatiumLite.logger.warning("Please report this to the developer.");
+            CombatiumLite.getPluginLogger().warning("Failed to check if " + attacker.getName() + " can interact with " + victim.getName());
+            CombatiumLite.getPluginLogger().warning("Could not obtain Server Player");
+            CombatiumLite.getPluginLogger().warning("Please report this to the developer.");
             return true;
         }
     }
@@ -33,9 +33,9 @@ public class ValidHitChecks {
 
             return nmsPlayer.canInteractWithEntity(nmsVictim, leeway);
         } catch (Exception e) {
-            CombatiumLite.logger.warning("Failed to check if " + attacker.getName() + " can interact with " + victim.getName());
-            CombatiumLite.logger.warning("Could not obtain Server Player");
-            CombatiumLite.logger.warning("Please report this to the developer.");
+            CombatiumLite.getPluginLogger().warning("Failed to check if " + attacker.getName() + " can interact with " + victim.getName());
+            CombatiumLite.getPluginLogger().warning("Could not obtain Server Player");
+            CombatiumLite.getPluginLogger().warning("Please report this to the developer.");
             return true;
         }
     }

@@ -2,6 +2,7 @@ package com.combatium.listeners.projectile;
 
 import com.combatium.CombatiumLite;
 import com.combatium.util.active.KnockbackUtil;
+import com.combatium.util.calculations.FixItem;
 import com.combatium.util.calculations.PlayerHitUtil;
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
 import net.minecraft.world.phys.Vec3;
@@ -13,9 +14,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
-
-import static com.combatium.CombatiumLite.logger;
-import static com.combatium.util.calculations.FixItem.isSword;
+import java.util.logging.Logger;
 
 public class ProjectileHitListener implements Listener {
     @EventHandler
@@ -38,7 +37,7 @@ public class ProjectileHitListener implements Listener {
                 boolean isBlocking = false;
                 boolean isSwordBlocking = false;
                 if (event.getHitEntity() instanceof Player player) {
-                    if (CombatiumLite.swordBlocking) isSwordBlocking = isSword(player.getActiveItem().getType());
+                    if (CombatiumLite.swordBlocking) isSwordBlocking = FixItem.isSword(player.getActiveItem().getType());
                     isBlocking = player.isBlocking();
                 }
 
@@ -60,6 +59,7 @@ public class ProjectileHitListener implements Listener {
                     } else nmsEntity.hurt((attacker == null) ? nmsEntity.damageSources().genericKill() : nmsEntity.damageSources().genericKill().eventEntityDamager(attacker), 0.000000001f);
                 } catch (NoSuchMethodError e) {
                     nmsEntity.hurt(nmsEntity.damageSources().genericKill(), 0.000000001f);
+                    Logger logger = CombatiumLite.getPluginLogger();
                     logger.severe("Failed to apply proper damage. Please report this to the CombatiumLite developers.");
                     logger.severe("This is not a critical error, but it may affect gameplay.");
                     logger.severe("Error: " + e.getMessage());

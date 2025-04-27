@@ -1,19 +1,18 @@
 package com.combatium.scheduler;
 
+import com.combatium.CombatiumLite;
 import com.combatium.util.active.PlayerDamageEntity;
+import com.combatium.util.calculations.ValidHitChecks;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
-import static com.combatium.util.active.ReachUtil.resetCooldown;
-import static com.combatium.util.calculations.ValidHitChecks.isValidHit;
-
 public class ScheduledHit {
-    public Player attacker;
-    public LivingEntity target;
-    public EntityDamageEvent.DamageCause damageCause;
+    Player attacker;
+    LivingEntity target;
+    EntityDamageEvent.DamageCause damageCause;
 
     public ScheduledHit(Player attacker, LivingEntity target, EntityDamageEvent.DamageCause damageCause) {
         this.attacker = attacker;
@@ -24,8 +23,8 @@ public class ScheduledHit {
     public void execute() {
         ItemStack weapon = attacker.getInventory().getItemInMainHand();
 
-        if (!isValidHit(attacker, target)) {
-            resetCooldown(attacker, true);
+        if (!ValidHitChecks.isValidHit(attacker, target)) {
+            CombatiumLite.getReachUtil().resetCooldown(attacker, true);
             return;
         }
         PlayerDamageEntity.playerDamageEntityEvent(attacker, target, weapon, damageCause, true);

@@ -94,7 +94,7 @@ public final class CombatiumLite extends JavaPlugin {
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
         fixSweepOnThrow = getConfig().getBoolean("pvp.fixSweepOnThrow", true);
         shieldProtectionArc = getConfig().getDouble("pvp.shieldProtectionArc", 130);
-        getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 3));
+        getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 4));
         reachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
 

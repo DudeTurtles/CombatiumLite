@@ -19,8 +19,8 @@ public class ReachUtil {
     private final Map<Player, Integer> cooldownTime = new HashMap<>();
     private final List<Player> playersWhoMissed = new ArrayList<>();
     private final Map<Player, Integer> rateLimit = new HashMap<>();
-    private int missTime = 3;
-    private int rateLimitTicks= 3;
+    private int missTime = 4;
+    private int rateLimitTicks = 4;
     private final NamespacedKey chargedReach = new NamespacedKey("combatify", "charged_reach");
     private final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
 

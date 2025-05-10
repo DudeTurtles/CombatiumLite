@@ -119,7 +119,7 @@ pvp:
   # The amount of time a player should wait before being able to send consecutive attacks.
   # This is to prevent spam clicking from being as effective, and to encourage proper timing of attacks.
   # Essentially, this acts to limit the players max clicks per second, to 20 divided by this number.
-  # Can be set to 0 to disable the rate limit, or disabled by setting rateLimit to false.
+  # Can be set to 0 to disable the rate limit. This should generally be the same as the miss time.
   # Default: 4
   rateLimitTicks: 4
 

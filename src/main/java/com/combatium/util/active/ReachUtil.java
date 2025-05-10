@@ -19,7 +19,7 @@ public class ReachUtil {
     private final Map<Player, Integer> cooldownTime = new HashMap<>();
     private final List<Player> playersWhoMissed = new ArrayList<>();
     private final Map<Player, Integer> rateLimit = new HashMap<>();
-    private int missTime = 4;
+    private int missTime = 3;
     private int rateLimitTicks= 3;
     private final NamespacedKey chargedReach = new NamespacedKey("combatify", "charged_reach");
     private final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
@@ -49,7 +49,8 @@ public class ReachUtil {
     public boolean isCharged(Player player, float baseTime) {
         if (getChargePercent(player, baseTime) < 1.0) {
             if (!playerCooldowns.containsKey(player)) return false;
-            return playersWhoMissed.contains(player) && (CombatiumLite.getScheduler().getCurrentTick() - playerCooldowns.get(player) + baseTime) > missTime;
+            return playersWhoMissed.contains(player) &&
+                    (CombatiumLite.getScheduler().getCurrentTick() - playerCooldowns.get(player) + baseTime) > ((CombatifyListener.isCombatifyPlayer(player)) ? missTime - 1 : missTime);
         }
 
         return true;
@@ -129,12 +130,13 @@ public class ReachUtil {
     }
 
     public boolean isRateLimited(Player player) {
-        if (!rateLimit.containsKey(player) || !CombatiumLite.rateLimit) return false;
+        if (!rateLimit.containsKey(player)) return false;
         return rateLimit.get(player) >= CombatiumLite.getScheduler().getCurrentTick();
     }
 
     public void rateLimit(Player player) {
-        rateLimit.put(player, CombatiumLite.getScheduler().getCurrentTick() + Math.min(rateLimitTicks, getCooldown(player)));
+        if (CombatifyListener.isCombatifyPlayer(player)) rateLimit.put(player, CombatiumLite.getScheduler().getCurrentTick() + Math.min(rateLimitTicks - 1, getCooldown(player) - 1));
+        else rateLimit.put(player, CombatiumLite.getScheduler().getCurrentTick() + Math.min(rateLimitTicks, getCooldown(player)));
     }
 
     public void setRateLimitTicks(int ticks) {

@@ -44,7 +44,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean limitedChargedWeapons;
     public static boolean improvedAnimations;
     public static boolean improvedChargedHits;
-    public static boolean rateLimit;
     public static boolean tridentsReturnFromVoid;
     public static boolean swordBlocking;
     public static boolean swordBlockingDisplay;
@@ -90,7 +89,6 @@ public final class CombatiumLite extends JavaPlugin {
         improvedAnimations = getConfig().getBoolean("pvp.improvedAnimations", true);
         improvedChargedHits = getConfig().getBoolean("pvp.improvedChargedHits", true);
         pingImprovements = getConfig().getBoolean("pvp.pingImprovements", true);
-        rateLimit = getConfig().getBoolean("pvp.rateLimit", true);
         tridentsReturnFromVoid = getConfig().getBoolean("pvp.tridentsReturnFromVoid", true);
         swapAccuracy = getConfig().getBoolean("pvp.swapAccuracy", true);
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
@@ -173,7 +171,6 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Improved Animations: " + improvedAnimations);
         logger.log(java.util.logging.Level.INFO, "Improved Charged Hits: " + improvedChargedHits);
         logger.log(java.util.logging.Level.INFO, "Ping Improvements: " + pingImprovements);
-        logger.log(java.util.logging.Level.INFO, "Rate Limit: " + rateLimit);
         logger.log(java.util.logging.Level.INFO, "Tridents Return From Void: " + tridentsReturnFromVoid);
         logger.log(java.util.logging.Level.INFO, "Swap Accuracy: " + swapAccuracy);
         logger.log(java.util.logging.Level.INFO, "Sweep On Miss: " + sweepOnMiss);

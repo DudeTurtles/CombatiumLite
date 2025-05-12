@@ -37,6 +37,7 @@ public class PlayerDamageEntity {
 
     public static void playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
+        if (entity.isInvulnerable()) return;
         // For some reason this would occasionally cause issues when dealing with players hitting bot players created by other plugins
         if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) {
             try {

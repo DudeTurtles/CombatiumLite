@@ -5,6 +5,7 @@ import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
 import org.bukkit.Material;
+import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -35,14 +36,17 @@ public class EntityDamageByEntityListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void entityDamageByEntity(EntityDamageByEntityEvent event) {
+        DamageType damageType = event.getDamageSource().getDamageType();
+        if (damageType == DamageType.GENERIC_KILL || damageType == DamageType.INDIRECT_MAGIC || damageType == DamageType.THORNS) {
+            return;
+        }
+
         if (event.getDamager() instanceof Player player) {
             if (event.getEntity() instanceof LivingEntity e && (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0)){
                 if (event.getEntity() instanceof Player && (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0)) {
                     event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
                     event.setDamage(PlayerHitUtil.getFinalDamage(e, (float) event.getDamage(), player.getInventory().getItemInMainHand()));
-                    if (e.getAbsorptionAmount() > 0) {
-                        event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, -1 * Math.min(e.getAbsorptionAmount(), event.getDamage()));
-                    }
+                    if (e.getAbsorptionAmount() > 0) event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, -1 * Math.min(e.getAbsorptionAmount(), event.getDamage()));
                 }
             }
         } else if (event.getDamager() instanceof Trident trident) { // Updated trident damage calculation
@@ -63,9 +67,7 @@ public class EntityDamageByEntityListener implements Listener {
             if (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < -5) {
                 event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
                 event.setDamage(PlayerHitUtil.getFinalDamage(victim, (float) event.getDamage() - 5, new ItemStack(Material.AIR)));
-                if (victim.getAbsorptionAmount() > 0) {
-                    event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, -1 * Math.min(victim.getAbsorptionAmount(), event.getDamage()));
-                }
+                if (victim.getAbsorptionAmount() > 0) event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, -1 * Math.min(victim.getAbsorptionAmount(), event.getDamage()));
             }
 
             double originalDamage = event.getDamage();

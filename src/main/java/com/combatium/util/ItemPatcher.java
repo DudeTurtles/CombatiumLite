@@ -2,12 +2,11 @@ package com.combatium.util;
 
 import com.combatium.CombatiumLite;
 import com.google.common.base.Suppliers;
+import net.atlas.defaulted.component.ItemPatches;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.component.PatchedDataComponentMap;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.component.*;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -21,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.component.UseCooldown;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.commons.lang3.function.TriFunction;
@@ -30,11 +30,16 @@ import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.inventory.meta.ItemMeta;
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public class ItemPatcher {
+    public static final String MOD_ID = "combatium";
+    public static List<ItemPatches> DEFAULT_PATCHES = new ArrayList<>();
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    }
     public static final ResourceLocation BASE_ATTACK_SPEED_CTS_ID = ResourceLocation.withDefaultNamespace("base_attack_speed_cts");
     public static final ResourceLocation BASE_ATTACK_REACH_ID = ResourceLocation.withDefaultNamespace("base_attack_reach");
     public static final TriFunction<CraftItemMetas.ItemMetaData<?>, ItemStack, Set<DataComponentType<?>>, ?> WRAPPER = (meta, stack, extra) -> {
@@ -54,12 +59,13 @@ public class ItemPatcher {
 
     public static void patch() {
         try {
+            Map<ResourceLocation, ItemPatches> intermediary = new HashMap<>();
             // Patch components here
-            applyDefaultComponents(useDuration(1), Items.MUSHROOM_STEW, Items.RABBIT_STEW, Items.BEETROOT_SOUP,
+            applyDefaultComponents(useDuration(1), id("drinkables"), intermediary, Items.MUSHROOM_STEW, Items.RABBIT_STEW, Items.BEETROOT_SOUP,
                     Items.SUSPICIOUS_STEW, Items.SPLASH_POTION, Items.LINGERING_POTION, Items.MILK_BUCKET, Items.HONEY_BOTTLE, Items.OMINOUS_BOTTLE);
-            applyDefaultComponents(size(16).andThen(useDuration(1)), Items.POTION);
-            applyDefaultComponents(size(64).andThen(cooldown(0.2F)), Items.SNOWBALL);
-            applyDefaultComponents(cooldown(0.2F), Items.EGG);
+            applyDefaultComponents(size(16).andThen(useDuration(1)), intermediary, Items.POTION);
+            applyDefaultComponents(size(64).andThen(cooldown(0.2F)), intermediary, Items.SNOWBALL);
+            applyDefaultComponents(cooldown(0.2F), id("eggs"), intermediary, Items.EGG, Items.BROWN_EGG, Items.BLUE_EGG);
 
             /*
             public static final Set<Material> Tools = Collections.unmodifiableSet(EnumSet.of(Material.TRIDENT,
@@ -73,53 +79,52 @@ public class ItemPatcher {
              */
 
             // Add weapons / drinking time
-            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), Items.WOODEN_SWORD);
-            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), Items.GOLDEN_SWORD);
-            applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), Items.STONE_SWORD);
-            applyDefaultComponents(weapon(3.0F, 0.5F, 0.5F), Items.IRON_SWORD);
-            applyDefaultComponents(weapon(4.0F, 0.5F, 0.5F), Items.DIAMOND_SWORD);
-            applyDefaultComponents(weapon(5.0F, 0.5F, 0.5F), Items.NETHERITE_SWORD);
+            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.WOODEN_SWORD);
+            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.GOLDEN_SWORD);
+            applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.STONE_SWORD);
+            applyDefaultComponents(weapon(3.0F, 0.5F, 0.5F), intermediary, Items.IRON_SWORD);
+            applyDefaultComponents(weapon(4.0F, 0.5F, 0.5F), intermediary, Items.DIAMOND_SWORD);
+            applyDefaultComponents(weapon(5.0F, 0.5F, 0.5F), intermediary, Items.NETHERITE_SWORD);
 
-            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.WOODEN_AXE);
-            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.GOLDEN_AXE);
-            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.STONE_AXE);
-            applyDefaultComponents(weapon(4.0F, -0.5F, 0.0F), Items.IRON_AXE);
-            applyDefaultComponents(weapon(5.0F, -0.5F, 0.0F), Items.DIAMOND_AXE);
-            applyDefaultComponents(weapon(6.0F, -0.5F, 0.0F), Items.NETHERITE_AXE);
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.WOODEN_AXE);
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.GOLDEN_AXE);
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.STONE_AXE);
+            applyDefaultComponents(weapon(4.0F, -0.5F, 0.0F), intermediary, Items.IRON_AXE);
+            applyDefaultComponents(weapon(5.0F, -0.5F, 0.0F), intermediary, Items.DIAMOND_AXE);
+            applyDefaultComponents(weapon(6.0F, -0.5F, 0.0F), intermediary, Items.NETHERITE_AXE);
 
-            applyDefaultComponents(weapon(0.0F, -0.5F, 1.0F), Items.WOODEN_HOE);
-            applyDefaultComponents(weapon(0.0F, 1.0F, 1.0F), Items.GOLDEN_HOE);
-            applyDefaultComponents(weapon(0.0F, 0.0F, 1.0F), Items.STONE_HOE);
-            applyDefaultComponents(weapon(1.0F, 0.5F, 1.0F), Items.IRON_HOE);
-            applyDefaultComponents(weapon(1.0F, 1.0F, 1.0F), Items.DIAMOND_HOE);
-            applyDefaultComponents(weapon(2.0F, 1.0F, 1.0F), Items.NETHERITE_HOE);
+            applyDefaultComponents(weapon(0.0F, -0.5F, 1.0F), intermediary, Items.WOODEN_HOE);
+            applyDefaultComponents(weapon(0.0F, 1.0F, 1.0F), intermediary, Items.GOLDEN_HOE);
+            applyDefaultComponents(weapon(0.0F, 0.0F, 1.0F), intermediary, Items.STONE_HOE);
+            applyDefaultComponents(weapon(1.0F, 0.5F, 1.0F), intermediary, Items.IRON_HOE);
+            applyDefaultComponents(weapon(1.0F, 1.0F, 1.0F), intermediary, Items.DIAMOND_HOE);
+            applyDefaultComponents(weapon(2.0F, 1.0F, 1.0F), intermediary, Items.NETHERITE_HOE);
 
-            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), Items.WOODEN_SHOVEL);
-            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), Items.GOLDEN_SHOVEL);
-            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), Items.STONE_SHOVEL);
-            applyDefaultComponents(weapon(1.0F, -0.5F, 0.0F), Items.IRON_SHOVEL);
-            applyDefaultComponents(weapon(2.0F, -0.5F, 0.0F), Items.DIAMOND_SHOVEL);
-            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), Items.NETHERITE_SHOVEL);
+            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), intermediary, Items.WOODEN_SHOVEL);
+            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), intermediary, Items.GOLDEN_SHOVEL);
+            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), intermediary, Items.STONE_SHOVEL);
+            applyDefaultComponents(weapon(1.0F, -0.5F, 0.0F), intermediary, Items.IRON_SHOVEL);
+            applyDefaultComponents(weapon(2.0F, -0.5F, 0.0F), intermediary, Items.DIAMOND_SHOVEL);
+            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.NETHERITE_SHOVEL);
 
-            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), Items.WOODEN_PICKAXE);
-            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), Items.GOLDEN_PICKAXE);
-            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), Items.STONE_PICKAXE);
-            applyDefaultComponents(weapon(2.0F, 0.0F, 0.0F), Items.IRON_PICKAXE);
-            applyDefaultComponents(weapon(3.0F, 0.0F, 0.0F), Items.DIAMOND_PICKAXE);
-            applyDefaultComponents(weapon(4.0F, 0.0F, 0.0F), Items.NETHERITE_PICKAXE);
+            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), intermediary, Items.WOODEN_PICKAXE);
+            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), intermediary, Items.GOLDEN_PICKAXE);
+            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), intermediary, Items.STONE_PICKAXE);
+            applyDefaultComponents(weapon(2.0F, 0.0F, 0.0F), intermediary, Items.IRON_PICKAXE);
+            applyDefaultComponents(weapon(3.0F, 0.0F, 0.0F), intermediary, Items.DIAMOND_PICKAXE);
+            applyDefaultComponents(weapon(4.0F, 0.0F, 0.0F), intermediary, Items.NETHERITE_PICKAXE);
 
-            applyDefaultComponents(weapon(5.0F, -0.5F, 1.0F), Items.TRIDENT);
-            applyDefaultComponents(weapon(4.0F, -1.50F, 0.0F), Items.MACE);
-
+            applyDefaultComponents(weapon(5.0F, -0.5F, 1.0F), intermediary, Items.TRIDENT);
+            applyDefaultComponents(weapon(4.0F, -1.50F, 0.0F), intermediary, Items.MACE);
+            DEFAULT_PATCHES = new ArrayList<>(intermediary.entrySet().stream().map(entry -> new ItemPatchesEntry(entry.getKey(), entry.getValue())).sorted(Comparator.naturalOrder()).map(ItemPatchesEntry::itemPatches).toList());
         } catch (NoSuchFieldException | IllegalAccessException e) {
             CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to update default components!" + e);
         }
     }
 
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Item item) throws NoSuchFieldException, IllegalAccessException {
+    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Map<ResourceLocation, ItemPatches> intermediary, Item item) throws NoSuchFieldException, IllegalAccessException {
         Field components = Item.class.getDeclaredField("components");
         components.setAccessible(true);
-
         PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
         patcher.accept(newMap);
         components.set(item, newMap);
@@ -129,16 +134,19 @@ public class ItemPatcher {
             metaData.setAccessible(true);
             metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
         }
+        intermediary.put(id(item.builtInRegistryHolder().key().location().getPath()), new ItemPatches(HolderSet.direct(item.builtInRegistryHolder()), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
     }
     public static <I extends ItemMeta> CraftItemMetas.ItemMetaData<I> generate(CraftItemMetas.ItemMetaData<I> meta) {
         return new CraftItemMetas.ItemMetaData<>(meta.metaClass(), (stack, extra) -> (I) WRAPPER.apply(meta, stack, extra), meta.fromItemMeta());
     }
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Item... items) throws NoSuchFieldException, IllegalAccessException {
+    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, ResourceLocation patchName, Map<ResourceLocation, ItemPatches> intermediary, Item... items) throws NoSuchFieldException, IllegalAccessException {
         Field components = Item.class.getDeclaredField("components");
         components.setAccessible(true);
 
         Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
         metaData.setAccessible(true);
+        PatchedDataComponentMap generic = new PatchedDataComponentMap(DataComponentMap.builder().build());
+        patcher.accept(generic);
         for (Item item : items) {
             PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
             patcher.accept(newMap);
@@ -148,6 +156,7 @@ public class ItemPatcher {
                 metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
             }
         }
+        intermediary.put(patchName, new ItemPatches(HolderSet.direct(Item::builtInRegistryHolder, items), Collections.emptyList(), Collections.emptyList(), generic.asPatch(), 1000));
     }
     public static Consumer<PatchedDataComponentMap> useDuration(float useSeconds) {
         return patchedDataComponentMap -> {
@@ -174,8 +183,7 @@ public class ItemPatcher {
         return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.USE_COOLDOWN, new UseCooldown(seconds));
     }
     public static void addAttributeTooltips(Consumer<net.minecraft.network.chat.Component> tooltipAdder, ItemStack stack, @Nullable ServerPlayer player) {
-        ItemAttributeModifiers itemAttributeModifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
-        if (itemAttributeModifiers.showInTooltip()) {
+        if (stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).shows(DataComponents.ATTRIBUTE_MODIFIERS)) {
             for (net.minecraft.world.entity.EquipmentSlotGroup equipmentSlotGroup : net.minecraft.world.entity.EquipmentSlotGroup.values()) {
                 MutableBoolean mutableBoolean = new MutableBoolean(true);
                 stack.forEachModifier(equipmentSlotGroup, (attribute, modifier) -> {
@@ -252,6 +260,13 @@ public class ItemPatcher {
                             .withStyle(attribute.value().getStyle(false))
                             .withStyle(Style.EMPTY.withItalic(false))
             );
+        }
+    }
+    public record ItemPatchesEntry(ResourceLocation id, ItemPatches itemPatches) implements Comparable<ItemPatchesEntry> {
+        @Override
+        public int compareTo(ItemPatchesEntry other) {
+            int priority = itemPatches.compareTo(other.itemPatches);
+            return priority == 0 ? id.compareTo(other.id) : priority;
         }
     }
 }

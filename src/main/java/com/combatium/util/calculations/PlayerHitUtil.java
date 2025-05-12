@@ -137,7 +137,7 @@ public class PlayerHitUtil {
     }
 
     public static double getAngle(Player attacker, Entity damagedEntity) {
-        Vec3 vector = CraftLocation.toVec3D(attacker.getLocation());
+        Vec3 vector = CraftLocation.toVec3(attacker.getLocation());
         net.minecraft.world.entity.Entity nmsEntity = ((CraftLivingEntity) damagedEntity).getHandle();
         Vec3 balls = nmsEntity.calculateViewVector(0.0f, nmsEntity.getYHeadRot());
         Vec3 directionVector = vector.vectorTo(nmsEntity.position());

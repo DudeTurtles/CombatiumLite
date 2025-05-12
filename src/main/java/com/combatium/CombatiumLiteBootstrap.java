@@ -30,8 +30,8 @@ import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.enchantment.ConditionalEffect;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.LevelBasedValue;
@@ -59,56 +59,12 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             Field optionalStreamCodec = ItemStack.class.getDeclaredField("OPTIONAL_STREAM_CODEC");
             Object staticBase = unsafe.staticFieldBase(optionalStreamCodec);
             long staticOffset = unsafe.staticFieldOffset(optionalStreamCodec);
+            Field untrustedStreamCodec = ItemStack.class.getDeclaredField("OPTIONAL_UNTRUSTED_STREAM_CODEC");
             Field streamCodec = ItemStack.class.getDeclaredField("STREAM_CODEC");
             Field listStreamCodec = ItemStack.class.getDeclaredField("OPTIONAL_LIST_STREAM_CODEC");
             StreamCodec<RegistryFriendlyByteBuf, ItemStack> original = (StreamCodec<RegistryFriendlyByteBuf, ItemStack>) optionalStreamCodec.get(null); // or use unsafe.getObject(...)
             CombatiumLite.getPluginLogger().log(Level.INFO, "Original stream codec: " + original);
-            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = new StreamCodec<>() {
-                @Override
-                public ItemStack decode(RegistryFriendlyByteBuf buffer) {
-                    ItemStack stack = original.decode(buffer);
-                    CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-                    if (customData != null && customData.contains(COMBATIUM_ORIGINAL)) {
-                        try {
-                            Tag tag = customData.copyTag().get(COMBATIUM_ORIGINAL);
-                            DataComponentPatch patch = DataComponentPatch.CODEC.parse(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), tag).getOrThrow();
-                            if (stack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) patchedDataComponentMap.restorePatch(patch);
-                        } catch (Throwable ignored) {
-
-                        }
-                    }
-                    return stack;
-                }
-
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, ItemStack stack) {
-                    ItemStack newStack = stack.copy();
-                    if (!stack.isEmpty()) {
-                        DataComponentMap prototype = stack.getPrototype();
-                        if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
-                            if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
-                                patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
-                                patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
-                            }
-                        }
-                    }
-                    ServerPlayer player = Bukkit.getOnlinePlayers().stream().findFirst().map(bukkit -> ((CraftPlayer)bukkit).getHandle()).orElse(null);
-                    ItemLore originalLore = newStack.getOrDefault(DataComponents.LORE, ItemLore.EMPTY);
-                    List<net.minecraft.network.chat.Component> lines = new ArrayList<>();
-                    List<net.minecraft.network.chat.Component> styledLines = originalLore.styledLines();
-                    addAttributeTooltips(lines::add, newStack, player);
-                    lines.addAll(originalLore.lines());
-                    ItemLore newLore = new ItemLore(lines, styledLines);
-                    if (!newLore.equals(originalLore)) {
-                        newStack.set(DataComponents.LORE, newLore);
-                        newStack.set(DataComponents.ATTRIBUTE_MODIFIERS, newStack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).withTooltip(false));
-                    }
-                    Tag tag = DataComponentPatch.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), stack.getComponentsPatch()).getOrThrow();
-                    CustomData customItemData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-                    newStack.set(DataComponents.CUSTOM_DATA, customItemData.update(customDataTag -> customDataTag.put(COMBATIUM_ORIGINAL, tag)));
-                    original.encode(buffer, newStack);
-                }
-            };
+            StreamCodec<RegistryFriendlyByteBuf, ItemStack> patched = wrapStreamCodec(original);
 
             unsafe.putObject(staticBase, staticOffset, patched);
 
@@ -139,10 +95,64 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             staticOffset = unsafe.staticFieldOffset(listStreamCodec);
             unsafe.putObject(staticBase, staticOffset, patched.apply(ByteBufCodecs.collection(NonNullList::createWithCapacity)));
 
+            staticBase = unsafe.staticFieldBase(untrustedStreamCodec);
+            staticOffset = unsafe.staticFieldOffset(untrustedStreamCodec);
+            unsafe.putObject(staticBase, staticOffset, wrapStreamCodec((StreamCodec<RegistryFriendlyByteBuf, ItemStack>) untrustedStreamCodec.get(null)));
+
             CombatiumLite.getPluginLogger().log(Level.INFO, "Patched stream codec: " + optionalStreamCodec.get(null));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static StreamCodec<RegistryFriendlyByteBuf, ItemStack> wrapStreamCodec(StreamCodec<RegistryFriendlyByteBuf, ItemStack> original) {
+        return new StreamCodec<>() {
+            @Override
+            public ItemStack decode(RegistryFriendlyByteBuf buffer) {
+                ItemStack stack = original.decode(buffer);
+                CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+                if (customData != null && customData.contains(COMBATIUM_ORIGINAL)) {
+                    try {
+                        Tag tag = customData.copyTag().get(COMBATIUM_ORIGINAL);
+                        DataComponentPatch patch = DataComponentPatch.CODEC.parse(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), tag).getOrThrow();
+                        if (stack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) patchedDataComponentMap.restorePatch(patch);
+                        stack.set(DataComponents.CUSTOM_DATA, customData);
+                    } catch (Throwable ignored) {
+
+                    }
+                }
+                return stack;
+            }
+
+            @Override
+            public void encode(RegistryFriendlyByteBuf buffer, ItemStack stack) {
+                ItemStack newStack = stack.copy();
+                if (!stack.isEmpty()) {
+                    DataComponentMap prototype = stack.getPrototype();
+                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                        if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
+                            patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
+                            patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
+                        }
+                    }
+                }
+                ServerPlayer player = Bukkit.getOnlinePlayers().stream().findFirst().map(bukkit -> ((CraftPlayer)bukkit).getHandle()).orElse(null);
+                ItemLore originalLore = newStack.getOrDefault(DataComponents.LORE, ItemLore.EMPTY);
+                List<net.minecraft.network.chat.Component> lines = new ArrayList<>();
+                List<net.minecraft.network.chat.Component> styledLines = originalLore.styledLines();
+                addAttributeTooltips(lines::add, newStack, player);
+                lines.addAll(originalLore.lines());
+                ItemLore newLore = new ItemLore(lines, styledLines);
+                if (!newLore.equals(originalLore)) {
+                    newStack.set(DataComponents.LORE, newLore);
+                    newStack.set(DataComponents.TOOLTIP_DISPLAY, newStack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
+                }
+                Tag tag = DataComponentPatch.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, buffer.registryAccess()), stack.getComponentsPatch()).getOrThrow();
+                CustomData customItemData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                newStack.set(DataComponents.CUSTOM_DATA, customItemData.update(customDataTag -> customDataTag.put(COMBATIUM_ORIGINAL, tag)));
+                original.encode(buffer, newStack);
+            }
+        };
     }
 
     @Override

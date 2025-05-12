@@ -1,7 +1,6 @@
 package com.combatium.listeners.snapshot;
 
 import com.combatium.CombatiumLite;
-import com.combatium.util.active.ReachUtil;
 import com.combatium.util.active.SweepingEdgeUtil;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;

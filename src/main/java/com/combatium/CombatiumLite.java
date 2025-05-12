@@ -8,6 +8,7 @@ import com.combatium.listeners.projectile.ProjectileHitListener;
 import com.combatium.listeners.projectile.ProjectileThrowListener;
 import com.combatium.listeners.regen.EntityRegainHealthListener;
 import com.combatium.listeners.snapshot.AirSwingListener;
+import com.combatium.listeners.snapshot.DefaultedListener;
 import com.combatium.listeners.snapshot.LiarListener;
 import com.combatium.listeners.util.*;
 import com.combatium.listeners.util.ping.AttributeChangeListener;
@@ -25,6 +26,7 @@ import com.combatium.util.ping.PingRunnable;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import net.atlas.defaulted.networking.ClientboundDefaultComponentsSyncPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -33,6 +35,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+
 import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
@@ -155,6 +158,8 @@ public final class CombatiumLite extends JavaPlugin {
             pluginManager.registerEvents(combatifyListener, this);
             getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
         }
+        pluginManager.registerEvents(new DefaultedListener(), this);
+        getServer().getMessenger().registerOutgoingPluginChannel(this, ClientboundDefaultComponentsSyncPacket.TYPE.id().toString());
     }
 
     @Override

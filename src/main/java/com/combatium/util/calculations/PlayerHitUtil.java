@@ -1,7 +1,6 @@
 package com.combatium.util.calculations;
 
 import com.combatium.CombatiumLite;
-import com.combatium.util.active.ReachUtil;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -33,7 +32,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -260,6 +258,8 @@ public class PlayerHitUtil {
             double result = (Math.random() <= (0.15 * lvl)) ? ((Math.random() * 4) + 1) : 0;
             if (result > damage) damage = result;
         }
+
+        if (damage == 0) return;
 
         DamageSource damageSource = DamageSource.builder(DamageType.THORNS).withCausingEntity(entity).withDirectEntity(entity).withDamageLocation(entity.getLocation()).build();
         attacker.damage(damage, damageSource);

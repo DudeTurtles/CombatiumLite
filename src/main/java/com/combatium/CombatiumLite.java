@@ -18,6 +18,7 @@ import com.combatium.listeners.util.sweepingEdgeListeners.PlayerInteractListener
 import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.scheduler.Scheduler;
 import com.combatium.util.ItemPatcher;
+import com.combatium.util.active.PlayerDamageEntity;
 import com.combatium.util.active.ReachUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
 import com.combatium.util.ping.PingRunnable;
@@ -126,7 +127,9 @@ public final class CombatiumLite extends JavaPlugin {
         this.scheduler = new Scheduler(this, regenTickDelay);
         this.scheduler.register(new InvulnerabilityScheduler(this.scheduler));
 
-        pluginManager.registerEvents(new EntityDamageByEntityListener(), this);
+        EntityDamageByEntityListener entityDamageByEntityListener = new EntityDamageByEntityListener();
+        PlayerDamageEntity.setEntityDamageByEntityListener(entityDamageByEntityListener);
+        pluginManager.registerEvents(entityDamageByEntityListener, this);
         pluginManager.registerEvents(new EntityDamageListener(), this);
         pluginManager.registerEvents(new ProjectileHitListener(), this);
         pluginManager.registerEvents(new EntityDeathListener(), this);
@@ -145,7 +148,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new ConsumeListener(), this);
         pluginManager.registerEvents(new VehicleDamageListener(), this);
         pluginManager.registerEvents(new ItemDropListener(), this);
-        pluginManager.registerEvents(new PlayerDeathListener(), this);
+        pluginManager.registerEvents(new PrePlayerAttackEvent(), this);
 
         if (combatifySupport) {
             CombatifyListener combatifyListener = new CombatifyListener();

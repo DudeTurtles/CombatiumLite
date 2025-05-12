@@ -1,6 +1,7 @@
 package com.combatium.util.active;
 
 import com.combatium.CombatiumLite;
+import com.combatium.listeners.damage.EntityDamageByEntityListener;
 import com.combatium.listeners.util.AnimationListener;
 import com.combatium.util.calculations.DisableShieldUtil;
 import com.combatium.util.calculations.PlayerHitUtil;
@@ -29,10 +30,10 @@ import java.util.Map;
 
 public class PlayerDamageEntity {
     private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
-    public static final Map<Player, Boolean> hasProcessed = new HashMap<>();
     public static final NamespacedKey BLOCK_ANGLE = new NamespacedKey("combatium", "block_angle");
     public static final NamespacedKey BLOCK_AMOUNT = new NamespacedKey("combatium", "block_amount");
     public static final NamespacedKey KNOCKBACK_REDUCTION = new NamespacedKey("combatium", "knockback_reduction");
+    private static EntityDamageByEntityListener entityDamageByEntityListener;
 
     public static void playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
@@ -105,6 +106,9 @@ public class PlayerDamageEntity {
             strength = (player.isSprinting() && (player.getAttackCooldown() <= 0.9)) ? 1.0 : 0.0;
         }
 
+        if (dealDamage) dealDamage(entity, damage, player);
+        if (entityDamageByEntityListener.wasHitCancelled(player)) return;
+
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, knockbackReduction, false);
 
         ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
@@ -125,8 +129,6 @@ public class PlayerDamageEntity {
         if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 
         if (isBlocked) player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ITEM_SHIELD_BLOCK, 1, 1);
-
-        if (dealDamage) dealDamage(entity, damage, player);
 
         if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
             KnockbackUtil.applyKnockback(entity, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), isBlocked, knockbackReduction, false);
@@ -154,7 +156,6 @@ public class PlayerDamageEntity {
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {
-        hasProcessed.put(cause, true);
         ServerPlayer nmsPlayer = ((CraftPlayer) cause).getHandle();
         boolean sprinting = nmsPlayer.isSprinting();
         DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
@@ -186,10 +187,7 @@ public class PlayerDamageEntity {
         lastTickWeapon.put(player, item);
     }
 
-    public static boolean hasProcessed(Player player) {
-        if (!hasProcessed.containsKey(player)) {
-            hasProcessed.put(player, false);
-        }
-        return hasProcessed.get(player);
+    public static void setEntityDamageByEntityListener(EntityDamageByEntityListener entityDamageByEntityListener) {
+        PlayerDamageEntity.entityDamageByEntityListener = entityDamageByEntityListener;
     }
 }

@@ -1,18 +1,12 @@
 package com.combatium.util.active;
 
 import net.minecraft.util.Mth;
-import org.bukkit.Bukkit;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.util.BoundingBox;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 
 public class SweepingEdgeUtil {
     public static void Sweep(Player player, @Nullable LivingEntity hit) {
@@ -21,31 +15,19 @@ public class SweepingEdgeUtil {
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying()) return;
 
         addParticle(player);
-        DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withDamageLocation(player.getLocation()).withDirectEntity(player).build();
 
         if (hit != null) {
             hit.getLocation().getNearbyLivingEntities(1, 0.25, 1).stream()
-                    .filter(entity -> entity != player)
-                    .forEach(entity -> {
-                        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(player, entity, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, damageSource, 2);
-                        Bukkit.getServer().getPluginManager().callEvent(event);
-                    });
+                    .filter(entity -> entity != player && entity != hit)
+                    .forEach(entity -> PlayerDamageEntity.playerDamageEntityEvent(player, entity, player.getInventory().getItemInMainHand(), EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, true));
         } else {
             double dirX = (-Mth.sin(player.getYaw() * 0.017453292F)) * 2.0;
             double dirZ = Mth.cos(player.getYaw() * 0.017453292F) * 2.0;
             BoundingBox hitbox = player.getBoundingBox().expand(1.0, 0.25, 1.0).shift(dirX, 0.0d, dirZ);
 
-            ArrayList<LivingEntity> entities = new ArrayList<>();
-
-            for (Entity entity : player.getWorld().getNearbyEntities(hitbox)) {
-                if (!(entity instanceof LivingEntity) || entity == player) continue;
-                entities.add((LivingEntity) entity);
-            }
-
-            for (LivingEntity entity : entities) {
-                EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(player, entity, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, damageSource, 2);
-                Bukkit.getServer().getPluginManager().callEvent(event);
-            }
+            player.getWorld().getNearbyEntities(hitbox).stream()
+                    .filter(e -> e instanceof LivingEntity && e != player)
+                    .forEach(entity -> PlayerDamageEntity.playerDamageEntityEvent(player, (LivingEntity) entity, player.getInventory().getItemInMainHand(), EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, true));
         }
     }
 

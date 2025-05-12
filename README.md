@@ -6,8 +6,6 @@ CombatiumLite is a plugin which aims to port over the Combat Test Snapshots to t
 Since the combat test snapshots are no longer being updated, there are plans to keep this plugin both updated for the latest version of minecraft, and to have a separate branch which aims to explore new features and changes to combat, similarly to how the combat test snapshots experimented with pvp. While the experimental branch isn't yet available, it will be in the near future, and will be listed here when available.<br><br>
 ### [Changes from Vanilla](Changes.md)
 
-### [Weapon Modding Support](Modding.md)
-
 </div>
 
 ### Configuration

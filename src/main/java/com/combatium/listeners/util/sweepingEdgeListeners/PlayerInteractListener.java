@@ -47,7 +47,9 @@ public PlayerInteractListener() {
                         CombatiumLite.getScheduler().scheduleSweep(event.getPlayer());
                         AnimationListener.cancelAnim(event.getPlayer());
                         return;
-                    } else SweepingEdgeUtil.Sweep(event.getPlayer(), null);
+                    } else {
+                        SweepingEdgeUtil.Sweep(event.getPlayer(), null);
+                    }
                 }
 
                 if (!(reachUtil.isRateLimited(event.getPlayer()))) {

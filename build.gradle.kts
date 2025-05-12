@@ -2,7 +2,7 @@ plugins {
     id ("com.gradleup.shadow") version "9.0.0-beta4"
     id("java")
     id("xyz.jpenilla.run-paper") version "2.3.1"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.14"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.16"
 }
 
 group = "CombatiumLite"
@@ -27,12 +27,12 @@ dependencies {
     shadow(gradleApi())
 
     implementation("com.github.retrooper:packetevents-spigot:2.7.0")
-    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT")
 }
 
 tasks {
     runServer {
-        minecraftVersion("1.21.4")
+        minecraftVersion("1.21.5")
     }
 }
 

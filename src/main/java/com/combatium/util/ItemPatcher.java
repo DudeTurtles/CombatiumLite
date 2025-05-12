@@ -18,10 +18,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.Consumable;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.component.TooltipDisplay;
-import net.minecraft.world.item.component.UseCooldown;
+import net.minecraft.world.item.component.*;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -86,12 +83,12 @@ public class ItemPatcher {
             applyDefaultComponents(weapon(4.0F, 0.5F, 0.5F), intermediary, Items.DIAMOND_SWORD);
             applyDefaultComponents(weapon(5.0F, 0.5F, 0.5F), intermediary, Items.NETHERITE_SWORD);
 
-            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.WOODEN_AXE);
-            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.GOLDEN_AXE);
-            applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.STONE_AXE);
-            applyDefaultComponents(weapon(4.0F, -0.5F, 0.0F), intermediary, Items.IRON_AXE);
-            applyDefaultComponents(weapon(5.0F, -0.5F, 0.0F), intermediary, Items.DIAMOND_AXE);
-            applyDefaultComponents(weapon(6.0F, -0.5F, 0.0F), intermediary, Items.NETHERITE_AXE);
+            applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(3.0F, -0.5F, 0.0F)), intermediary, Items.WOODEN_AXE);
+            applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(3.0F, -0.5F, 0.0F)), intermediary, Items.GOLDEN_AXE);
+            applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(3.0F, -0.5F, 0.0F)), intermediary, Items.STONE_AXE);
+            applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(4.0F, -0.5F, 0.0F)), intermediary, Items.IRON_AXE);
+            applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(5.0F, -0.5F, 0.0F)), intermediary, Items.DIAMOND_AXE);
+            applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(6.0F, -0.5F, 0.0F)), intermediary, Items.NETHERITE_AXE);
 
             applyDefaultComponents(weapon(0.0F, -0.5F, 1.0F), intermediary, Items.WOODEN_HOE);
             applyDefaultComponents(weapon(0.0F, 1.0F, 1.0F), intermediary, Items.GOLDEN_HOE);
@@ -181,6 +178,9 @@ public class ItemPatcher {
     }
     public static Consumer<PatchedDataComponentMap> cooldown(float seconds) {
         return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.USE_COOLDOWN, new UseCooldown(seconds));
+    }
+    public static Consumer<PatchedDataComponentMap> weaponComponent(int itemDamagePerAttack, float disableTime) {
+        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.WEAPON, new Weapon(itemDamagePerAttack, disableTime));
     }
     public static void addAttributeTooltips(Consumer<net.minecraft.network.chat.Component> tooltipAdder, ItemStack stack, @Nullable ServerPlayer player) {
         if (stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).shows(DataComponents.ATTRIBUTE_MODIFIERS)) {

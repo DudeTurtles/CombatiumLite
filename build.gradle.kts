@@ -26,7 +26,7 @@ dependencies {
     shadow(localGroovy())
     shadow(gradleApi())
 
-    implementation("com.github.retrooper:packetevents-spigot:2.7.0")
+    implementation("com.github.retrooper:packetevents-spigot:2.8.0")
     paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT")
 }
 

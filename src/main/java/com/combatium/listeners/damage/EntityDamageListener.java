@@ -2,7 +2,11 @@ package com.combatium.listeners.damage;
 
 import com.combatium.CombatiumLite;
 import com.combatium.scheduler.InvulnerabilityScheduler;
+import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemUseAnimation;
 import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
@@ -27,7 +31,30 @@ public class EntityDamageListener implements Listener {
     public void onEntityDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof LivingEntity e && computeAmountFromEntityDamageEvent(event) > 0) {
             net.minecraft.world.entity.LivingEntity nms = ((CraftLivingEntity)e).getHandle();
-            if (!((CraftDamageSource)event.getDamageSource()).getHandle().is(DamageTypeTags.NO_IMPACT)) nms.hurtMarked = true;
+            DamageSource damageSource = ((CraftDamageSource)event.getDamageSource()).getHandle();
+            if (!damageSource.is(DamageTypeTags.NO_IMPACT)) nms.hurtMarked = true;
+            if (!damageSource.is(DamageTypeTags.NO_KNOCKBACK)) {
+                double d = 0.0F;
+                double d1 = 0.0F;
+                Entity attacker = damageSource.getDirectEntity();
+                if (attacker instanceof Projectile projectile) {
+                    DoubleDoubleImmutablePair doubleDoubleImmutablePair = projectile.calculateHorizontalHurtKnockbackDirection(nms, damageSource);
+                    d = -doubleDoubleImmutablePair.leftDouble();
+                    d1 = -doubleDoubleImmutablePair.rightDouble();
+                } else if (damageSource.getSourcePosition() != null) {
+                    d = damageSource.getSourcePosition().x() - nms.getX();
+                    d1 = damageSource.getSourcePosition().z() - nms.getZ();
+                }
+
+                if (Math.abs(d) > (double) 200.0F) {
+                    d = Math.random() - Math.random();
+                }
+
+                if (Math.abs(d1) > (double) 200.0F) {
+                    d1 = Math.random() - Math.random();
+                }
+                nms.indicateDamage(d, d1);
+            }
         }
         if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent && !event.isCancelled() && event.getDamage() > 0) {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();

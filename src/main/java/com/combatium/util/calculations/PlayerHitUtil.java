@@ -5,8 +5,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -16,7 +14,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.craftbukkit.entity.CraftEntity;
-import org.bukkit.craftbukkit.entity.CraftEntityType;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
@@ -30,7 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffectType;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,28 +75,6 @@ public class PlayerHitUtil {
         }
 
         return damage;
-    }
-
-    public static boolean isEntityInTag(Entity entity, TagKey<EntityType<?>> tag) {
-        return CraftEntityType.bukkitToMinecraft(entity.getType()).is(tag);
-    }
-
-    //Calculate the damage values after armor and resistance are accounted for
-    public static float getFinalDamage(LivingEntity damagedEntity, float rawDamage, ItemStack weapon) {
-        double protPassPercent = getProtPassPercent(damagedEntity);
-
-        //Get the amount of damage dealt after armor is accounted for
-        double armor = Objects.requireNonNull(damagedEntity.getAttribute(Attribute.ARMOR)).getValue();
-        double toughness = Objects.requireNonNull(damagedEntity.getAttribute(Attribute.ARMOR_TOUGHNESS)).getValue();
-
-        float armorBlockPercent = (float) ((Math.max(((armor) / 5), (armor - ((4 * rawDamage) / (toughness + 8))))) / 25);
-        float armorPassPercent = (float) (1 - (armorBlockPercent * (1 - 0.15 * weapon.getEnchantmentLevel(Enchantment.BREACH))));
-
-        //Get the percentage of damage dealt after resistance
-        int resistance = damagedEntity.getPotionEffect(PotionEffectType.RESISTANCE) == null ? 0 : Objects.requireNonNull(damagedEntity.getPotionEffect(PotionEffectType.RESISTANCE)).getAmplifier();
-        double potionPassPercent = 1 - ( resistance * 0.2);
-
-        return (float) (rawDamage * armorPassPercent * protPassPercent * potionPassPercent);
     }
 
     public static boolean dealsEnchantDamage(ItemStack weapon, ServerPlayer player, Entity damagedEntity) {
@@ -161,33 +136,6 @@ public class PlayerHitUtil {
 
     public static void setBackShots(Boolean backShots) {
         PlayerHitUtil.backShots = backShots;
-    }
-
-    private static double getProtPassPercent(LivingEntity entity) {
-        ItemStack helmet = null;
-        ItemStack chestplate = null;
-        ItemStack leggings = null;
-        ItemStack boots = null;
-
-        if (entity instanceof Player player) {
-            helmet = player.getInventory().getHelmet();
-            chestplate = player.getInventory().getChestplate();
-            leggings = player.getInventory().getLeggings();
-            boots = player.getInventory().getBoots();
-        } else if (entity.getEquipment() != null) {
-            helmet = entity.getEquipment().getHelmet();
-            chestplate = entity.getEquipment().getChestplate();
-            leggings = entity.getEquipment().getLeggings();
-            boots = entity.getEquipment().getBoots();
-        }
-
-        //Get the percentage of damage dealt after protection
-        int prot = (helmet != null ? helmet.getEnchantmentLevel(Enchantment.PROTECTION) : 0) +
-                (chestplate != null ? chestplate.getEnchantmentLevel(Enchantment.PROTECTION) : 0) +
-                (leggings != null ? leggings.getEnchantmentLevel(Enchantment.PROTECTION) : 0) +
-                (boots != null ? boots.getEnchantmentLevel(Enchantment.PROTECTION) : 0);
-
-        return 1 - (prot * 0.04f);
     }
 
     public static int getFireProt(LivingEntity entity) {

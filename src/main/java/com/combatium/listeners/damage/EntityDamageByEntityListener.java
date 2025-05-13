@@ -41,15 +41,7 @@ public class EntityDamageByEntityListener implements Listener {
             return;
         }
 
-        if (event.getDamager() instanceof Player player) {
-            if (event.getEntity() instanceof LivingEntity e && (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0)){
-                if (event.getEntity() instanceof Player && (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0)) {
-                    event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
-                    event.setDamage(PlayerHitUtil.getFinalDamage(e, (float) event.getDamage(), player.getInventory().getItemInMainHand()));
-                    if (e.getAbsorptionAmount() > 0) event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, -1 * Math.min(e.getAbsorptionAmount(), event.getDamage()));
-                }
-            }
-        } else if (event.getDamager() instanceof Trident trident) { // Updated trident damage calculation
+        if (event.getDamager() instanceof Trident trident) { // Updated trident damage calculation
             double damage = 8;
             if (trident.getItemStack().containsEnchantment(Enchantment.IMPALING) && (event.getEntity()).isInWaterOrRain()) {
                 damage += trident.getItemStack().getEnchantmentLevel(Enchantment.IMPALING) * 2.5;
@@ -62,12 +54,6 @@ public class EntityDamageByEntityListener implements Listener {
                 event.setCancelled(true);
                 event.setDamage(0);
                 return;
-            }
-
-            if (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < -5) {
-                event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
-                event.setDamage(PlayerHitUtil.getFinalDamage(victim, (float) event.getDamage() - 5, new ItemStack(Material.AIR)));
-                if (victim.getAbsorptionAmount() > 0) event.setDamage(EntityDamageEvent.DamageModifier.ABSORPTION, -1 * Math.min(victim.getAbsorptionAmount(), event.getDamage()));
             }
 
             double originalDamage = event.getDamage();

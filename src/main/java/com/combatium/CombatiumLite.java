@@ -28,6 +28,7 @@ import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import net.atlas.defaulted.networking.ClientboundDefaultComponentsSyncPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -97,7 +98,7 @@ public final class CombatiumLite extends JavaPlugin {
         swapAccuracy = getConfig().getBoolean("pvp.swapAccuracy", true);
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
         fixSweepOnThrow = getConfig().getBoolean("pvp.fixSweepOnThrow", true);
-        shieldProtectionArc = getConfig().getDouble("pvp.shieldProtectionArc", 130);
+        shieldProtectionArc = Mth.clamp(getConfig().getDouble("pvp.shieldProtectionArc", 65), 0, 180);
         getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 4));
         reachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
@@ -133,6 +134,7 @@ public final class CombatiumLite extends JavaPlugin {
         EntityDamageByEntityListener entityDamageByEntityListener = new EntityDamageByEntityListener();
         PlayerDamageEntity.setEntityDamageByEntityListener(entityDamageByEntityListener);
         pluginManager.registerEvents(entityDamageByEntityListener, this);
+        pluginManager.registerEvents(new PlayerShieldDisableListener(), this);
         pluginManager.registerEvents(new EntityDamageListener(), this);
         pluginManager.registerEvents(new ProjectileHitListener(), this);
         pluginManager.registerEvents(new EntityDeathListener(), this);

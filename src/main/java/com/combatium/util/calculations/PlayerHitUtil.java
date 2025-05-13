@@ -13,7 +13,6 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.craftbukkit.entity.CraftEntity;
@@ -44,7 +43,7 @@ public class PlayerHitUtil {
     private static final Map<Player, Double> lastTickDamage = new HashMap<>();
     private static final NamespacedKey enchantedDamageBonus = new NamespacedKey("combatium", "magic_damage_bonus");
 
-    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, boolean isBlocked, double blockAmount, EntityDamageEvent.DamageCause damageCause) {
+    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause) {
         float damage = (float) attackDamage(attacker);
         float enchantedDamage;
 
@@ -76,15 +75,6 @@ public class PlayerHitUtil {
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {
             damage *= 1.5f;
-        }
-
-        else if (isBlocked) {
-            if (damage > blockAmount) {
-                return (float) (damage - blockAmount);
-            } else {
-                damagedEntity.getWorld().playSound(damagedEntity.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 1.0f);
-                return 0;
-            }
         }
 
         return damage;

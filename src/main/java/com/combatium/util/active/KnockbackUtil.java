@@ -3,9 +3,9 @@ package com.combatium.util.active;
 import com.combatium.CombatiumLite;
 import com.combatium.util.ping.PingManager;
 import com.combatium.util.ping.PlayerPingData;
-import net.minecraft.world.entity.Entity;
 import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -13,12 +13,12 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 public class KnockbackUtil {
-    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean isBlocked, double knockbackReduction, boolean checkVertical) {
+    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean checkVertical) {
         if (entity instanceof Player p && (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR))
             return;
+        net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) entity).getHandle();
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
-        knockbackRes = Math.min(1.0, knockbackRes + (isBlocked ? knockbackReduction : 0.0));
-        Entity nmsEntity = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) entity).getHandle();
+        knockbackRes = Math.min(1.0, knockbackRes + (nmsEntity.isBlocking() ? 0.5 : 0.0));
 
         strength *= 1.0 - knockbackRes;
         if (strength <= 0.0F) return;

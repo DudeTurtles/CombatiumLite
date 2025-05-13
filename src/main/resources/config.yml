@@ -129,5 +129,5 @@ pvp:
   missTime: 4
 
   # The protection arc of the shield. This is the angle in which the shield will protect the player.
-  # Default: 130.0
-  shieldProtectionArc: 130.0
+  # Default: 65.0
+  shieldProtectionArc: 65.0

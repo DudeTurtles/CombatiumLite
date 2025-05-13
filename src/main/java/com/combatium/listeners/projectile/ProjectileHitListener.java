@@ -1,15 +1,17 @@
 package com.combatium.listeners.projectile;
 
-import com.combatium.util.active.KnockbackUtil;
+import com.combatium.CombatiumLite;
 import com.combatium.util.calculations.PlayerHitUtil;
-import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
 import net.minecraft.world.damagesource.DamageSource;
+import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftProjectile;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
+
+import java.util.logging.Logger;
 
 public class ProjectileHitListener implements Listener {
     @EventHandler
@@ -21,13 +23,19 @@ public class ProjectileHitListener implements Listener {
                 net.minecraft.world.entity.projectile.Projectile nmsProjectile = ((CraftProjectile) event.getEntity()).getHandle();
                 DamageSource potentialSource = nmsProjectile.damageSources().thrown(nmsProjectile, nmsProjectile.getOwner());
 
-                DoubleDoubleImmutablePair doubleDoubleImmutablePair = nmsProjectile.calculateHorizontalHurtKnockbackDirection(nmsEntity, potentialSource);
-                double d = -doubleDoubleImmutablePair.leftDouble();
-                double d1 = -doubleDoubleImmutablePair.rightDouble();
-                if (!(nmsEntity.getItemBlockingWith() != null && nmsEntity.resolveBlockedDamage(potentialSource, 1) > 0)) nmsEntity.hurtMarked = true;
 
-                KnockbackUtil.applyKnockback(entity, 0.4f, d, d1, true);
-                nmsEntity.indicateDamage(d, d1);
+                try {
+                    if (entity instanceof Player p) {
+                        if (p.getGameMode() != GameMode.SPECTATOR && p.getGameMode() != GameMode.CREATIVE) nmsEntity.hurt(potentialSource, 0.000000001f);
+                    } else nmsEntity.hurt(potentialSource, 0.000000001f);
+                } catch (NoSuchMethodError e) {
+                    nmsEntity.hurt(potentialSource, 0.000000001f);
+                    Logger logger = CombatiumLite.getPluginLogger();
+                    logger.severe("Failed to apply proper damage. Please report this to the CombatiumLite developers.");
+                    logger.severe("This is not a critical error, but it may affect gameplay.");
+                    logger.severe("Error: " + e.getMessage());
+                }
+
                 if (event.getEntity().getShooter() instanceof LivingEntity attacker1) PlayerHitUtil.thornsCheck(entity, attacker1);
             }
         }

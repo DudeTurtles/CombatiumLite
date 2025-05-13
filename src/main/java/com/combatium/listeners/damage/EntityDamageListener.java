@@ -2,7 +2,10 @@ package com.combatium.listeners.damage;
 
 import com.combatium.CombatiumLite;
 import com.combatium.scheduler.InvulnerabilityScheduler;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.item.ItemUseAnimation;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.LivingEntity;
@@ -22,6 +25,10 @@ public class EntityDamageListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof LivingEntity e && computeAmountFromEntityDamageEvent(event) > 0) {
+            net.minecraft.world.entity.LivingEntity nms = ((CraftLivingEntity)e).getHandle();
+            if (!((CraftDamageSource)event.getDamageSource()).getHandle().is(DamageTypeTags.NO_IMPACT)) nms.hurtMarked = true;
+        }
         if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent && !event.isCancelled() && event.getDamage() > 0) {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
             if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {
@@ -57,5 +64,13 @@ public class EntityDamageListener implements Listener {
                 if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) invulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage, event.getCause());
             }
         }
+    }
+    private float computeAmountFromEntityDamageEvent(EntityDamageEvent event) {
+        float amount = 0.0F;
+        amount += (float)event.getDamage(EntityDamageEvent.DamageModifier.BASE);
+        amount += (float)event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING);
+        amount += (float)event.getDamage(EntityDamageEvent.DamageModifier.FREEZING);
+        amount += (float)event.getDamage(EntityDamageEvent.DamageModifier.HARD_HAT);
+        return amount;
     }
 }

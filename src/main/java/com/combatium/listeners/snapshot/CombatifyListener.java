@@ -33,7 +33,7 @@ public class CombatifyListener implements Listener, PluginMessageListener {
             try {
                 Method setDirty = AttributeInstance.class.getDeclaredMethod("setDirty");
                 setDirty.setAccessible(true);
-                setDirty.invoke(nmsPlayer.getAttribute(Attributes.ATTACK_DAMAGE));
+                setDirty.invoke(nmsPlayer.getAttribute(Attributes.ATTACK_SPEED));
             } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
 
             }

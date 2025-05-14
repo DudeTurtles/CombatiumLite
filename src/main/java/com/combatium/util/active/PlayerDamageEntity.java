@@ -36,6 +36,7 @@ public class PlayerDamageEntity {
     public static void playerDamageEntityEvent(Player player, LivingEntity entity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
         if (entity.isInvulnerable()) return;
+        if (entity instanceof Player p && p.getGameMode().isInvulnerable()) return;
         // For some reason this would occasionally cause issues when dealing with players hitting bot players created by other plugins
         if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) {
             try {
@@ -74,6 +75,7 @@ public class PlayerDamageEntity {
         } else {
             strength = (player.isSprinting() && (player.getAttackCooldown() <= 0.9)) ? 1.0 : 0.0;
         }
+        boolean isSprinting = player.isSprinting();
 
         double oldHealth = entity.getHealth();
         if (dealDamage) dealDamage(entity, damage, player);
@@ -87,11 +89,11 @@ public class PlayerDamageEntity {
         //Fix item crit particles and sounds
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
-            if (player.isSprinting() || player.getAttackCooldown() > 0) {
+            if (isSprinting || player.getAttackCooldown() > 0) {
                 nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 4));
             }
         } else {
-            if (player.isSprinting()) player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
+            if (isSprinting) player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
             else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
         }
 

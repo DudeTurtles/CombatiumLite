@@ -2,7 +2,6 @@ package com.combatium.util.active;
 
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -42,16 +41,7 @@ public class MaceUtil {
         attacker.setVelocity(new Vector(0, 0, 0));
         attacker.setFallDistance(0);
 
-        windburstPlayer(attacker, mace.getEnchantmentLevel(Enchantment.WIND_BURST));
         return true;
-    }
-
-    private static void windburstPlayer(Player player, int level) {
-        if (level <= 0) return;
-
-        player.getLocation().getWorld().spawnParticle(Particle.GUST_EMITTER_LARGE, player.getLocation(), 1, 1.0, 1.0, 1.0, 0.1);
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WIND_CHARGE_WIND_BURST, SoundCategory.PLAYERS, 1.0f, 1.0f);
-        player.setVelocity(player.getVelocity().setY(1.15 + 0.35 * level));
     }
 
     private static double getKnockback(Player attacker, LivingEntity attacked, Vector distance) {

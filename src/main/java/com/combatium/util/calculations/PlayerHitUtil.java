@@ -125,13 +125,18 @@ public class PlayerHitUtil {
         return Objects.requireNonNull(attacker.getAttribute(Attribute.ATTACK_DAMAGE)).getValue();
     }
 
+    /*
+     * The dam and val variables serve to ensure weapon swapping works even if the weapon has enchantments
+     */
     private static double enchantedDamage(Player attacker, float enchantedDamage) {
         if (attacker.isRiptiding()) return enchantedDamage + attackDamage(attacker);
+        double dam = attackDamage(attacker);
         var attrib = Objects.requireNonNull(attacker.getAttribute(Attribute.ATTACK_DAMAGE));
+        double val = attrib.getValue();
         attrib.addTransientModifier(new AttributeModifier(enchantedDamageBonus, enchantedDamage, AttributeModifier.Operation.ADD_NUMBER));
         double res = attrib.getValue();
         attrib.removeModifier(enchantedDamageBonus);
-        return res;
+        return res - val + dam;
     }
 
     public static void setBackShots(Boolean backShots) {

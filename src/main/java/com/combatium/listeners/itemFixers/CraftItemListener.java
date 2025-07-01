@@ -14,11 +14,11 @@ public class CraftItemListener implements Listener {
             return;
         }
 
-        if (CombatiumLite.swordBlocking) {
-            ItemStack item = FixItem.makeSwordBlock(event.getCurrentItem());
-            if (item != null) {
-                event.setCurrentItem(item);
-            }
+        if (!CombatiumLite.swordBlocking) return;
+
+        ItemStack item = FixItem.makeSwordBlock(event.getCurrentItem());
+        if (item != null) {
+            event.setCurrentItem(item);
         }
     }
 }

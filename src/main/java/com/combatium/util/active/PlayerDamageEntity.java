@@ -8,8 +8,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.EnchantmentTarget;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
@@ -23,8 +27,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 public class PlayerDamageEntity {
     private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
@@ -49,17 +56,17 @@ public class PlayerDamageEntity {
 
         //Calculation for reduced shield blocking arc
         net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) entity).getHandle();
+        ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
+        net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
 
         float damage = PlayerHitUtil.getRawDamage(player, entity, weapon, damageCause);
-        net.minecraft.world.damagesource.DamageSource source = ((CraftDamageSource) DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(player).withDirectEntity(player).build()).getHandle();
+        net.minecraft.world.damagesource.DamageSource damageSource = Optional.ofNullable(nmsWeapon.getItem().getDamageSource(nmsPlayer)).orElse(nmsPlayer.damageSources().playerAttack(nmsPlayer));
 
         double invulnerableDamage = CombatiumLite.getScheduler().getInvulnerabilityScheduler().isInvulnerable(entity);
         float originalDamage = damage;
         boolean cancelKB = false;
         damage -= (float) invulnerableDamage;
         if (damage <= 0) return;
-
-        if (weapon.getType() == Material.MACE) cancelKB = MaceUtil.macePostHit(weapon, player.getFallDistance(), player, entity);
 
         double strength;
         //Apply Knockback
@@ -69,7 +76,7 @@ public class PlayerDamageEntity {
             //Increase knockback strength based on knockback enchantment level
             if (weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchant(Enchantment.KNOCKBACK) && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
                 strength += getKnockback(((CraftPlayer) player).getHandle(), ((CraftLivingEntity) entity).getHandle(),
-                        source,
+                        damageSource,
                         (CraftItemStack.unwrap(weapon)));
             }
         } else {
@@ -82,9 +89,9 @@ public class PlayerDamageEntity {
         double finalDamage = oldHealth - entity.getHealth();
         if (entityDamageByEntityListener.wasHitCancelled(player)) return;
 
-        if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
+        EnchantmentHelper.doPostAttackEffects(nmsPlayer.serverLevel(), nmsEntity, damageSource);
 
-        ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
+        if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
 
         //Fix item crit particles and sounds
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
@@ -108,13 +115,6 @@ public class PlayerDamageEntity {
         if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             SweepingEdgeUtil.Sweep(player, entity);
-        }
-
-        PlayerHitUtil.thornsCheck(entity, player);
-
-        if (finalDamage > 0 && weapon.containsEnchantment(Enchantment.FIRE_ASPECT)) {
-            int fireProt = PlayerHitUtil.getFireProt(entity);
-            entity.setFireTicks(fireProt > 7 ? 0 : (int) ((80 * weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT) * (1 - (0.15 * fireProt)))));
         }
 
         /*

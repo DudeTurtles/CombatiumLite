@@ -67,6 +67,9 @@ public final class CombatiumLite extends JavaPlugin {
     public Scheduler scheduler;
     private ReachUtil reachUtil;
 
+    //todo: REMOVE THIS
+    public static boolean debug = false;
+
     @Override
     public void onEnable() {
         INSTANCE = this;
@@ -102,29 +105,28 @@ public final class CombatiumLite extends JavaPlugin {
         getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 4));
         reachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
+        debug = getConfig().getBoolean("pvp.debug", false);
 
         ItemPatcher.patch();
         printConfig();
 
-        if (pingImprovements) {
-            PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
-            PacketEvents.getAPI().load();
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        PacketEvents.getAPI().load();
 
-            PacketEvents.getAPI().getEventManager().registerListeners(
-                    new AttributeChangeListener(),
-                    new PingReceiveListener()
-            );
+        PacketEvents.getAPI().getEventManager().registerListeners(
+                new AttributeChangeListener(),
+                new PingReceiveListener()
+        );
 
-            PacketEvents.getAPI().getEventManager().registerListener(new AirSwingListener(), PacketListenerPriority.LOWEST);
-            PacketEvents.getAPI().getEventManager().registerListener(new LiarListener(), PacketListenerPriority.LOWEST);
-            pluginManager.registerEvents(new JoinQuitListener(), this);
-            PacketEvents.getAPI().getSettings()
-                    .checkForUpdates(false)
-                    .debug(false);
-            PacketEvents.getAPI().load();
-            PacketEvents.getAPI().init();
-            pingTask = new PingRunnable().runTaskTimerAsynchronously(this, 0L, 5L);
-        }
+        PacketEvents.getAPI().getEventManager().registerListener(new AirSwingListener(), PacketListenerPriority.LOWEST);
+        PacketEvents.getAPI().getEventManager().registerListener(new LiarListener(), PacketListenerPriority.LOWEST);
+        pluginManager.registerEvents(new JoinQuitListener(), this);
+        PacketEvents.getAPI().getSettings()
+                .checkForUpdates(false)
+                .debug(false);
+        PacketEvents.getAPI().load();
+        PacketEvents.getAPI().init();
+        pingTask = new PingRunnable().runTaskTimerAsynchronously(this, 0L, 5L);
 
         PlayerHitUtil.setBackShots(backShotsPlus);
 

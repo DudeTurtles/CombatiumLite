@@ -13,13 +13,12 @@ import org.bukkit.inventory.ItemStack;
 public class VehicleDamageListener implements Listener {
     @EventHandler
     public void onVehicleDamage(VehicleDamageEvent event) {
-        if (event.getAttacker() instanceof Player player) {
-            ItemStack item = player.getInventory().getItemInMainHand();
-            if (item.containsEnchantment(Enchantment.SWEEPING_EDGE)) return;
-            event.setCancelled(true);
-            Entity vehicle = ((CraftVehicle) event.getVehicle()).getHandle();
-            DamageSource damageSource = vehicle.damageSources().generic();
-            vehicle.hurtServer(vehicle.level().getMinecraftWorld(), damageSource, (float) event.getDamage());
-        }
+        if (!(event.getAttacker() instanceof Player player)) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item.containsEnchantment(Enchantment.SWEEPING_EDGE)) return;
+        event.setCancelled(true);
+        Entity vehicle = ((CraftVehicle) event.getVehicle()).getHandle();
+        DamageSource damageSource = vehicle.damageSources().generic();
+        vehicle.hurtServer(vehicle.level().getMinecraftWorld(), damageSource, (float) event.getDamage());
     }
 }

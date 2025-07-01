@@ -13,16 +13,15 @@ public class AirSwingListener implements PacketListener {
         if (event.getPacketType() != PacketType.Play.Client.INTERACT_ENTITY) return;
 
         InteractPacketWrapper packet = new InteractPacketWrapper(event);
-        if (packet.getAction() == InteractPacketWrapper.InteractAction.AIR_SWING) {
-            Player player = event.getPlayer();
-            CombatiumLite.getReachUtil().resetCooldown(player, true);
+        if (packet.getAction() != InteractPacketWrapper.InteractAction.AIR_SWING) return;
+        Player player = event.getPlayer();
+        CombatiumLite.getReachUtil().resetCooldown(player, true);
 
-            if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F)
-                    && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
-                SweepingEdgeUtil.Sweep(player, null);
-            }
-
-            event.setCancelled(true);
+        if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F)
+                && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
+            SweepingEdgeUtil.Sweep(player, null);
         }
+
+        event.setCancelled(true);
     }
 }

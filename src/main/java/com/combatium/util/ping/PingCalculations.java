@@ -53,11 +53,9 @@ public class PingCalculations {
         while (ping >= 1) {
             estimatedVelocity -= acceleration;
             estimatedVelocity *= MULTIPLIER;
+            estimatedVelocity = Math.min(estimatedVelocity, TERMINAL_VELOCITY);
             ping--;
         }
-
-        estimatedVelocity -= acceleration * ping;
-        estimatedVelocity *= Math.pow(MULTIPLIER, ping);
 
         return estimatedVelocity;
     }

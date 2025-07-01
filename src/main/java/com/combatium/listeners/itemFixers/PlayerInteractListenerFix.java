@@ -13,11 +13,11 @@ public class PlayerInteractListenerFix implements Listener {
         ItemStack weapon = event.getPlayer().getInventory().getItemInMainHand();
         if (weapon.getType().isAir()) return;
 
-        if (CombatiumLite.swordBlocking) {
-            ItemStack item = FixItem.makeSwordBlock(weapon);
-            if (item != null) {
-                event.getPlayer().getInventory().setItemInMainHand(item);
-            }
+        if (!CombatiumLite.swordBlocking) return;
+
+        ItemStack item = FixItem.makeSwordBlock(weapon);
+        if (item != null) {
+            event.getPlayer().getInventory().setItemInMainHand(item);
         }
     }
 }

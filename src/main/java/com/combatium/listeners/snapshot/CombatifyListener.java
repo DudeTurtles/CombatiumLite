@@ -24,20 +24,17 @@ public class CombatifyListener implements Listener, PluginMessageListener {
 
     @EventHandler
     public void onPlayerRegisterChannel(PlayerRegisterChannelEvent event) {
-        if (event.getChannel().equals("combatify:remaining_use_ticks")) {
-            Player player = event.getPlayer();
-            CombatiumLite.getPluginLogger().info(player.getName() + " has joined with Combatify");
-            combatifyPlayers.add(player.getUniqueId());
-            net.minecraft.world.entity.player.Player nmsPlayer = ((CraftPlayer)player).getHandle();
-            nmsPlayer.hasImpulse = true;
-            try {
-                Method setDirty = AttributeInstance.class.getDeclaredMethod("setDirty");
-                setDirty.setAccessible(true);
-                setDirty.invoke(nmsPlayer.getAttribute(Attributes.ATTACK_SPEED));
-            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
-
-            }
-        }
+        if (!event.getChannel().equals("combatify:remaining_use_ticks")) return;
+        Player player = event.getPlayer();
+        CombatiumLite.getPluginLogger().info(player.getName() + " has joined with Combatify");
+        combatifyPlayers.add(player.getUniqueId());
+        net.minecraft.world.entity.player.Player nmsPlayer = ((CraftPlayer) player).getHandle();
+        nmsPlayer.hasImpulse = true;
+        try {
+            Method setDirty = AttributeInstance.class.getDeclaredMethod("setDirty");
+            setDirty.setAccessible(true);
+            setDirty.invoke(nmsPlayer.getAttribute(Attributes.ATTACK_SPEED));
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
     }
 
     @EventHandler
@@ -47,15 +44,14 @@ public class CombatifyListener implements Listener, PluginMessageListener {
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] bytes) {
-        if (channel.equals("combatify:miss_attack")) {
-            //CombatiumLite.logger.info(player.getName() + " has missed");
+        if (!channel.equals("combatify:miss_attack")) return;
+        //CombatiumLite.logger.info(player.getName() + " has missed");
 
-            CombatiumLite.getReachUtil().resetCooldown(player, true);
+        CombatiumLite.getReachUtil().resetCooldown(player, true);
 
-            if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F)
-                    && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
-                SweepingEdgeUtil.Sweep(player, null);
-            }
+        if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F)
+                && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
+            SweepingEdgeUtil.Sweep(player, null);
         }
     }
 

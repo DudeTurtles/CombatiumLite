@@ -30,8 +30,8 @@ public class EntityDamageListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof LivingEntity e && computeAmountFromEntityDamageEvent(event) > 0) {
-            net.minecraft.world.entity.LivingEntity nms = ((CraftLivingEntity)e).getHandle();
-            DamageSource damageSource = ((CraftDamageSource)event.getDamageSource()).getHandle();
+            net.minecraft.world.entity.LivingEntity nms = ((CraftLivingEntity) e).getHandle();
+            DamageSource damageSource = ((CraftDamageSource) event.getDamageSource()).getHandle();
             if (!damageSource.is(DamageTypeTags.NO_IMPACT)) nms.hurtMarked = true;
             if (!damageSource.is(DamageTypeTags.NO_KNOCKBACK)) {
                 double d = 0.0F;
@@ -62,35 +62,37 @@ public class EntityDamageListener implements Listener {
                 e.clearActiveItem();
             }
         }
-        if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK || event.getCause() == EntityDamageEvent.DamageCause.PROJECTILE ||
+
+        if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK || event.getCause() == EntityDamageEvent.DamageCause.PROJECTILE ||
                 event instanceof EntityDamageByEntityEvent || event.getDamageSource().getDamageType() == DamageType.MOB_PROJECTILE ||
-                event.getDamageSource().getDamageType() == DamageType.GENERIC_KILL || event.getDamageSource().getDamageType() == DamageType.GENERIC)) {
-            if (event.getEntity() instanceof LivingEntity livingEntity) {
-                double invulDamage = invulnerabilityScheduler.isInvulnerable(livingEntity);
+                event.getDamageSource().getDamageType() == DamageType.GENERIC_KILL || event.getDamageSource().getDamageType() == DamageType.GENERIC) return;
 
-                if (event.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL &&
-                        invulnerabilityScheduler.getLastDamageCause(livingEntity) == EntityDamageEvent.DamageCause.FLY_INTO_WALL &&
-                        invulDamage > 0) {
-                    event.setCancelled(true);
-                    return;
-                }
+        if (!(event.getEntity() instanceof LivingEntity livingEntity)) return;
 
-                if (invulDamage >= event.getDamage()) {
-                    event.setCancelled(true);
-                    return;
-                }
+        double invulDamage = invulnerabilityScheduler.isInvulnerable(livingEntity);
 
-                double originalDamage = event.getDamage();
-                event.setDamage(event.getDamage() - invulDamage);
-
-                if (event.getCause() == EntityDamageEvent.DamageCause.MAGIC && event.getDamageSource().getDirectEntity() == null && event.getDamageSource().getCausingEntity() == null) {
-                    event.setDamage(event.getDamage() * .125);
-                }
-
-                // If the damage is not from an entity, set the entity to be invulnerable for 10 ticks
-                if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) invulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage, event.getCause());
-            }
+        if (event.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL &&
+                invulnerabilityScheduler.getLastDamageCause(livingEntity) == EntityDamageEvent.DamageCause.FLY_INTO_WALL &&
+                invulDamage > 0) {
+            event.setCancelled(true);
+            return;
         }
+
+        if (invulDamage >= event.getDamage() && invulDamage != 0) {
+            event.setCancelled(true);
+            return;
+        }
+
+        double originalDamage = event.getDamage();
+        event.setDamage(event.getDamage() - invulDamage);
+
+        if (event.getCause() == EntityDamageEvent.DamageCause.MAGIC && event.getDamageSource().getDirectEntity() == null && event.getDamageSource().getCausingEntity() == null) {
+            event.setDamage(event.getDamage() * .125);
+        }
+
+        // If the damage is not from an entity, set the entity to be invulnerable for 10 ticks
+        if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK))
+            invulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage, event.getCause());
     }
     private float computeAmountFromEntityDamageEvent(EntityDamageEvent event) {
         float amount = 0.0F;

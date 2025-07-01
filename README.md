@@ -3,7 +3,7 @@
 # CombatiumLite
 ![Available for paper](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/supported/paper_vector.svg)<br>
 CombatiumLite is a plugin which aims to port over the Combat Test Snapshots to the latest version as accurately as possible.<br><br>
-Since the combat test snapshots are no longer being updated, there are plans to keep this plugin both updated for the latest version of minecraft, and to have a separate branch which aims to explore new features and changes to combat, similarly to how the combat test snapshots experimented with pvp. While the experimental branch isn't yet available, it will be in the near future, and will be listed here when available.<br><br>
+Since the combat test snapshots are no longer being updated, there are plans to keep this plugin both updated for the latest version of minecraft, and potentially to have a separate branch which aims to explore new features and changes to combat, similarly to how the combat test snapshots experimented with pvp.<br><br>
 ### [Changes from Vanilla](Changes.md)
 
 </div>
@@ -18,8 +18,16 @@ If you are having issues with this plugin or are encountering bugs, feel free to
 
 
 ### Plans
+ - N/A all significant plans have been implemented
 
 ### Known Issues
+ - Issues when connecting on combatify such as:
+ - - (As this only happens when connecting with Combatify, we are unsure if it is an issue on combatify's end or ours)
+ - - The /enchant command not working
+ - - The anvil not working
+ - - Armor trims not working
+ - - Crossbows not appearing loaded when they are
+ - 8c doesn't have bonus reach in creative mode, and so vanilla creative bonus reach should be removed.
 
 #### Implementation ideas for plans
  - N/A all significant plans have been implemented

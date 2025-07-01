@@ -3,7 +3,6 @@ package com.combatium.listeners.damage;
 import com.combatium.CombatiumLite;
 import com.combatium.scheduler.InvulnerabilityScheduler;
 import com.combatium.util.active.ReachUtil;
-import com.combatium.util.calculations.PlayerHitUtil;
 import org.bukkit.Material;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
@@ -15,8 +14,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 
 public class EntityDamageByEntityListener implements Listener {
@@ -47,10 +44,10 @@ public class EntityDamageByEntityListener implements Listener {
                 damage += trident.getItemStack().getEnchantmentLevel(Enchantment.IMPALING) * 2.5;
             }
             event.setDamage(damage);
-        } else if (event.getEntity() instanceof LivingEntity victim) { // Ensure replacement i-frames work for other cases
+        } else if (event.getEntity() instanceof LivingEntity victim && !(event.getDamager() instanceof Player)) { // Ensure replacement i-frames work for other cases
             double invulDamage = invulnerabilityScheduler.isInvulnerable(victim);
 
-            if (invulDamage >= event.getDamage()) {
+            if (invulDamage >= event.getDamage() && invulDamage != 0) {
                 event.setCancelled(true);
                 event.setDamage(0);
                 return;

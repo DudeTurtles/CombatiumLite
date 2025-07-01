@@ -15,28 +15,28 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 public class ProjectileThrowListener implements Listener {
     @EventHandler
     public void onProjectileThrow(ProjectileLaunchEvent event) {
-        if (event.getEntity().getShooter() != null) {
-            if (event.getEntity().getShooter() instanceof org.bukkit.entity.Player player) {
-                if (event.getEntity() instanceof CraftWindCharge) return;
-                Player p = ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle();
-                Projectile proj;
-                if (event.getEntity() instanceof CraftAbstractArrow) {
-                    proj = ((CraftAbstractArrow) event.getEntity()).getHandle();
-                } else {
-                    proj = ((CraftProjectile) event.getEntity()).getHandle();
-                }
+        if (event.getEntity().getShooter() == null) return;
 
-                Vec3 knownMovement = p.getKnownMovement();
-                Vec3 currentMomentum = proj.getDeltaMovement().subtract(knownMovement.x, p.onGround() ? 0.0 : knownMovement.y, knownMovement.z);
+        if (!(event.getEntity().getShooter() instanceof org.bukkit.entity.Player player)) return;
+        if (event.getEntity() instanceof CraftWindCharge) return;
 
-                Vec3 entityMomentum = p.onGround ? p.getDeltaMovement() : p.getDeltaMovement().multiply(1.0, 0.0, 1.0);
-                Vec3 projected = project(entityMomentum, currentMomentum);
-                proj.setDeltaMovement(currentMomentum.add(projected));
+        Player p = ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle();
+        Projectile proj;
+        if (event.getEntity() instanceof CraftAbstractArrow) {
+            proj = ((CraftAbstractArrow) event.getEntity()).getHandle();
+        } else {
+            proj = ((CraftProjectile) event.getEntity()).getHandle();
+        }
 
-                if (event.getEntity() instanceof Trident trident && trident.getItemStack().containsEnchantment(org.bukkit.enchantments.Enchantment.LOYALTY)) {
-                    TridentTracker.addTrident(trident);
-                }
-            }
+        Vec3 knownMovement = p.getKnownMovement();
+        Vec3 currentMomentum = proj.getDeltaMovement().subtract(knownMovement.x, p.onGround() ? 0.0 : knownMovement.y, knownMovement.z);
+
+        Vec3 entityMomentum = p.onGround ? p.getDeltaMovement() : p.getDeltaMovement().multiply(1.0, 0.0, 1.0);
+        Vec3 projected = project(entityMomentum, currentMomentum);
+        proj.setDeltaMovement(currentMomentum.add(projected));
+
+        if (event.getEntity() instanceof Trident trident && trident.getItemStack().containsEnchantment(org.bukkit.enchantments.Enchantment.LOYALTY)) {
+            TridentTracker.addTrident(trident);
         }
     }
 

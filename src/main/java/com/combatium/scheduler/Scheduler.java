@@ -94,7 +94,7 @@ public class Scheduler {
                 }
 
                 if (!random.nextBoolean()) continue;
-                FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1);
+                FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1, null);
                 Bukkit.getPluginManager().callEvent(event);
                 if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
 

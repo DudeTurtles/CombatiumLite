@@ -28,32 +28,41 @@ public class PrePlayerAttackEvent implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void prePlayerAttack(PrePlayerAttackEntityEvent event) {
-        if (event.getAttacked() instanceof LivingEntity victim) {
-            Player attacker = event.getPlayer();
+        Player attacker = event.getPlayer();
 
-            ItemStack weapon = attacker.getInventory().getItemInMainHand();
-            if (reachUtil.isRateLimited(attacker)) {
+        if (!(event.getAttacked() instanceof LivingEntity victim)) {
+            if (reachUtil.isCharged(attacker, 0.0F)) {
+                CombatiumLite.getReachUtil().resetCooldown(attacker, false);
+            } else {
                 AnimationListener.cancelAnim(attacker);
                 event.setCancelled(true);
-                return;
             }
-
-            //Checks if a player is charged, also allows sweep damage to be dealt due to sweep damage being a separate event
-            if (reachUtil.isCharged(attacker, 0.0F)) {
-                PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, EntityDamageEvent.DamageCause.ENTITY_ATTACK, true);
-            } else {
-                if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod && !CombatifyListener.isCombatifyPlayer(attacker)) {
-                    //Grace period for early hits
-                    if (reachUtil.getChargePercent(attacker, 0.0F) < 1.0F && reachUtil.getChargePercent(attacker, 1.0F) > 0.8F) {
-                        ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, EntityDamageEvent.DamageCause.ENTITY_ATTACK);
-                        scheduler.scheduleHit(scheduledHit);
-                    }
-                }
-                AnimationListener.cancelAnim(attacker);
-            }
-            event.setCancelled(true);
             reachUtil.rateLimit(attacker);
-            victim.setNoDamageTicks(0);
+            return;
         }
+
+        ItemStack weapon = attacker.getInventory().getItemInMainHand();
+        if (reachUtil.isRateLimited(attacker)) {
+            AnimationListener.cancelAnim(attacker);
+            event.setCancelled(true);
+            return;
+        }
+
+        //Checks if a player is charged, also allows sweep damage to be dealt due to sweep damage being a separate event
+        if (reachUtil.isCharged(attacker, 0.0F)) {
+            PlayerDamageEntity.playerDamageEntityEvent(attacker, victim, weapon, EntityDamageEvent.DamageCause.ENTITY_ATTACK, true);
+        } else {
+            if (weapon.getType() != Material.MACE && CombatiumLite.gracePeriod && !CombatifyListener.isCombatifyPlayer(attacker)) {
+                //Grace period for early hits
+                if (reachUtil.getChargePercent(attacker, 0.0F) < 1.0F && reachUtil.getChargePercent(attacker, 1.0F) > 0.8F) {
+                    ScheduledHit scheduledHit = new ScheduledHit(attacker, victim, EntityDamageEvent.DamageCause.ENTITY_ATTACK);
+                    scheduler.scheduleHit(scheduledHit);
+                }
+            }
+            AnimationListener.cancelAnim(attacker);
+        }
+        event.setCancelled(true);
+        reachUtil.rateLimit(attacker);
+        victim.setNoDamageTicks(0);
     }
 }

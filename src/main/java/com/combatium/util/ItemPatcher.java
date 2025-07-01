@@ -4,37 +4,33 @@ import com.combatium.CombatiumLite;
 import com.google.common.base.Suppliers;
 import net.atlas.defaulted.component.ItemPatches;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.*;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.commons.lang3.function.TriFunction;
-import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.bukkit.craftbukkit.CraftRegistry;
 import org.bukkit.craftbukkit.inventory.CraftItemMetas;
 import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.inventory.meta.ItemMeta;
-import javax.annotation.Nullable;
+
 import java.lang.reflect.Field;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -195,6 +191,16 @@ public class ItemPatcher {
             builder.add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_CTS_ID, speed, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             if (reach != 0) builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build());
+            List<Component> lore = new ArrayList<>();
+            Style commonStyle = CommonComponents.space().getStyle().withItalic(false).withColor(ChatFormatting.GRAY);
+            lore.add(CommonComponents.space());
+            lore.add(Component.literal("When in Main Hand:").setStyle(commonStyle));
+            lore.add(CommonComponents.space().append(Component.literal(format(damage + 2) + " Attack Damage").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
+            lore.add(CommonComponents.space().append(Component.literal(format(speed + 2.5) + " Attack Speed").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
+            if (reach != 0) lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(reach + 2.5) + " Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
+
+            patchedDataComponentMap.set(DataComponents.LORE, new ItemLore(lore));
+            patchedDataComponentMap.set(DataComponents.TOOLTIP_DISPLAY, patchedDataComponentMap.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
         };
     }
     public static Consumer<PatchedDataComponentMap> size(int stackSize) {
@@ -205,6 +211,10 @@ public class ItemPatcher {
     }
     public static Consumer<PatchedDataComponentMap> weaponComponent(int itemDamagePerAttack, float disableTime) {
         return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.WEAPON, new Weapon(itemDamagePerAttack, disableTime));
+    }
+    private static String format(double value) {
+        DecimalFormat df = new DecimalFormat("0.#");
+        return df.format(value);
     }
     public record ItemPatchesEntry(ResourceLocation id, ItemPatches itemPatches) implements Comparable<ItemPatchesEntry> {
         @Override

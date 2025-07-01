@@ -1,5 +1,11 @@
 package com.combatium;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.hash.HashCode;
+import com.mojang.datafixers.DataFixUtils;
+import com.mojang.serialization.DynamicOps;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
@@ -17,11 +23,13 @@ import io.papermc.paper.registry.set.RegistrySet;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.PatchedDataComponentMap;
+import net.minecraft.core.component.*;
+import net.minecraft.network.HashedPatchMap;
+import net.minecraft.network.HashedStack;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.HashOps;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ConditionalEffect;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
@@ -86,6 +94,23 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             unsafe.putObject(staticBase, staticOffset, wrapStreamCodec((StreamCodec<RegistryFriendlyByteBuf, ItemStack>) untrustedStreamCodec.get(null)));
 
             CombatiumLite.getPluginLogger().log(Level.INFO, "Patched stream codec: " + optionalStreamCodec.get(null));
+
+            Field hashedStackStreamCodec = HashedStack.class.getDeclaredField("STREAM_CODEC");
+            CombatiumLite.getPluginLogger().log(Level.INFO, "Original stream codec: " + hashedStackStreamCodec.get(null));
+
+            staticBase = unsafe.staticFieldBase(hashedStackStreamCodec);
+            staticOffset = unsafe.staticFieldOffset(hashedStackStreamCodec);
+            unsafe.putObject(staticBase, staticOffset, ByteBufCodecs.optional(wrapHashedStackStreamCodec((StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem>) HashedStack.ActualItem.class.getDeclaredField("STREAM_CODEC").get(null))).map((optional) -> (HashedStack) DataFixUtils.orElse(optional, HashedStack.EMPTY), (hashedStack) -> {
+                Optional<HashedStack.ActualItem> optionalActualItem;
+                if (hashedStack instanceof HashedStack.ActualItem actualItem) {
+                    optionalActualItem = Optional.of(actualItem);
+                } else {
+                    optionalActualItem = Optional.empty();
+                }
+
+                return optionalActualItem;
+            }));
+            CombatiumLite.getPluginLogger().log(Level.INFO, "Patched stream codec: " + hashedStackStreamCodec.get(null));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -95,7 +120,13 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         return new StreamCodec<>() {
             @Override
             public ItemStack decode(RegistryFriendlyByteBuf buffer) {
-                return original.decode(buffer);
+                ItemStack stack = original.decode(buffer);
+                DataComponentPatch patch = stack.getComponentsPatch();
+                if (stack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
+                    patchedDataComponentMap.clearPatch();
+                    patchedDataComponentMap.applyPatch(patch);
+                }
+                return stack;
             }
 
             @Override
@@ -113,6 +144,9 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                 original.encode(buffer, newStack);
             }
         };
+    }
+    public static StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem> wrapHashedStackStreamCodec(StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem> original) {
+        return new WrapHashedStreamCodec(original);
     }
 
     @Override
@@ -174,5 +208,59 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                 .newHandler(event -> event.builder().supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_WEAPON)))
                 .filter(EnchantmentKeys.FIRE_ASPECT)
         );
+    }
+
+    private static class WrapHashedStreamCodec implements StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem> {
+        private final StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem> original;
+        private DynamicOps<HashCode> registryHashOps;
+
+        private LoadingCache<TypedDataComponent<?>, Integer> cache = CacheBuilder.newBuilder().maximumSize(256L).build(new CacheLoader<>() {
+            public Integer load(TypedDataComponent<?> typedDataComponent) {
+                return typedDataComponent.encodeValue(WrapHashedStreamCodec.this.registryHashOps).getOrThrow((string) -> {
+                    String var10002 = String.valueOf(typedDataComponent);
+                    return new IllegalArgumentException("Failed to hash " + var10002 + ": " + string);
+                }).asInt();
+            }
+        });
+
+        public WrapHashedStreamCodec(StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem> original) {
+            this.original = original;
+        }
+
+        @Override
+        public HashedStack.ActualItem decode(RegistryFriendlyByteBuf buffer) {
+            if (this.registryHashOps == null) this.registryHashOps = buffer.registryAccess().createSerializationContext(HashOps.CRC32C_INSTANCE);
+            HashedStack.ActualItem stack = original.decode(buffer);
+            HashedPatchMap components = stack.components();
+            DataComponentMap prototype = stack.item().value().components();
+            if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                DataComponentPatch.SplitResult splitResult = prototypeDataComponentMap.asPatch().split();
+                Map<DataComponentType<?>, Integer> added = new IdentityHashMap<>(splitResult.added().size());
+                added.putAll(components.addedComponents());
+                splitResult.added().forEach((typedDataComponent) -> {
+                    if (added.containsKey(typedDataComponent.type()) && added.get(typedDataComponent.type()).equals(cache.getUnchecked(typedDataComponent))) added.remove(typedDataComponent.type());
+                });
+                Set<DataComponentType<?>> removed = new HashSet<>(components.removedComponents());
+                removed.removeAll(splitResult.removed());
+                stack = new HashedStack.ActualItem(stack.item(), stack.count(), new HashedPatchMap(added, removed));
+            }
+            return stack;
+        }
+
+        @Override
+        public void encode(RegistryFriendlyByteBuf buffer, HashedStack.ActualItem stack) {
+            if (this.registryHashOps == null) this.registryHashOps = buffer.registryAccess().createSerializationContext(HashOps.CRC32C_INSTANCE);
+            DataComponentMap prototype = stack.item().value().components();
+            if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                DataComponentPatch.SplitResult splitResult = prototypeDataComponentMap.asPatch().split();
+                Map<DataComponentType<?>, Integer> added = new IdentityHashMap<>(splitResult.added().size());
+                splitResult.added().forEach((typedDataComponent) -> added.put(typedDataComponent.type(), cache.getUnchecked(typedDataComponent)));
+                added.putAll(stack.components().addedComponents());
+                Set<DataComponentType<?>> removed = new HashSet<>(splitResult.removed());
+                removed.addAll(stack.components().removedComponents());
+                stack = new HashedStack.ActualItem(stack.item(), stack.count(), new HashedPatchMap(added, removed));
+            }
+            original.encode(buffer, stack);
+        }
     }
 }

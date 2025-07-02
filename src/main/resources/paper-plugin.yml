@@ -1,7 +1,7 @@
 name: CombatiumLite
-version: '1.1.38'
-main: com.combatium.CombatiumLite
-bootstrapper: com.combatium.CombatiumLiteBootstrap
+version: '1.1.40'
+main: com.dudeturtles.combatium.CombatiumLite
+bootstrapper: com.dudeturtles.combatium.CombatiumLiteBootstrap
 api-version: '1.21.5'
 authors:
   - DudeTurtles

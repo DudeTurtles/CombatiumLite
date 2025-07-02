@@ -5,8 +5,12 @@ plugins {
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
 }
 
-group = "CombatiumLite"
-version = "1.0-SNAPSHOT"
+version = "${project.property("version")}.${project.property("sub_version")}"
+group = project.property("maven_group")!!
+
+base {
+    archivesName = "${project.property("archives_base_name")}-${project.property("minecraft_version")!!}"
+}
 
 repositories {
     mavenCentral()
@@ -27,7 +31,7 @@ dependencies {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.5")
+        minecraftVersion(project.property("minecraft_version")!!.toString())
     }
 }
 

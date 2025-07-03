@@ -3,6 +3,7 @@ package net.atlas.defaulted.component;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.Registries;
@@ -21,5 +22,14 @@ public record ItemPatches(HolderSet<Item> items, List<TagKey<Item>> tags, List<P
     @Override
     public int compareTo(ItemPatches o) {
         return priority - o.priority;
+    }
+    @SuppressWarnings("deprecation")
+    public boolean matchItem(Item item) {
+        if (items.size() != 0 || !tags.isEmpty()) {
+            Holder<Item> itemHolder = item.builtInRegistryHolder();
+            List<TagKey<Item>> matchedTags = tags.stream().filter(itemHolder::is).toList();
+            return items.contains(itemHolder) || !matchedTags.isEmpty();
+        }
+        return true;
     }
 }

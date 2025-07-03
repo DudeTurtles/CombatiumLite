@@ -5,7 +5,7 @@ plugins {
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
 }
 
-version = "${project.property("version")}.${project.property("sub_version")}"
+version = "${project.property("main_version")}.${project.property("sub_version")}"
 group = project.property("maven_group")!!
 
 base {
@@ -32,6 +32,17 @@ dependencies {
 tasks {
     runServer {
         minecraftVersion(project.property("minecraft_version")!!.toString())
+    }
+}
+var resourceTargets = listOf("paper-plugin.yml")
+var replaceProperties = mapOf(Pair("name", project.property("name")), Pair("version", project.property("main_version")), Pair("minecraft_version", project.property("minecraft_version")))
+tasks.processResources {
+    inputs.property("name", project.property("name"))
+    inputs.property("version", project.property("main_version"))
+    inputs.property("minecraft_version", project.property("minecraft_version"))
+
+    filesMatching(resourceTargets) {
+        expand(replaceProperties)
     }
 }
 

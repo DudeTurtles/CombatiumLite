@@ -26,7 +26,7 @@ dependencies {
     shadow(gradleApi())
 
     implementation("com.github.retrooper:packetevents-spigot:2.9.0-SNAPSHOT")
-    paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.7-R0.1-SNAPSHOT")
 }
 
 tasks {

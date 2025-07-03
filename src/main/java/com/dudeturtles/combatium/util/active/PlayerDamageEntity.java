@@ -82,7 +82,7 @@ public class PlayerDamageEntity {
         double finalDamage = oldHealth - entity.getHealth();
         if (entityDamageByEntityListener.wasHitCancelled(player)) return;
 
-        EnchantmentHelper.doPostAttackEffectsWithItemSource(nmsPlayer.serverLevel(), nmsEntity, damageSource, nmsWeapon);
+        EnchantmentHelper.doPostAttackEffectsWithItemSource(nmsPlayer.level(), nmsEntity, damageSource, nmsWeapon);
         if (weapon.getType() == Material.MACE) cancelKB = MaceUtil.macePostHit(weapon, player.getFallDistance(), player, entity);
 
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(entity, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
@@ -91,14 +91,14 @@ public class PlayerDamageEntity {
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
             if (isSprinting || player.getAttackCooldown() > 0) {
-                nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 4));
+                nmsPlayer.level().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 4));
             }
         } else {
             if (isSprinting) player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
             else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
         }
 
-        if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, entity)) nmsPlayer.serverLevel().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 5));
+        if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, entity)) nmsPlayer.level().getChunkSource().broadcastAndSend(nmsEntity, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsEntity, 5));
 
         if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, entity.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 

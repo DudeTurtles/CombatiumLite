@@ -47,7 +47,7 @@ public class PlayerHitUtil {
         ItemMeta meta = weapon.getItemMeta();
         if (meta != null && meta.hasEnchants()) {
             ServerPlayer player = ((CraftPlayer)attacker).getHandle();
-            enchantedDamage = EnchantmentHelper.modifyDamage(player.serverLevel(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
+            enchantedDamage = EnchantmentHelper.modifyDamage(player.level(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
             enchantedDamage = getImpalingDamage(player, damagedEntity, meta, enchantedDamage);
             if (enchantedDamage != 0) {
                 damage = (float) enchantedDamage(attacker, enchantedDamage);
@@ -81,16 +81,16 @@ public class PlayerHitUtil {
         if (!(weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchants())) return false;
         float damage = (float) attackDamage(player.getBukkitEntity());
         ItemMeta meta = weapon.getItemMeta();
-        float enchantedDamage = EnchantmentHelper.modifyDamage(player.serverLevel(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
+        float enchantedDamage = EnchantmentHelper.modifyDamage(player.level(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
         enchantedDamage = getImpalingDamage(player, damagedEntity, meta, enchantedDamage);
         return enchantedDamage != 0;
     }
 
     private static float getImpalingDamage(ServerPlayer player, Entity damagedEntity, ItemMeta meta, float enchantedDamage) {
-        Holder.Reference<net.minecraft.world.item.enchantment.Enchantment> impaling = player.serverLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(ResourceLocation.withDefaultNamespace("impaling")).orElse(null);
+        Holder.Reference<net.minecraft.world.item.enchantment.Enchantment> impaling = player.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(ResourceLocation.withDefaultNamespace("impaling")).orElse(null);
         if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain() && (impaling == null || impaling.value()
                 .getEffects(EnchantmentEffectComponents.DAMAGE).stream().noneMatch(conditionalEffect -> {
-                    LootContext context = net.minecraft.world.item.enchantment.Enchantment.damageContext(player.serverLevel(), meta.getEnchantLevel(Enchantment.IMPALING), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player));
+                    LootContext context = net.minecraft.world.item.enchantment.Enchantment.damageContext(player.level(), meta.getEnchantLevel(Enchantment.IMPALING), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player));
                     return conditionalEffect.matches(context);
                 }))) enchantedDamage += (meta.getEnchantLevel(Enchantment.IMPALING) * 2.5f);
         return enchantedDamage;

@@ -179,7 +179,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         CLEAVING = EnchantmentKeys.create(Key.key("cleaving"));
 
         var lifecycleManager = context.getLifecycleManager();
-        lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.freeze().newHandler(event -> event.registry().register(
+        lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.compose().newHandler(event -> event.registry().register(
                 CLEAVING,
                 b -> {
                     b.description(Component.translatable("enchantment.minecraft.cleaving", "Cleaving"))

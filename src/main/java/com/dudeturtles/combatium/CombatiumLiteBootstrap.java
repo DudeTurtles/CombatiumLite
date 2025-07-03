@@ -1,5 +1,7 @@
 package com.dudeturtles.combatium;
 
+import com.dudeturtles.combatium.util.ItemPatcher;
+import com.dudeturtles.combatium.util.MemoizingPredicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -44,6 +46,18 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class CombatiumLiteBootstrap implements PluginBootstrap {
+    public static MemoizingPredicate<ItemStack> shouldFix = new MemoizingPredicate<>(checkStack -> {
+        if (ItemPatcher.DEFAULT_PATCHES.stream().noneMatch(itemPatches -> itemPatches.matchItem(checkStack.getItem()))) return false;
+        Field prototype;
+        try {
+            prototype = PatchedDataComponentMap.class.getDeclaredField("prototype");
+            prototype.setAccessible(true);
+            if (checkStack.getComponents() instanceof PatchedDataComponentMap current && !(prototype.get(current) instanceof PatchedDataComponentMap)) return true;
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {
+
+        }
+        return false;
+    });
     public static TypedKey<Enchantment> CLEAVING;
     static {
         try {
@@ -100,7 +114,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
 
             staticBase = unsafe.staticFieldBase(hashedStackStreamCodec);
             staticOffset = unsafe.staticFieldOffset(hashedStackStreamCodec);
-            unsafe.putObject(staticBase, staticOffset, ByteBufCodecs.optional(wrapHashedStackStreamCodec((StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem>) HashedStack.ActualItem.class.getDeclaredField("STREAM_CODEC").get(null))).map((optional) -> (HashedStack) DataFixUtils.orElse(optional, HashedStack.EMPTY), (hashedStack) -> {
+            unsafe.putObject(staticBase, staticOffset, ByteBufCodecs.optional(wrapHashedStackStreamCodec((StreamCodec<RegistryFriendlyByteBuf, HashedStack.ActualItem>) HashedStack.ActualItem.class.getDeclaredField("STREAM_CODEC").get(null))).map((optional) -> DataFixUtils.orElse(optional, HashedStack.EMPTY), (hashedStack) -> {
                 Optional<HashedStack.ActualItem> optionalActualItem;
                 if (hashedStack instanceof HashedStack.ActualItem actualItem) {
                     optionalActualItem = Optional.of(actualItem);
@@ -131,6 +145,17 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
 
             @Override
             public void encode(RegistryFriendlyByteBuf buffer, ItemStack stack) {
+                if (shouldFix.apply(stack)) {
+                    DataComponentPatch patch = stack.getComponentsPatch();
+                    try {
+                        Field components = ItemStack.class.getDeclaredField("components");
+                        components.setAccessible(true);
+                        PatchedDataComponentMap patchedDataComponentMap = PatchedDataComponentMap.fromPatch(stack.getPrototype(), patch);
+                        components.set(stack, patchedDataComponentMap);
+                    } catch (NoSuchFieldException | IllegalAccessException ignored) {
+
+                    }
+                }
                 ItemStack newStack = stack.copy();
                 if (!stack.isEmpty()) {
                     DataComponentMap prototype = stack.getPrototype();

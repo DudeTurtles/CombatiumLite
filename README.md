@@ -21,12 +21,6 @@ If you are having issues with this plugin or are encountering bugs, feel free to
  - N/A all significant plans have been implemented
 
 ### Known Issues
- - Issues when connecting on combatify such as:
- - - (As this only happens when connecting with Combatify, we are unsure if it is an issue on combatify's end or ours)
- - - The /enchant command not working
- - - The anvil not working
- - - Armor trims not working
- - - Crossbows not appearing loaded when they are
  - 8c doesn't have bonus reach in creative mode, and so vanilla creative bonus reach should be removed.
 
 #### Implementation ideas for plans

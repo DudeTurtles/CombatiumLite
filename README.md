@@ -20,9 +20,6 @@ If you are having issues with this plugin or are encountering bugs, feel free to
 ### Plans
  - N/A all significant plans have been implemented
 
-### Known Issues
- - 8c doesn't have bonus reach in creative mode, and so vanilla creative bonus reach should be removed.
-
 #### Implementation ideas for plans
  - N/A all significant plans have been implemented
 

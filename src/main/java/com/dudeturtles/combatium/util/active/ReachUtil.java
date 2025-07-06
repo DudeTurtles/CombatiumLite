@@ -3,13 +3,17 @@ package com.dudeturtles.combatium.util.active;
 import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.listeners.snapshot.CombatifyListener;
 import com.dudeturtles.combatium.util.ping.PingManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.craftbukkit.attribute.CraftAttribute;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import java.util.*;
@@ -57,6 +61,16 @@ public class ReachUtil {
     }
 
     public void updatePlayerReach(Player player) {
+        ServerPlayer nms = ((CraftPlayer)player).getHandle();
+        net.minecraft.world.entity.ai.attributes.AttributeInstance blockIntRange = nms.getAttribute(Attributes.BLOCK_INTERACTION_RANGE);
+        if (blockIntRange != null) {
+            blockIntRange.removeModifier(ResourceLocation.withDefaultNamespace("creative_mode_block_range"));
+        }
+
+        net.minecraft.world.entity.ai.attributes.AttributeInstance entityIntRange = nms.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+        if (entityIntRange != null) {
+            entityIntRange.removeModifier(ResourceLocation.withDefaultNamespace("creative_mode_entity_range"));
+        }
         if (CombatifyListener.isCombatifyPlayer(player)) {
             return;
         }

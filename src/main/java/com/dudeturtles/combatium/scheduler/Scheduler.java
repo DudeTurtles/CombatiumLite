@@ -17,8 +17,6 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Random;
 
 public class Scheduler {
     private final Plugin plugin;

@@ -1,5 +1,6 @@
 package com.dudeturtles.combatium;
 
+import com.dudeturtles.combatium.listeners.regen.ExhaustListener;
 import com.dudeturtles.combatium.listeners.snapshot.CombatifyListener;
 import com.dudeturtles.combatium.listeners.damage.*;
 import com.dudeturtles.combatium.listeners.itemFixers.*;
@@ -156,6 +157,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new VehicleDamageListener(), this);
         pluginManager.registerEvents(new ItemDropListener(), this);
         pluginManager.registerEvents(new PrePlayerAttackEvent(), this);
+        pluginManager.registerEvents(new ExhaustListener(), this);
 
         if (combatifySupport) {
             CombatifyListener combatifyListener = new CombatifyListener();

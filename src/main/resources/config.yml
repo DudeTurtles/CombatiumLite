@@ -114,7 +114,7 @@ pvp:
   # This increased regen speed is to make up for the lack of boosted
   # regen at high saturation.
   # Default: 39
-  regenTickDelay: 39
+  regenTickDelay: 40
 
   # The amount of time a player should wait before being able to send consecutive attacks.
   # This is to prevent spam clicking from being as effective, and to encourage proper timing of attacks.

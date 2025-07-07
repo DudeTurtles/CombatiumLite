@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
@@ -28,7 +29,6 @@ public class Scheduler {
     private final ArrayList<ScheduledSweep> scheduledSweeps;
     private final ArrayList<ScheduledHit> scheduledHits;
     private final ArrayList<ScheduledHit> toRemove;
-    private final Random random = new Random();
     private InvulnerabilityScheduler invulnerabilityScheduler;
 
     public Scheduler(Plugin plugin, int regenTickDelay) {
@@ -80,27 +80,19 @@ public class Scheduler {
         toRemove.clear();
 
         //Regen health
-        if (regenTick == regenTickDelay) {
+        if (++regenTick == regenTickDelay) {
             regenTick = 0;
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION)) ||
-                        !(player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() &&
-                                player.getFoodLevel() > 7 && player.getHealth() > 0)) continue;
+                net.minecraft.world.entity.player.Player nmsPlayer = ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle();
+                if (!(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION) && nmsPlayer.isHurt() && player.getFoodLevel() > 7)) continue;
 
-                if (player.getHealth() < Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue() - 1) {
-                    player.setHealth(player.getHealth() + 1);
-                } else {
-                    player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue());
-                }
+                nmsPlayer.heal(1.0F, EntityRegainHealthEvent.RegainReason.CUSTOM);
 
-                if (!random.nextBoolean()) continue;
+                if (!nmsPlayer.getRandom().nextBoolean()) continue;
                 FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1, null);
                 Bukkit.getPluginManager().callEvent(event);
                 if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
-
             }
-        } else {
-            regenTick++;
         }
 
         //Check for players using sword block

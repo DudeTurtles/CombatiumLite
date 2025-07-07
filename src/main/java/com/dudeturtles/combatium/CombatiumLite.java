@@ -105,7 +105,7 @@ public final class CombatiumLite extends JavaPlugin {
         shieldProtectionArc = Mth.clamp(getConfig().getDouble("pvp.shieldProtectionArc", 65), 0, 180);
         getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 4));
         reachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
-        int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 39);
+        int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 40);
         debug = getConfig().getBoolean("pvp.debug", false);
 
         ItemPatcher.patch();

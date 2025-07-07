@@ -109,11 +109,11 @@ pvp:
   fixSweepOnThrow: true
 
   # The number of ticks between regen ticks. (20 ticks = 1 second)
-  # 39 by default, meaning regen ticks every 40 ticks, or 2 seconds.
-  # In vanilla, this is 79 ticks, or 4 seconds, but in CTS, it is 39 ticks.
+  # 40 by default, meaning regen ticks every 40 ticks, or 2 seconds.
+  # In vanilla, this is 80 ticks, or 4 seconds, but in CTS, it is 40 ticks.
   # This increased regen speed is to make up for the lack of boosted
   # regen at high saturation.
-  # Default: 39
+  # Default: 40
   regenTickDelay: 40
 
   # The amount of time a player should wait before being able to send consecutive attacks.
@@ -129,8 +129,8 @@ pvp:
   missTime: 4
 
   # The protection arc of the shield. This is the angle in which the shield will protect the player.
-  # Default: 65.0
-  shieldProtectionArc: 65.0
+  # Default: 53.06381014
+  shieldProtectionArc: 53.06381014
 
   # TODO: REMOVE THIS
   debug: false

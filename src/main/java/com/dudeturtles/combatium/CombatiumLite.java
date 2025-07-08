@@ -4,7 +4,6 @@ import com.dudeturtles.combatium.listeners.regen.ExhaustListener;
 import com.dudeturtles.combatium.listeners.snapshot.CombatifyListener;
 import com.dudeturtles.combatium.listeners.damage.*;
 import com.dudeturtles.combatium.listeners.itemFixers.*;
-import com.dudeturtles.combatium.listeners.projectile.DispenseTridentListener;
 import com.dudeturtles.combatium.listeners.projectile.ProjectileHitListener;
 import com.dudeturtles.combatium.listeners.projectile.ProjectileThrowListener;
 import com.dudeturtles.combatium.listeners.regen.EntityRegainHealthListener;
@@ -33,6 +32,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.DispenserBlock;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -149,7 +150,6 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new PlayerInteractListenerFix(), this);
         pluginManager.registerEvents(new CraftItemListener(), this);
         pluginManager.registerEvents(new TickListener(this.scheduler), this);
-        pluginManager.registerEvents(new DispenseTridentListener(), this);
         pluginManager.registerEvents(new AnimationListener(), this);
         pluginManager.registerEvents(new KnockbackListener(), this);
         pluginManager.registerEvents(new JoinQuitListener(), this);
@@ -158,6 +158,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new ItemDropListener(), this);
         pluginManager.registerEvents(new PrePlayerAttackEvent(), this);
         pluginManager.registerEvents(new ExhaustListener(), this);
+        DispenserBlock.registerProjectileBehavior(Items.TRIDENT);
 
         if (combatifySupport) {
             CombatifyListener combatifyListener = new CombatifyListener();

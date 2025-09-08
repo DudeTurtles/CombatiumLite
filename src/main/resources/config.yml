@@ -74,8 +74,16 @@ pvp:
 
   # If enabled, players with higher ping will take more accurate knockback.
   # Based off of the Knockback Sync plugin.
+  # After further testing, 8c servers, for what ever reason, appears to not properly take velocity into account.
+  # As such, this feature is disabled by default, as it does not accurately reflect 8c combat.
+  # Default: false
+  pingImprovements: false
+
+  # If knockback should ignore a player's velocity.
+  # After testing, 8c servers, for what ever reason, appear to do this.
+  # As such, this feature is enabled by default, as it more accurately reflects 8c combat.
   # Default: true
-  pingImprovements: true
+  scuffedAssKB: true
 
   # If there should be a limit on how quickly a player can attack. This prevents spam clicking from being
   # as effective, and encourages proper timing of attacks.
@@ -131,6 +139,3 @@ pvp:
   # The protection arc of the shield. This is the angle in which the shield will protect the player.
   # Default: 106.1276203
   shieldProtectionArc: 106.1276203
-
-  # TODO: REMOVE THIS
-  debug: false

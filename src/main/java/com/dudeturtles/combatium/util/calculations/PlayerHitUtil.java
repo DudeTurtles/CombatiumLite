@@ -143,30 +143,6 @@ public class PlayerHitUtil {
         PlayerHitUtil.backShots = backShots;
     }
 
-    public static int getFireProt(LivingEntity entity) {
-        ItemStack helmet = null;
-        ItemStack chestplate = null;
-        ItemStack leggings = null;
-        ItemStack boots = null;
-
-        if (entity instanceof Player player) {
-            helmet = player.getInventory().getHelmet();
-            chestplate = player.getInventory().getChestplate();
-            leggings = player.getInventory().getLeggings();
-            boots = player.getInventory().getBoots();
-        } else if (entity.getEquipment() != null) {
-            helmet = entity.getEquipment().getHelmet();
-            chestplate = entity.getEquipment().getChestplate();
-            leggings = entity.getEquipment().getLeggings();
-            boots = entity.getEquipment().getBoots();
-        }
-
-        return (helmet != null ? helmet.getEnchantmentLevel(Enchantment.FIRE_PROTECTION) : 0) +
-                (chestplate != null ? chestplate.getEnchantmentLevel(Enchantment.FIRE_PROTECTION) : 0) +
-                (leggings != null ? leggings.getEnchantmentLevel(Enchantment.FIRE_PROTECTION) : 0) +
-                (boots != null ? boots.getEnchantmentLevel(Enchantment.FIRE_PROTECTION) : 0);
-    }
-
     public static void setLastTickDamage(Player player, double damage) {
         lastTickDamage.put(player, damage);
     }

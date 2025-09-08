@@ -56,6 +56,7 @@ public class EntityDamageListener implements Listener {
                 nms.indicateDamage(d, d1);
             }
         }
+
         if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent && !event.isCancelled() && event.getDamage() > 0) {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
             if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {

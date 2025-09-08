@@ -65,12 +65,10 @@ public final class CombatiumLite extends JavaPlugin {
     public static double shieldProtectionArc;
     public static boolean sprintFix;
     public static boolean combatifySupport;
+    public static boolean scuffedAssKB;
     BukkitTask pingTask;
     public Scheduler scheduler;
     private ReachUtil reachUtil;
-
-    //todo: REMOVE THIS
-    public static boolean debug = false;
 
     @Override
     public void onEnable() {
@@ -98,7 +96,8 @@ public final class CombatiumLite extends JavaPlugin {
         gracePeriod = getConfig().getBoolean("pvp.gracePeriod", true);
         improvedAnimations = getConfig().getBoolean("pvp.improvedAnimations", true);
         improvedChargedHits = getConfig().getBoolean("pvp.improvedChargedHits", true);
-        pingImprovements = getConfig().getBoolean("pvp.pingImprovements", true);
+        pingImprovements = getConfig().getBoolean("pvp.pingImprovements", false);
+        scuffedAssKB = getConfig().getBoolean("pvp.scuffedAssKB", true);
         tridentsReturnFromVoid = getConfig().getBoolean("pvp.tridentsReturnFromVoid", true);
         swapAccuracy = getConfig().getBoolean("pvp.swapAccuracy", true);
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
@@ -107,7 +106,6 @@ public final class CombatiumLite extends JavaPlugin {
         getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 4));
         reachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
         int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 40);
-        debug = getConfig().getBoolean("pvp.debug", false);
 
         ItemPatcher.patch();
         printConfig();
@@ -186,6 +184,7 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Improved Animations: " + improvedAnimations);
         logger.log(java.util.logging.Level.INFO, "Improved Charged Hits: " + improvedChargedHits);
         logger.log(java.util.logging.Level.INFO, "Ping Improvements: " + pingImprovements);
+        logger.log(java.util.logging.Level.INFO, "Scuffed Ass KB: " + scuffedAssKB);
         logger.log(java.util.logging.Level.INFO, "Tridents Return From Void: " + tridentsReturnFromVoid);
         logger.log(java.util.logging.Level.INFO, "Swap Accuracy: " + swapAccuracy);
         logger.log(java.util.logging.Level.INFO, "Sweep On Miss: " + sweepOnMiss);

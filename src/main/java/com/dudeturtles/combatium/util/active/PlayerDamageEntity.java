@@ -37,7 +37,7 @@ public class PlayerDamageEntity {
 
     public static void playerDamageEntityEvent(Player player, LivingEntity target, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
-        if (target.isInvulnerable()) return;
+        if (target.isInvulnerable() || target.isDead()) return;
         if (target instanceof Player p && p.getGameMode().isInvulnerable()) return;
         // For some reason this would occasionally cause issues when dealing with players hitting bot players created by other plugins
         if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) {
@@ -130,18 +130,23 @@ public class PlayerDamageEntity {
     }
 
     private static void dealDamage(LivingEntity entity, float damage, Player cause) {
-        ServerPlayer nmsPlayer = ((CraftPlayer) cause).getHandle();
-        boolean sprinting = nmsPlayer.isSprinting();
-        DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
-        entity.damage(damage, damageSource);
+        try {
+            ServerPlayer nmsPlayer = ((CraftPlayer) cause).getHandle();
+            boolean sprinting = nmsPlayer.isSprinting();
+            DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
+            entity.damage(damage, damageSource);
 
-        if (!CombatiumLite.sprintFix) {
-            nmsPlayer.setSprinting(false);
-        } else {
-            nmsPlayer.setSprinting(sprinting);
+            if (!CombatiumLite.sprintFix) {
+                nmsPlayer.setSprinting(false);
+            } else {
+                nmsPlayer.setSprinting(sprinting);
+            }
+
+            cause.incrementStatistic(Statistic.DAMAGE_DEALT, Math.round(damage * 10));
+        } catch (Exception e) {
+            CombatiumLite.getPluginLogger().warning("Failed to deal damage to entity: " + entity.getName());
+            CombatiumLite.getPluginLogger().warning("Error Message: " + e.getMessage());
         }
-
-        cause.incrementStatistic(Statistic.DAMAGE_DEALT, Math.round(damage * 10));
     }
 
     protected static float getKnockback(net.minecraft.world.entity.LivingEntity attacker, Entity target, net.minecraft.world.damagesource.DamageSource damageSource, net.minecraft.world.item.ItemStack item) {

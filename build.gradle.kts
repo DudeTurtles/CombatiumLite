@@ -2,7 +2,7 @@ plugins {
     id ("com.gradleup.shadow") version "9.0.0-beta15"
     id("java")
     id("xyz.jpenilla.run-paper") version "2.3.1"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.18"
 }
 
 version = "${project.property("main_version")}.${project.property("sub_version")}"
@@ -25,7 +25,7 @@ dependencies {
     shadow(localGroovy())
     shadow(gradleApi())
 
-    implementation("com.github.retrooper:packetevents-spigot:2.9.0-SNAPSHOT")
+    implementation("com.github.retrooper:packetevents-spigot:2.9.4-SNAPSHOT")
     paperweight.paperDevBundle("${project.property("minecraft_version")}-R0.1-SNAPSHOT")
 }
 

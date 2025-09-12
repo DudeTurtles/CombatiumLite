@@ -65,7 +65,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static double shieldProtectionArc;
     public static boolean sprintFix;
     public static boolean combatifySupport;
-    public static boolean scuffedAssKB;
     BukkitTask pingTask;
     public Scheduler scheduler;
     private ReachUtil reachUtil;
@@ -97,7 +96,6 @@ public final class CombatiumLite extends JavaPlugin {
         improvedAnimations = getConfig().getBoolean("pvp.improvedAnimations", true);
         improvedChargedHits = getConfig().getBoolean("pvp.improvedChargedHits", true);
         pingImprovements = getConfig().getBoolean("pvp.pingImprovements", false);
-        scuffedAssKB = getConfig().getBoolean("pvp.scuffedAssKB", true);
         tridentsReturnFromVoid = getConfig().getBoolean("pvp.tridentsReturnFromVoid", true);
         swapAccuracy = getConfig().getBoolean("pvp.swapAccuracy", true);
         sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
@@ -158,11 +156,9 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new ExhaustListener(), this);
         DispenserBlock.registerProjectileBehavior(Items.TRIDENT);
 
-        if (combatifySupport) {
-            CombatifyListener combatifyListener = new CombatifyListener();
-            pluginManager.registerEvents(combatifyListener, this);
-            getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
-        }
+        CombatifyListener combatifyListener = new CombatifyListener();
+        pluginManager.registerEvents(combatifyListener, this);
+        getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
         pluginManager.registerEvents(new DefaultedListener(), this);
         getServer().getMessenger().registerOutgoingPluginChannel(this, ClientboundDefaultComponentsSyncPacket.TYPE.id().toString());
     }
@@ -184,7 +180,6 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Improved Animations: " + improvedAnimations);
         logger.log(java.util.logging.Level.INFO, "Improved Charged Hits: " + improvedChargedHits);
         logger.log(java.util.logging.Level.INFO, "Ping Improvements: " + pingImprovements);
-        logger.log(java.util.logging.Level.INFO, "Scuffed Ass KB: " + scuffedAssKB);
         logger.log(java.util.logging.Level.INFO, "Tridents Return From Void: " + tridentsReturnFromVoid);
         logger.log(java.util.logging.Level.INFO, "Swap Accuracy: " + swapAccuracy);
         logger.log(java.util.logging.Level.INFO, "Sweep On Miss: " + sweepOnMiss);

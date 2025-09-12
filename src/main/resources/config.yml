@@ -39,10 +39,12 @@ pvp:
   # Default: false
   sprintFix: false
 
-  # If the plugin should support players joining on Combatify.
-  # This will make it so their weapons are updated to have the proper attack speed.
+  # If enabled, players with higher ping will take more accurate knockback.
+  # Based off of the Knockback Sync plugin.
+  # After further testing, 8c servers, for what ever reason, appears to not properly take velocity into account.
+  # As such, this feature is disabled by default, as it does not accurately reflect 8c combat.
   # Default: false
-  combatifySupport: false
+  pingImprovements: false
 
   # If the saturation changes from the combat tests should be implemented.
   # This makes it so that eating food doesn't increase saturation each time, but instead
@@ -71,19 +73,6 @@ pvp:
   # to perform a charged attack.
   # Default: true
   improvedChargedHits: true
-
-  # If enabled, players with higher ping will take more accurate knockback.
-  # Based off of the Knockback Sync plugin.
-  # After further testing, 8c servers, for what ever reason, appears to not properly take velocity into account.
-  # As such, this feature is disabled by default, as it does not accurately reflect 8c combat.
-  # Default: false
-  pingImprovements: false
-
-  # If knockback should ignore a player's velocity.
-  # After testing, 8c servers, for what ever reason, appear to do this.
-  # As such, this feature is enabled by default, as it more accurately reflects 8c combat.
-  # Default: true
-  scuffedAssKB: true
 
   # If there should be a limit on how quickly a player can attack. This prevents spam clicking from being
   # as effective, and encourages proper timing of attacks.
@@ -137,5 +126,5 @@ pvp:
   missTime: 4
 
   # The protection arc of the shield. This is the angle in which the shield will protect the player.
-  # Default: 106.1276203
-  shieldProtectionArc: 106.1276203
+  # Default: 73.8723797
+  shieldProtectionArc: 73.8723797

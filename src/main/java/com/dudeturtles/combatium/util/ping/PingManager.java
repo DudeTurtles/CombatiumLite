@@ -14,7 +14,7 @@ public class PingManager {
     public static int getPingTicks (Player player) {
         PlayerPingData data = playerData.get(player.getUniqueId());
         if (data == null) return 0;
-        return (int) Math.min(5, Math.ceil(data.getEstimatedPingNoOffset() / 100d));
+        return (int) Math.min(5, Math.ceil(data.getEstimatedPing() / 100d));
     }
 
     public static boolean hasPlayerData(UUID player) {

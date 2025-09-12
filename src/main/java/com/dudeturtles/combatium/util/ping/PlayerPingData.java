@@ -48,7 +48,7 @@ public class PlayerPingData {
 
     // Gets the estimated client side vertical velocity of the player based on ping.
     public double estimateVerticalVelocity(double velocity) {
-        double ping = (getEstimatedPingNoOffset() / 50d);
+        double ping = (getEstimatedPing() / 50d);
         return PingCalculations.estimateVelocity(velocity, ping, gravity);
     }
 
@@ -58,13 +58,6 @@ public class PlayerPingData {
 
     public Map<Integer, Long> getTimeline() {
         return timeline;
-    }
-
-    public long getEstimatedPingNoOffset() {
-        long current = (ping != null) ? ping : player.getPing();
-        long last = (lastPing != null) ? lastPing : player.getPing();
-        long ping = (current - last > 20L) ? last : current;
-        return (Math.max(1, ping));
     }
 
     public long getEstimatedPing() {

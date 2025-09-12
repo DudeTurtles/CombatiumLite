@@ -4,12 +4,16 @@ import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.listeners.damage.EntityDamageByEntityListener;
 import com.dudeturtles.combatium.listeners.util.AnimationListener;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.component.Weapon;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.*;
@@ -39,10 +43,15 @@ public class PlayerDamageEntity {
         AnimationListener.validHit(player);
         if (target.isInvulnerable() || target.isDead()) return;
         if (target instanceof Player p && p.getGameMode().isInvulnerable()) return;
+
+        net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
+
         // For some reason this would occasionally cause issues when dealing with players hitting bot players created by other plugins
         if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) {
             try {
-                weapon.damage(1, target);
+                DataComponentMap map = nmsWeapon.getComponents();
+                Weapon component = map.has(DataComponents.WEAPON) ? map.get(DataComponents.WEAPON) : null;
+                weapon.damage((component == null) ? 0 : component.itemDamagePerAttack(), target);
             } catch (Exception ignored) {
                 CombatiumLite.getPluginLogger().warning("Failed to damage weapon");
                 CombatiumLite.getPluginLogger().warning("Error Message: " + ignored.getMessage());
@@ -52,7 +61,6 @@ public class PlayerDamageEntity {
         //Calculation for reduced shield blocking arc
         net.minecraft.world.entity.LivingEntity nmsTarget = ((CraftLivingEntity) target).getHandle();
         ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
-        net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
 
         float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause);
         net.minecraft.world.damagesource.DamageSource damageSource = Optional.ofNullable(nmsWeapon.getItem().getDamageSource(nmsPlayer)).orElse(nmsPlayer.damageSources().playerAttack(nmsPlayer));

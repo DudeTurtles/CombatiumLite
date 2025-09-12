@@ -81,7 +81,7 @@ public class ReachUtil {
             cooldownTime.put(player, 0);
         }
 
-        if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) : 0.0F)) && !player.isSneaking()) {
+        if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) * 2 : 0.0F)) && !player.isSneaking()) {
             AttributeInstance attribute = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
             assert attribute != null;
             if (attribute.getModifier(chargedReach) == null) attribute.addModifier(chargedReachModifier);

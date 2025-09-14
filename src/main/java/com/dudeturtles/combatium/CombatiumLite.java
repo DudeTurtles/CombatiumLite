@@ -66,6 +66,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean combatifySupport;
     public static float shieldBaseBlocking;
     public static float shieldBlockingMultiplier;
+    public static double defaultShieldKnockbackMultiplier;
     BukkitTask pingTask;
     public Scheduler scheduler;
     private ReachUtil reachUtil;
@@ -105,6 +106,7 @@ public final class CombatiumLite extends JavaPlugin {
         int regenTickDelay = getConfig().getInt("regenTickDelay", 40);
         shieldBaseBlocking = (float) getConfig().getDouble("shieldBaseBlocking", 5.0);
         shieldBlockingMultiplier = (float) getConfig().getDouble("shieldBlockingMultiplier", 0.0);
+        defaultShieldKnockbackMultiplier = (float) getConfig().getDouble("defaultShieldKnockbackMultiplier", 0.5);
 
         ItemPatcher.patch(shieldBaseBlocking, shieldBlockingMultiplier);
         printConfig();

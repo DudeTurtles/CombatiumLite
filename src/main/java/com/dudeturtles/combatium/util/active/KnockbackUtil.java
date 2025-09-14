@@ -59,11 +59,11 @@ public class KnockbackUtil {
 
     public static double getBlockingReduction(LivingEntity entity) {
         ItemStack item = entity.getActiveItem();
-        if (!item.getPersistentDataContainer().has(PlayerDamageEntity.KNOCKBACK_REDUCTION)) return 0.5;
+        if (!item.getPersistentDataContainer().has(PlayerDamageEntity.KNOCKBACK_REDUCTION)) return CombatiumLite.defaultShieldKnockbackMultiplier;
         try {
             return item.getPersistentDataContainer().get(PlayerDamageEntity.KNOCKBACK_REDUCTION, org.bukkit.persistence.PersistentDataType.DOUBLE);
         } catch (Exception e) {
-            return 0.5;
+            return CombatiumLite.defaultShieldKnockbackMultiplier;
         }
     }
 }

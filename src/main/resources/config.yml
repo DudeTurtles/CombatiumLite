@@ -123,6 +123,13 @@ shieldBaseBlocking: 5.0
 # Default: 0.0
 shieldBlockingMultiplier: 0.0
 
+# The default amount of knockback a shield will block. This is the added knockback resistance when holding up a shield.
+# A value of 0.0 means that the shield will not block any knockback.
+# A value of 1.0 means that the shield will block all knockback.
+# This can be modified per shield using the items persistent data.
+# Default: 0.5
+defaultShieldKnockbackMultiplier: 0.5
+
 # The protection arc of the shield. This is the angle in which the shield will protect the player.
 # Default: 73.8723797
 shieldProtectionArc: 73.8723797

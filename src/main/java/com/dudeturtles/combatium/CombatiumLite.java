@@ -3,7 +3,6 @@ package com.dudeturtles.combatium;
 import com.dudeturtles.combatium.listeners.regen.ExhaustListener;
 import com.dudeturtles.combatium.listeners.snapshot.CombatifyListener;
 import com.dudeturtles.combatium.listeners.damage.*;
-import com.dudeturtles.combatium.listeners.itemFixers.*;
 import com.dudeturtles.combatium.listeners.projectile.ProjectileHitListener;
 import com.dudeturtles.combatium.listeners.projectile.ProjectileThrowListener;
 import com.dudeturtles.combatium.listeners.regen.EntityRegainHealthListener;
@@ -38,11 +37,13 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.slf4j.LoggerFactory;
 
 import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
 public final class CombatiumLite extends JavaPlugin {
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(CombatiumLite.class);
     private static CombatiumLite INSTANCE;
     public static PluginManager pluginManager;
     public static Logger logger = Logger.getLogger("[CombatiumLite]");
@@ -52,8 +53,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean improvedAnimations;
     public static boolean improvedChargedHits;
     public static boolean tridentsReturnFromVoid;
-    public static boolean swordBlocking;
-    public static boolean swordBlockingDisplay;
     public static boolean weakerSpamCrits;
     public static boolean hasteFix;
     public static boolean pingImprovements;
@@ -65,6 +64,8 @@ public final class CombatiumLite extends JavaPlugin {
     public static double shieldProtectionArc;
     public static boolean sprintFix;
     public static boolean combatifySupport;
+    public static float shieldBaseBlocking;
+    public static float shieldBlockingMultiplier;
     BukkitTask pingTask;
     public Scheduler scheduler;
     private ReachUtil reachUtil;
@@ -83,29 +84,29 @@ public final class CombatiumLite extends JavaPlugin {
         this.reachUtil = new ReachUtil();
         //Check for config options
         saveDefaultConfig();
-        backShotsPlus = getConfig().getBoolean("pvp.backShotsPlus", false);
-        swordBlocking = getConfig().getBoolean("pvp.swordBlocking", false);
-        swordBlockingDisplay = getConfig().getBoolean("pvp.swordBlockingDisplay", false);
-        weakerSpamCrits = getConfig().getBoolean("pvp.weakerSpamCrits", false);
-        hasteFix = getConfig().getBoolean("pvp.hasteFix", false);
-        hitThroughTransparent = getConfig().getBoolean("pvp.hitThroughTransparent", false);
-        sprintFix = getConfig().getBoolean("pvp.sprintFix", false);
-        combatifySupport = getConfig().getBoolean("pvp.combatifySupport", false);
-        saturationChanges = getConfig().getBoolean("pvp.saturationChanges", true);
-        gracePeriod = getConfig().getBoolean("pvp.gracePeriod", true);
-        improvedAnimations = getConfig().getBoolean("pvp.improvedAnimations", true);
-        improvedChargedHits = getConfig().getBoolean("pvp.improvedChargedHits", true);
-        pingImprovements = getConfig().getBoolean("pvp.pingImprovements", false);
-        tridentsReturnFromVoid = getConfig().getBoolean("pvp.tridentsReturnFromVoid", true);
-        swapAccuracy = getConfig().getBoolean("pvp.swapAccuracy", true);
-        sweepOnMiss = getConfig().getBoolean("pvp.sweepOnMiss", true);
-        fixSweepOnThrow = getConfig().getBoolean("pvp.fixSweepOnThrow", true);
-        shieldProtectionArc = Mth.clamp(getConfig().getDouble("pvp.shieldProtectionArc", 106.1276203), 0, 180);
-        getReachUtil().setRateLimitTicks(getConfig().getInt("pvp.rateLimitTicks", 4));
-        reachUtil.setMissTime(getConfig().getInt("pvp.missTime", 4));
-        int regenTickDelay = getConfig().getInt("pvp.regenTickDelay", 40);
+        backShotsPlus = getConfig().getBoolean("backShotsPlus", false);
+        weakerSpamCrits = getConfig().getBoolean("weakerSpamCrits", false);
+        hasteFix = getConfig().getBoolean("hasteFix", false);
+        hitThroughTransparent = getConfig().getBoolean("hitThroughTransparent", false);
+        sprintFix = getConfig().getBoolean("sprintFix", false);
+        combatifySupport = getConfig().getBoolean("combatifySupport", false);
+        saturationChanges = getConfig().getBoolean("saturationChanges", true);
+        gracePeriod = getConfig().getBoolean("gracePeriod", true);
+        improvedAnimations = getConfig().getBoolean("improvedAnimations", true);
+        improvedChargedHits = getConfig().getBoolean("improvedChargedHits", true);
+        pingImprovements = getConfig().getBoolean("pingImprovements", false);
+        tridentsReturnFromVoid = getConfig().getBoolean("tridentsReturnFromVoid", true);
+        swapAccuracy = getConfig().getBoolean("swapAccuracy", true);
+        sweepOnMiss = getConfig().getBoolean("sweepOnMiss", true);
+        fixSweepOnThrow = getConfig().getBoolean("fixSweepOnThrow", true);
+        shieldProtectionArc = Mth.clamp(getConfig().getDouble("shieldProtectionArc", 106.1276203), 0, 180);
+        getReachUtil().setRateLimitTicks(getConfig().getInt("rateLimitTicks", 4));
+        reachUtil.setMissTime(getConfig().getInt("missTime", 4));
+        int regenTickDelay = getConfig().getInt("regenTickDelay", 40);
+        shieldBaseBlocking = (float) getConfig().getDouble("shieldBaseBlocking", 5.0);
+        shieldBlockingMultiplier = (float) getConfig().getDouble("shieldBlockingMultiplier", 0.0);
 
-        ItemPatcher.patch();
+        ItemPatcher.patch(shieldBaseBlocking, shieldBlockingMultiplier);
         printConfig();
 
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
@@ -143,8 +144,6 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new PlayerInteractListener(), this);
         pluginManager.registerEvents(new PlayerJoinListener(), this);
         pluginManager.registerEvents(new ProjectileThrowListener(), this);
-        pluginManager.registerEvents(new PlayerInteractListenerFix(), this);
-        pluginManager.registerEvents(new CraftItemListener(), this);
         pluginManager.registerEvents(new TickListener(this.scheduler), this);
         pluginManager.registerEvents(new AnimationListener(), this);
         pluginManager.registerEvents(new KnockbackListener(), this);
@@ -172,7 +171,6 @@ public final class CombatiumLite extends JavaPlugin {
     private void printConfig() {
         logger.log(java.util.logging.Level.INFO, "=== CombatiumLite Config ===");
         logger.log(java.util.logging.Level.INFO, "Back Shots Plus: " + backShotsPlus);
-        logger.log(java.util.logging.Level.INFO, "Sword Blocking: " + swordBlocking);
         logger.log(java.util.logging.Level.INFO, "Weaker Spam Crits: " + weakerSpamCrits);
         logger.log(java.util.logging.Level.INFO, "Hit Through Transparent: " + hitThroughTransparent);
         logger.log(java.util.logging.Level.INFO, "Saturation Changes: " + saturationChanges);
@@ -185,8 +183,12 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Sweep On Miss: " + sweepOnMiss);
         logger.log(java.util.logging.Level.INFO, "Fix Sweep On Throw: " + fixSweepOnThrow);
         logger.log(java.util.logging.Level.INFO, "Shield Protection Arc: " + shieldProtectionArc);
+        logger.log(java.util.logging.Level.INFO, "Shield Base Blocking: " + shieldBaseBlocking);
+        logger.log(java.util.logging.Level.INFO, "Shield Blocking Multiplier: " + shieldBlockingMultiplier);
+        logger.log(java.util.logging.Level.INFO, "Haste Fix: " + hasteFix);
         logger.log(java.util.logging.Level.INFO, "Sprint Fix: " + sprintFix);
         logger.log(java.util.logging.Level.INFO, "Combatify Support: " + combatifySupport);
+        logger.log(java.util.logging.Level.INFO, "============================");
     }
 
     public static CombatiumLite getInstance() {

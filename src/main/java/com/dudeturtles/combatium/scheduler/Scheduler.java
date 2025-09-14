@@ -4,7 +4,6 @@ import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.util.active.PlayerDamageEntity;
 import com.dudeturtles.combatium.util.active.ReachUtil;
 import com.dudeturtles.combatium.util.active.TridentTracker;
-import com.dudeturtles.combatium.util.calculations.FixItem;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
 import com.dudeturtles.combatium.util.hitThroughTransparent.HitManager;
 import net.kyori.adventure.text.Component;
@@ -90,14 +89,6 @@ public class Scheduler {
                 FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1, null);
                 Bukkit.getPluginManager().callEvent(event);
                 if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
-            }
-        }
-
-        //Check for players using sword block
-        if (CombatiumLite.swordBlockingDisplay && CombatiumLite.swordBlocking) {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (FixItem.isSword(player.getActiveItem().getType())) player.sendActionBar(Component.text("Blocking").color(NamedTextColor.GREEN));
-                else player.sendActionBar(Component.text(""));
             }
         }
 

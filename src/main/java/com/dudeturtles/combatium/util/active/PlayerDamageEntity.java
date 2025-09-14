@@ -34,8 +34,6 @@ import java.util.Optional;
 
 public class PlayerDamageEntity {
     private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
-    public static final NamespacedKey BLOCK_ANGLE = new NamespacedKey("combatium", "block_angle");
-    public static final NamespacedKey BLOCK_AMOUNT = new NamespacedKey("combatium", "block_amount");
     public static final NamespacedKey KNOCKBACK_REDUCTION = new NamespacedKey("combatium", "knockback_reduction");
     private static EntityDamageByEntityListener entityDamageByEntityListener;
 

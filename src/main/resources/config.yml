@@ -1,130 +1,128 @@
-pvp:
-  # If hitting a player from behind should deal more damage
-  # similar to a critical hit. Can't stack with critical hits.
-  # (This has nothing to do with the combat tests and was just something I added for fun)
-  # Default: false
-  backShotsPlus: false
+# If hitting a player from behind should deal more damage
+# similar to a critical hit. Can't stack with critical hits.
+# (This has nothing to do with the combat tests and was just something I added for fun)
+# Default: false
+backShotsPlus: false
 
-  # If the player should be able to block with a sword, similar to 1.8 combat.
-  # This will reduce damage taken by 3 when blocking, but will also reduce
-  # the players movement speed.
-  # Not a part of cts, just something I wanted to see if I could do.
-  # Default: false
-  swordBlocking: false
+# If critical hits should do less damage on non-charged hits.
+# This was implemented in combat test 8a to reduce the effectiveness of spam hitting.
+# Default: false
+weakerSpamCrits: false
 
-  # If the player should have an action bar message show when they are blocking with a sword.
-  # Implemented for pre-1.21.4 players, where client side block animation wasn't added yet.
-  # Default: false
-  swordBlockingDisplay: false
+# If haste should take into account the accurate attack speed or an increased one.
+# Fixes a bug in CTS where haste is vastly more powerful than it should be.
+# Default: false
+hasteFix: false
 
-  # If critical hits should do less damage on non-charged hits.
-  # This was implemented in combat test 8a to reduce the effectiveness of spam hitting.
-  # Default: false
-  weakerSpamCrits: false
+# If you should be able to hit an entity through passable blocks such as vines, grass, and cobwebs.
+# This is a feature in the original snapshots, but given it is calculated server side, it is less accurate
+# than the original snapshots, and isn't a feature I'm confident in. It also has to store past locations for
+# every player to compensate for ping, which can be taxing on the server.
+# Default: false
+hitThroughTransparent: false
 
-  # If haste should take into account the accurate attack speed or an increased one.
-  # Fixes a bug in CTS where haste is vastly more powerful than it should be.
-  # Default: false
-  hasteFix: false
+# A bug fix which removes the need for w tapping.
+# This is false by default as it is generally not used, especially in competitive settings.
+# Default: false
+sprintFix: false
 
-  # If you should be able to hit an entity through passable blocks such as vines, grass, and cobwebs.
-  # This is a feature in the original snapshots, but given it is calculated server side, it is less accurate
-  # than the original snapshots, and isn't a feature I'm confident in. It also has to store past locations for
-  # every player to compensate for ping, which can be taxing on the server.
-  # Default: false
-  hitThroughTransparent: false
+# If enabled, players with higher ping will take more accurate knockback.
+# Based off of the Knockback Sync plugin.
+# After further testing, 8c servers, for what ever reason, appears to not properly take velocity into account.
+# As such, this feature is disabled by default, as it does not accurately reflect 8c combat.
+# Default: false
+pingImprovements: false
 
-  # A bug fix which removes the need for w tapping.
-  # This is false by default as it is generally not used, especially in competitive settings.
-  # Default: false
-  sprintFix: false
+# If the saturation changes from the combat tests should be implemented.
+# This makes it so that eating food doesn't increase saturation each time, but instead
+# increases it to the maximum saturation of the food. This means that eating multiple
+# foods in a row will not increase saturation, but will still increase hunger as normal.
+# While there is a limit to how much saturation a food will get you to, your saturation
+# will not decrease.
+# Default: true
+saturationChanges: true
 
-  # If enabled, players with higher ping will take more accurate knockback.
-  # Based off of the Knockback Sync plugin.
-  # After further testing, 8c servers, for what ever reason, appears to not properly take velocity into account.
-  # As such, this feature is disabled by default, as it does not accurately reflect 8c combat.
-  # Default: false
-  pingImprovements: false
+# If tridents which have loyalty should return when they hit the void.
+# While not a significant part of combat, this is a feature in CTS.
+# Default: true
+tridentsReturnFromVoid: true
 
-  # If the saturation changes from the combat tests should be implemented.
-  # This makes it so that eating food doesn't increase saturation each time, but instead
-  # increases it to the maximum saturation of the food. This means that eating multiple
-  # foods in a row will not increase saturation, but will still increase hunger as normal.
-  # While there is a limit to how much saturation a food will get you to, your saturation
-  # will not decrease.
-  # Default: true
-  saturationChanges: true
+# If the animations server side should be improved to more accurately match CTS.
+# Makes it so arm swing animations only play when a player can attack, so attacks
+# made before the cooldown is up won't show the arm swing.
+# This will not change client side animations, as that would require a client mod.
+# But it will make it so other players animations reflect their actual attack speed.
+# Default: true
+improvedAnimations: true
 
-  # If tridents which have loyalty should return when they hit the void.
-  # While not a significant part of combat, this is a feature in CTS.
-  # Default: true
-  tridentsReturnFromVoid: true
+# If reach charging should use ping to more accurately update players reach.
+# This will make it so players with higher ping don't have to wait longer before being able
+# to perform a charged attack.
+# Default: true
+improvedChargedHits: true
 
-  # If the animations server side should be improved to more accurately match CTS.
-  # Makes it so arm swing animations only play when a player can attack, so attacks
-  # made before the cooldown is up won't show the arm swing.
-  # This will not change client side animations, as that would require a client mod.
-  # But it will make it so other players animations reflect their actual attack speed.
-  # Default: true
-  improvedAnimations: true
+# If there should be a limit on how quickly a player can attack. This prevents spam clicking from being
+# as effective, and encourages proper timing of attacks.
+# Default: true
+rateLimit: true
 
-  # If reach charging should use ping to more accurately update players reach.
-  # This will make it so players with higher ping don't have to wait longer before being able
-  # to perform a charged attack.
-  # Default: true
-  improvedChargedHits: true
+# If the hit grace period should be enabled. This allows players to hit
+# slightly before their weapon is charged, and delays the hit to when their weapon would be charged.
+# This allows for more consistent pvp, allowing people to compensate for ping, and also reducing
+# the advantages of spam clicking.
+# Default: true
+gracePeriod: true
 
-  # If there should be a limit on how quickly a player can attack. This prevents spam clicking from being
-  # as effective, and encourages proper timing of attacks.
-  # Default: true
-  rateLimit: true
+# If swapping weapons the same tick you attack, should act as it does in vanilla.
+# This plugin modified how damage calculations work, in vanilla swapping weapons the same tick you attack
+# results in the attack speed, reach, and damage of the first weapon, and the enchantments of the second weapon.
+# This being enabled will return the vanilla functionality. If disabled, calculations are done only based on the
+# weapon which was swapped to.
+# Default: true
+swapAccuracy: true
 
-  # If the hit grace period should be enabled. This allows players to hit
-  # slightly before their weapon is charged, and delays the hit to when their weapon would be charged.
-  # This allows for more consistent pvp, allowing people to compensate for ping, and also reducing
-  # the advantages of spam clicking.
-  # Default: true
-  gracePeriod: true
+# If when the player misses an attack, if they have sweeping edge, should the sweep attack still be applied.
+# This is a feature in CTS, and is enabled by default.
+# Default: true
+sweepOnMiss: true
 
-  # If swapping weapons the same tick you attack, should act as it does in vanilla.
-  # This plugin modified how damage calculations work, in vanilla swapping weapons the same tick you attack
-  # results in the attack speed, reach, and damage of the first weapon, and the enchantments of the second weapon.
-  # This being enabled will return the vanilla functionality. If disabled, calculations are done only based on the
-  # weapon which was swapped to.
-  # Default: true
-  swapAccuracy: true
+# This delays the sweep attack by one tick, to prevent an issue where paper would apply the sweep attack
+# when ever a player dropped an item from their inventory. This is recommended, as from experience
+# it is annoying to have the sweep attack applied when you drop an item.
+# Default: true
+fixSweepOnThrow: true
 
-  # If when the player misses an attack, if they have sweeping edge, should the sweep attack still be applied.
-  # This is a feature in CTS, and is enabled by default.
-  # Default: true
-  sweepOnMiss: true
+# The number of ticks between regen ticks. (20 ticks = 1 second)
+# 40 by default, meaning regen ticks every 40 ticks, or 2 seconds.
+# In vanilla, this is 80 ticks, or 4 seconds, but in CTS, it is 40 ticks.
+# This increased regen speed is to make up for the lack of boosted
+# regen at high saturation.
+# Default: 40
+regenTickDelay: 40
 
-  # This delays the sweep attack by one tick, to prevent an issue where paper would apply the sweep attack
-  # when ever a player dropped an item from their inventory. This is recommended, as from experience
-  # it is annoying to have the sweep attack applied when you drop an item.
-  # Default: true
-  fixSweepOnThrow: true
+# The amount of time a player should wait before being able to send consecutive attacks.
+# This is to prevent spam clicking from being as effective, and to encourage proper timing of attacks.
+# Essentially, this acts to limit the players max clicks per second, to 20 divided by this number.
+# Can be set to 0 to disable the rate limit. This should generally be the same as the miss time.
+# Default: 4
+rateLimitTicks: 4
 
-  # The number of ticks between regen ticks. (20 ticks = 1 second)
-  # 40 by default, meaning regen ticks every 40 ticks, or 2 seconds.
-  # In vanilla, this is 80 ticks, or 4 seconds, but in CTS, it is 40 ticks.
-  # This increased regen speed is to make up for the lack of boosted
-  # regen at high saturation.
-  # Default: 40
-  regenTickDelay: 40
+# The cooldown, in ticks, that a player should have after missing an attack.
+# Can be set to 0 to disable the cooldown (This is not recommended).
+# Default: 4
+missTime: 4
 
-  # The amount of time a player should wait before being able to send consecutive attacks.
-  # This is to prevent spam clicking from being as effective, and to encourage proper timing of attacks.
-  # Essentially, this acts to limit the players max clicks per second, to 20 divided by this number.
-  # Can be set to 0 to disable the rate limit. This should generally be the same as the miss time.
-  # Default: 4
-  rateLimitTicks: 4
+# The base amount of damage a shield will block.
+# This is a flat number and is applied to all hits.
+# Default: 5.0
+shieldBaseBlocking: 5.0
 
-  # The cooldown, in ticks, that a player should have after missing an attack.
-  # Can be set to 0 to disable the cooldown (This is not recommended).
-  # Default: 4
-  missTime: 4
+# The multiplier for how much damage a shield will block based on the damage of the hit.
+# A value of 0.0 means that the shield will block a flat amount of damage (the shieldBaseBlocking value).
+# A value of 1.0 means that the shield will block all damage from the hit.
+# Default: 0.0
+shieldBlockingMultiplier: 0.0
 
-  # The protection arc of the shield. This is the angle in which the shield will protect the player.
-  # Default: 73.8723797
-  shieldProtectionArc: 73.8723797
+# The protection arc of the shield. This is the angle in which the shield will protect the player.
+# Default: 73.8723797
+shieldProtectionArc: 73.8723797

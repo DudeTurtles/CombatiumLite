@@ -100,7 +100,7 @@ public final class CombatiumLite extends JavaPlugin {
         swapAccuracy = getConfig().getBoolean("swapAccuracy", true);
         sweepOnMiss = getConfig().getBoolean("sweepOnMiss", true);
         fixSweepOnThrow = getConfig().getBoolean("fixSweepOnThrow", true);
-        shieldProtectionArc = Mth.clamp(getConfig().getDouble("shieldProtectionArc", 106.1276203), 0, 180);
+        shieldProtectionArc = Mth.clamp(getConfig().getDouble("shieldProtectionArc", 73.8723797), 0, 180);
         getReachUtil().setRateLimitTicks(getConfig().getInt("rateLimitTicks", 4));
         reachUtil.setMissTime(getConfig().getInt("missTime", 4));
         int regenTickDelay = getConfig().getInt("regenTickDelay", 40);

@@ -75,7 +75,6 @@ public class ProjectilePhaseListener implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        if(true) return;
         Player p = event.getPlayer();
         for (Entity entity : p.getNearbyEntities(5,5,5)) {
             if(!(entity instanceof Projectile proj)) continue;

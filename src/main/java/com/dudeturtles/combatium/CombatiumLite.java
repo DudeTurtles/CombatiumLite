@@ -1,5 +1,6 @@
 package com.dudeturtles.combatium;
 
+import com.dudeturtles.combatium.listeners.projectile.ProjectilePhaseListener;
 import com.dudeturtles.combatium.listeners.regen.ExhaustListener;
 import com.dudeturtles.combatium.listeners.snapshot.CombatifyListener;
 import com.dudeturtles.combatium.listeners.damage.*;
@@ -67,6 +68,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static float shieldBaseBlocking;
     public static float shieldBlockingMultiplier;
     public static double defaultShieldKnockbackMultiplier;
+    public static boolean antiProjectileGhosting;
     BukkitTask pingTask;
     public Scheduler scheduler;
     private ReachUtil reachUtil;
@@ -90,7 +92,7 @@ public final class CombatiumLite extends JavaPlugin {
         hasteFix = getConfig().getBoolean("hasteFix", false);
         hitThroughTransparent = getConfig().getBoolean("hitThroughTransparent", false);
         sprintFix = getConfig().getBoolean("sprintFix", false);
-        combatifySupport = getConfig().getBoolean("combatifySupport", false);
+        combatifySupport = getConfig().getBoolean("combatifySupport", true);
         saturationChanges = getConfig().getBoolean("saturationChanges", true);
         gracePeriod = getConfig().getBoolean("gracePeriod", true);
         improvedAnimations = getConfig().getBoolean("improvedAnimations", true);
@@ -107,6 +109,7 @@ public final class CombatiumLite extends JavaPlugin {
         shieldBaseBlocking = (float) getConfig().getDouble("shieldBaseBlocking", 5.0);
         shieldBlockingMultiplier = (float) getConfig().getDouble("shieldBlockingMultiplier", 0.0);
         defaultShieldKnockbackMultiplier = (float) getConfig().getDouble("defaultShieldKnockbackMultiplier", 0.5);
+        antiProjectileGhosting = getConfig().getBoolean("antiProjectileGhosting", true);
 
         ItemPatcher.patch(shieldBaseBlocking, shieldBlockingMultiplier);
         printConfig();
@@ -156,6 +159,7 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new PrePlayerAttackEvent(), this);
         pluginManager.registerEvents(new ExhaustListener(), this);
         DispenserBlock.registerProjectileBehavior(Items.TRIDENT);
+        if (antiProjectileGhosting) pluginManager.registerEvents(new ProjectilePhaseListener(), this);
 
         CombatifyListener combatifyListener = new CombatifyListener();
         pluginManager.registerEvents(combatifyListener, this);
@@ -189,6 +193,7 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Shield Blocking Multiplier: " + shieldBlockingMultiplier);
         logger.log(java.util.logging.Level.INFO, "Haste Fix: " + hasteFix);
         logger.log(java.util.logging.Level.INFO, "Sprint Fix: " + sprintFix);
+        logger.log(java.util.logging.Level.INFO, "Anti Projectile Ghosting: " + antiProjectileGhosting);
         logger.log(java.util.logging.Level.INFO, "Combatify Support: " + combatifySupport);
         logger.log(java.util.logging.Level.INFO, "============================");
     }

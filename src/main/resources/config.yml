@@ -42,6 +42,12 @@ pingImprovements: false
 # Default: true
 saturationChanges: true
 
+# A fix for vanilla projectile ghosting.
+# This makes it so projectiles are less likely to pass through players.
+# Credit to CatPVP for the code.
+# Default: true
+antiProjectileGhosting: true
+
 # If tridents which have loyalty should return when they hit the void.
 # While not a significant part of combat, this is a feature in CTS.
 # Default: true

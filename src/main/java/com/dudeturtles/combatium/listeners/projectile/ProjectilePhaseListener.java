@@ -21,47 +21,47 @@ import java.util.*;
 
 public class ProjectilePhaseListener implements Listener {
     private static final Set<Projectile> projectiles = new HashSet<>();
-    public static void task() {
-        Bukkit.getScheduler().runTaskTimer(CombatiumLite.getInstance(), () -> {
-            //if(true) return;
-            for (Iterator<Projectile> iterator = projectiles.iterator(); iterator.hasNext(); ) {
-                Projectile proj = iterator.next();
-                World world = proj.getWorld();
+    public static void tick() {
+        //if(true) return;
+        for (Iterator<Projectile> iterator = projectiles.iterator(); iterator.hasNext(); ) {
+            Projectile proj = iterator.next();
+            World world = proj.getWorld();
 
-                Vector arrowVelocity = proj.getVelocity().clone();
-                arrowVelocity.setY(arrowVelocity.getY()-0.08);
-                BoundingBox arrowBox = proj.getBoundingBox().clone()
-                        .union(proj.getBoundingBox().clone().shift(arrowVelocity));
+            Vector arrowVelocity = proj.getVelocity().clone();
+            arrowVelocity.setY(arrowVelocity.getY() - 0.08);
+            BoundingBox arrowBox = proj.getBoundingBox().clone()
+                    .union(proj.getBoundingBox().clone().shift(arrowVelocity));
 
-                for (Entity entity : world.getNearbyEntities(arrowBox.clone().expand(5, 5, 5))) {
-                    if (entity instanceof Player p
-                            && !p.getGameMode().equals(GameMode.SPECTATOR)
-                            && p != proj.getShooter()
-                            && proj.getVelocity().getX() != 0
-                            && proj.getVelocity().getZ() != 0
-                    ) {
-                        Vector pVelocity = p.getVelocity().clone();
-                        pVelocity.setY(pVelocity.getY()-0.08);
+            for (Entity entity : world.getNearbyEntities(arrowBox.clone().expand(5, 5, 5))) {
+                if (entity instanceof Player p
+                        && !p.getGameMode().equals(GameMode.SPECTATOR)
+                        && p != proj.getShooter()
+                        && proj.getVelocity().getX() != 0
+                        && proj.getVelocity().getZ() != 0
+                ) {
+                    Vector pVelocity = p.getVelocity().clone();
+                    pVelocity.setY(pVelocity.getY() - 0.08);
 
-                        BoundingBox playerBox = p.getBoundingBox().clone()
-                                .union(p.getBoundingBox().clone().shift(p.getVelocity()));
+                    BoundingBox playerBox = p.getBoundingBox().clone()
+                            .union(p.getBoundingBox().clone().shift(p.getVelocity()));
 
-                        if(arrowBox.overlaps(playerBox)) {
-                            iterator.remove();
-                            proj.hitEntity(entity, proj.getVelocity());
-                            //Bukkit.broadcastMessage("hitting: " + entity.getName());
-                        }
+                    if (arrowBox.overlaps(playerBox)) {
+                        iterator.remove();
+                        proj.hitEntity(entity, proj.getVelocity());
+                        //Bukkit.broadcastMessage("hitting: " + entity.getName());
                     }
                 }
             }
-        }, 1L, 1L);
+        }
+    }
+
+    public ProjectilePhaseListener() {
+        CombatiumLite.getScheduler().registerProjectilePhaseListener(this);
     }
 
     @EventHandler
     public void onSpawn(EntitySpawnEvent event) {
-        if (event.getEntity() instanceof Arrow proj
-//                || event.getEntity() instanceof EnderPearl
-        ) {
+        if (event.getEntity() instanceof Projectile proj ) {
             projectiles.add(proj);
             Bukkit.getScheduler().runTaskLater(CombatiumLite.getInstance(), () -> projectiles.remove(proj), 20L * 30L);
         }

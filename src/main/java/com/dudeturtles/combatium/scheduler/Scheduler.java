@@ -1,6 +1,7 @@
 package com.dudeturtles.combatium.scheduler;
 
 import com.dudeturtles.combatium.CombatiumLite;
+import com.dudeturtles.combatium.listeners.projectile.ProjectilePhaseListener;
 import com.dudeturtles.combatium.util.active.PlayerDamageEntity;
 import com.dudeturtles.combatium.util.active.ReachUtil;
 import com.dudeturtles.combatium.util.active.TridentTracker;
@@ -27,6 +28,7 @@ public class Scheduler {
     private final ArrayList<ScheduledHit> scheduledHits;
     private final ArrayList<ScheduledHit> toRemove;
     private InvulnerabilityScheduler invulnerabilityScheduler;
+    private ProjectilePhaseListener projectilePhaseListener;
 
     public Scheduler(Plugin plugin, int regenTickDelay) {
         this.plugin = plugin;
@@ -36,6 +38,10 @@ public class Scheduler {
         scheduledSweeps = new ArrayList<>();
         scheduledHits = new ArrayList<>();
         toRemove = new ArrayList<>();
+    }
+
+    public void registerProjectilePhaseListener(ProjectilePhaseListener listener) {
+        this.projectilePhaseListener = listener;
     }
 
     public int getCurrentTick() {
@@ -107,6 +113,10 @@ public class Scheduler {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 HitManager.updatePlayerData(player);
             }
+        }
+
+        if (projectilePhaseListener != null) {
+            ProjectilePhaseListener.tick();
         }
 
         currentTick++;

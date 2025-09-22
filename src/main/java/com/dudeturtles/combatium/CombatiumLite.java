@@ -25,15 +25,22 @@ import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
 import com.dudeturtles.combatium.util.ping.PingRunnable;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.event.SimplePacketListenerAbstract;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityVelocity;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import net.atlas.defaulted.networking.ClientboundDefaultComponentsSyncPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.DispenserBlock;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -69,6 +76,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static float shieldBlockingMultiplier;
     public static double defaultShieldKnockbackMultiplier;
     public static boolean antiProjectileGhosting;
+    public static boolean entityMovementOptimizations;
     BukkitTask pingTask;
     public Scheduler scheduler;
     private ReachUtil reachUtil;
@@ -110,6 +118,7 @@ public final class CombatiumLite extends JavaPlugin {
         shieldBlockingMultiplier = (float) getConfig().getDouble("shieldBlockingMultiplier", 0.0);
         defaultShieldKnockbackMultiplier = (float) getConfig().getDouble("defaultShieldKnockbackMultiplier", 0.5);
         antiProjectileGhosting = getConfig().getBoolean("antiProjectileGhosting", true);
+        entityMovementOptimizations = getConfig().getBoolean("entityMovementOptimizations", true);
 
         ItemPatcher.patch(shieldBaseBlocking, shieldBlockingMultiplier);
         printConfig();
@@ -161,6 +170,13 @@ public final class CombatiumLite extends JavaPlugin {
         DispenserBlock.registerProjectileBehavior(Items.TRIDENT);
         if (antiProjectileGhosting) pluginManager.registerEvents(new ProjectilePhaseListener(), this);
 
+        if (entityMovementOptimizations) {
+            if (!(Bukkit.getServer() instanceof CraftServer cs)) return;
+
+            MinecraftServer nmsServer = cs.getServer();
+            pluginManager.registerEvents(new EntityMovementOptimization(nmsServer, getLogger()), this);
+        }
+
         CombatifyListener combatifyListener = new CombatifyListener();
         pluginManager.registerEvents(combatifyListener, this);
         getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
@@ -195,6 +211,7 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Sprint Fix: " + sprintFix);
         logger.log(java.util.logging.Level.INFO, "Anti Projectile Ghosting: " + antiProjectileGhosting);
         logger.log(java.util.logging.Level.INFO, "Combatify Support: " + combatifySupport);
+        logger.log(java.util.logging.Level.INFO, "Entity Movement Optimizations: " + entityMovementOptimizations);
         logger.log(java.util.logging.Level.INFO, "============================");
     }
 

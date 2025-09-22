@@ -6,7 +6,6 @@ import com.dudeturtles.combatium.listeners.util.AnimationListener;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

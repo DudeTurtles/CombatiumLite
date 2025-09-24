@@ -49,7 +49,7 @@ public class CombatifyListener implements Listener, PluginMessageListener {
 
         CombatiumLite.getReachUtil().resetCooldown(player, true);
 
-        if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F)
+        if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F)
                 && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
             SweepingEdgeUtil.Sweep(player, null);
         }

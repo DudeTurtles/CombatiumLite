@@ -87,7 +87,7 @@ public class Scheduler {
             regenTick = 0;
             for (Player player : Bukkit.getOnlinePlayers()) {
                 net.minecraft.world.entity.player.Player nmsPlayer = ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle();
-                if ((Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION)) || nmsPlayer.isHurt() && player.getFoodLevel() > 7)) continue;
+                if ((Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION)) || !nmsPlayer.isHurt() || player.getFoodLevel() <= 7)) continue;
 
                 nmsPlayer.heal(1.0F, EntityRegainHealthEvent.RegainReason.CUSTOM);
 

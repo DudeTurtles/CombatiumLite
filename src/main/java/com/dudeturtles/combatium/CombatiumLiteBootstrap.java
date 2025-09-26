@@ -37,11 +37,14 @@ import net.minecraft.world.item.enchantment.ConditionalEffect;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.LevelBasedValue;
 import net.minecraft.world.item.enchantment.effects.AddValue;
+import net.minecraft.world.level.GameRules;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -59,8 +62,17 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         return false;
     });
     public static TypedKey<Enchantment> CLEAVING;
+    public static final GameRules.Key<GameRules.BooleanValue> RULE_EATINGINTERRUPTIONS;
+
     static {
         try {
+            Method register = GameRules.class.getDeclaredMethod("register", String.class, GameRules.Category.class, GameRules.Type.class);
+            Method create = GameRules.BooleanValue.class.getDeclaredMethod("create", boolean.class);
+            register.setAccessible(true);
+            create.setAccessible(true);
+
+            RULE_EATINGINTERRUPTIONS = (GameRules.Key<GameRules.BooleanValue>) register.invoke(null, "eatingInterruptions", GameRules.Category.UPDATES, create.invoke(null, true));
+
             Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
             unsafeField.setAccessible(true);
             Unsafe unsafe = (Unsafe) unsafeField.get(null);
@@ -126,6 +138,10 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             }));
             CombatiumLite.getPluginLogger().log(Level.INFO, "Patched stream codec: " + hashedStackStreamCodec.get(null));
         } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }

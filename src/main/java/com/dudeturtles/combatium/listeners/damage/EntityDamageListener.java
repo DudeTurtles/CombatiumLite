@@ -1,8 +1,10 @@
 package com.dudeturtles.combatium.listeners.damage;
 
 import com.dudeturtles.combatium.CombatiumLite;
+import com.dudeturtles.combatium.CombatiumLiteBootstrap;
 import com.dudeturtles.combatium.scheduler.InvulnerabilityScheduler;
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -32,7 +34,8 @@ public class EntityDamageListener implements Listener {
         if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent && !event.isCancelled() && event.getDamage() > 0) {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
             if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {
-                e.clearActiveItem();
+                ServerLevel level = (ServerLevel) ((CraftLivingEntity) e).getHandle().level();
+                if (level.getGameRules().getBoolean(CombatiumLiteBootstrap.RULE_EATINGINTERRUPTIONS)) e.clearActiveItem();
             }
         }
 

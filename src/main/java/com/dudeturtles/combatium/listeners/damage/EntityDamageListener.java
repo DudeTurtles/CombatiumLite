@@ -29,34 +29,6 @@ public class EntityDamageListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof LivingEntity e && computeAmountFromEntityDamageEvent(event) > 0) {
-            net.minecraft.world.entity.LivingEntity nms = ((CraftLivingEntity) e).getHandle();
-            DamageSource damageSource = ((CraftDamageSource) event.getDamageSource()).getHandle();
-            if (!damageSource.is(DamageTypeTags.NO_IMPACT)) nms.hurtMarked = true;
-            if (!damageSource.is(DamageTypeTags.NO_KNOCKBACK)) {
-                double d = 0.0F;
-                double d1 = 0.0F;
-                Entity attacker = damageSource.getDirectEntity();
-                if (attacker instanceof Projectile projectile) {
-                    DoubleDoubleImmutablePair doubleDoubleImmutablePair = projectile.calculateHorizontalHurtKnockbackDirection(nms, damageSource);
-                    d = -doubleDoubleImmutablePair.leftDouble();
-                    d1 = -doubleDoubleImmutablePair.rightDouble();
-                } else if (damageSource.getSourcePosition() != null) {
-                    d = damageSource.getSourcePosition().x() - nms.getX();
-                    d1 = damageSource.getSourcePosition().z() - nms.getZ();
-                }
-
-                if (Math.abs(d) > (double) 200.0F) {
-                    d = Math.random() - Math.random();
-                }
-
-                if (Math.abs(d1) > (double) 200.0F) {
-                    d1 = Math.random() - Math.random();
-                }
-                nms.indicateDamage(d, d1);
-            }
-        }
-
         if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent && !event.isCancelled() && event.getDamage() > 0) {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
             if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {
@@ -94,6 +66,36 @@ public class EntityDamageListener implements Listener {
         // If the damage is not from an entity, set the entity to be invulnerable for 10 ticks
         if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK))
             invulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage, event.getCause());
+
+        if (event.isCancelled()) return;
+
+        if (event.getEntity() instanceof LivingEntity e && computeAmountFromEntityDamageEvent(event) > 0) {
+            net.minecraft.world.entity.LivingEntity nms = ((CraftLivingEntity) e).getHandle();
+            DamageSource damageSource = ((CraftDamageSource) event.getDamageSource()).getHandle();
+            if (!damageSource.is(DamageTypeTags.NO_IMPACT)) nms.hurtMarked = true;
+            if (!damageSource.is(DamageTypeTags.NO_KNOCKBACK)) {
+                double d = 0.0F;
+                double d1 = 0.0F;
+                Entity attacker = damageSource.getDirectEntity();
+                if (attacker instanceof Projectile projectile) {
+                    DoubleDoubleImmutablePair doubleDoubleImmutablePair = projectile.calculateHorizontalHurtKnockbackDirection(nms, damageSource);
+                    d = -doubleDoubleImmutablePair.leftDouble();
+                    d1 = -doubleDoubleImmutablePair.rightDouble();
+                } else if (damageSource.getSourcePosition() != null) {
+                    d = damageSource.getSourcePosition().x() - nms.getX();
+                    d1 = damageSource.getSourcePosition().z() - nms.getZ();
+                }
+
+                if (Math.abs(d) > (double) 200.0F) {
+                    d = Math.random() - Math.random();
+                }
+
+                if (Math.abs(d1) > (double) 200.0F) {
+                    d1 = Math.random() - Math.random();
+                }
+                nms.indicateDamage(d, d1);
+            }
+        }
     }
     private float computeAmountFromEntityDamageEvent(EntityDamageEvent event) {
         float amount = 0.0F;

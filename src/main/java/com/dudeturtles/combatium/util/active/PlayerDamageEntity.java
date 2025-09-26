@@ -6,7 +6,6 @@ import com.dudeturtles.combatium.listeners.util.AnimationListener;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -115,7 +114,7 @@ public class PlayerDamageEntity {
             KnockbackUtil.applyKnockback(target, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
         }
 
-        if (CombatiumLite.getReachUtil().isOverCharged(player, 0.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
+        if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
             SweepingEdgeUtil.Sweep(player, target);
         }

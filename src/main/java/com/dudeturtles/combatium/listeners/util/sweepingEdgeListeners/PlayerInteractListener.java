@@ -41,7 +41,7 @@ public PlayerInteractListener() {
 
         if (event.getAction().isLeftClick()) {
             if (reachUtil.isCharged(event.getPlayer(), 0.0F)) {
-                if (CombatiumLite.sweepOnMiss && event.getAction() == Action.LEFT_CLICK_AIR && reachUtil.isOverCharged(event.getPlayer(), 0.0F) &&
+                if (CombatiumLite.sweepOnMiss && event.getAction() == Action.LEFT_CLICK_AIR && reachUtil.isOverCharged(event.getPlayer(), 1.0F) &&
                         (SweepingEdgeUtil.getSweepingLevel(event.getPlayer()) > 0)) {
                     if (CombatiumLite.fixSweepOnThrow) {
                         CombatiumLite.getScheduler().scheduleSweep(event.getPlayer());

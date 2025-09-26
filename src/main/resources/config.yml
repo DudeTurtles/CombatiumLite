@@ -33,6 +33,12 @@ sprintFix: false
 # Default: false
 pingImprovements: false
 
+# If entity movement optimizations should be applied.
+# This makes the plugin send entity position information after it is updated.
+# This makes entity movement feel quicker.
+# Default: true
+entityMovementOptimizations: true
+
 # If the saturation changes from the combat tests should be implemented.
 # This makes it so that eating food doesn't increase saturation each time, but instead
 # increases it to the maximum saturation of the food. This means that eating multiple

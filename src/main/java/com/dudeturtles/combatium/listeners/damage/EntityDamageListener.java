@@ -97,6 +97,7 @@ public class EntityDamageListener implements Listener {
     }
     private float computeAmountFromEntityDamageEvent(EntityDamageEvent event) {
         float amount = 0.0F;
+        if (event.getDamageSource().getDirectEntity() instanceof org.bukkit.entity.Projectile && event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) != 0.0) return 0.0F;
         amount += (float)event.getDamage(EntityDamageEvent.DamageModifier.BASE);
         amount += (float)event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING);
         amount += (float)event.getDamage(EntityDamageEvent.DamageModifier.FREEZING);

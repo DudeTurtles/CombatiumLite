@@ -254,7 +254,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
 
         @Override
         public HashedStack.ActualItem decode(RegistryFriendlyByteBuf buffer) {
-            if (this.registryHashOps == null) this.registryHashOps = buffer.registryAccess().createSerializationContext(HashOps.CRC32C_INSTANCE);
+            this.registryHashOps = buffer.registryAccess().createSerializationContext(HashOps.CRC32C_INSTANCE);
             HashedStack.ActualItem stack = original.decode(buffer);
             HashedPatchMap components = stack.components();
             DataComponentMap prototype = stack.item().value().components();
@@ -274,17 +274,6 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
 
         @Override
         public void encode(RegistryFriendlyByteBuf buffer, HashedStack.ActualItem stack) {
-            if (this.registryHashOps == null) this.registryHashOps = buffer.registryAccess().createSerializationContext(HashOps.CRC32C_INSTANCE);
-            DataComponentMap prototype = stack.item().value().components();
-            if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
-                DataComponentPatch.SplitResult splitResult = prototypeDataComponentMap.asPatch().split();
-                Map<DataComponentType<?>, Integer> added = new IdentityHashMap<>(splitResult.added().size());
-                splitResult.added().forEach((typedDataComponent) -> added.put(typedDataComponent.type(), cache.getUnchecked(typedDataComponent)));
-                added.putAll(stack.components().addedComponents());
-                Set<DataComponentType<?>> removed = new HashSet<>(splitResult.removed());
-                removed.addAll(stack.components().removedComponents());
-                stack = new HashedStack.ActualItem(stack.item(), stack.count(), new HashedPatchMap(added, removed));
-            }
             original.encode(buffer, stack);
         }
     }

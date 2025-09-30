@@ -23,8 +23,12 @@ public class MaceUtil {
             attacker.getWorld().playSound(attacker, Sound.ITEM_MACE_SMASH_AIR, SoundCategory.PLAYERS, 1.0f, 1.0f);
         }
 
+        if (!mace.containsEnchantment(Enchantment.WIND_BURST)) attacker.setFallDistance(0);
+        attacker.setVelocity(new Vector(0, 0, 0));
+
         target.getLocation().getNearbyLivingEntities(3.5, 3.5, 3.5).forEach(entity -> {
             try {
+                if (entity.equals(attacker) || entity.equals(target)) return;
                 Vector direction = entity.getLocation().subtract(target.getLocation()).toVector();
                 double d = getKnockback(attacker, entity, direction);
                 Vector vector = direction.normalize().multiply(d);
@@ -38,11 +42,6 @@ public class MaceUtil {
         spawnBlockParticleCircle(target.getLocation(), target.getLocation().subtract(0, 0.1, 0).getBlock().getType(), 1, 10, 0.5);
 
         spawnBlockParticleCircle(target.getLocation(), target.getLocation().subtract(0, 0.1, 0).getBlock().getType(), 3, 25, 0.6);
-
-        if (!mace.containsEnchantment(Enchantment.WIND_BURST)) {
-            attacker.setVelocity(new Vector(0, 0, 0));
-            attacker.setFallDistance(0);
-        }
 
         return true;
     }

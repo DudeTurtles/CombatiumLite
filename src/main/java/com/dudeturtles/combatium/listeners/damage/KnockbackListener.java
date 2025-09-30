@@ -16,7 +16,10 @@ public class KnockbackListener implements Listener {
     @EventHandler
     public void onKnockback(EntityKnockbackByEntityEvent event) {
         EntityKnockbackEvent.Cause cause = event.getCause();
-        if (!(cause == EntityKnockbackEvent.Cause.ENTITY_ATTACK || cause == EntityKnockbackEvent.Cause.SWEEP_ATTACK || cause == EntityKnockbackEvent.Cause.SHIELD_BLOCK)) return;
+        if (!(cause == EntityKnockbackEvent.Cause.ENTITY_ATTACK ||
+                cause == EntityKnockbackEvent.Cause.SWEEP_ATTACK ||
+                cause == EntityKnockbackEvent.Cause.SHIELD_BLOCK ||
+                event.getKnockbackStrength() == 0)) return;
         if (event.getHitBy() instanceof Projectile &&
                 event.getEntity().getLastDamageCause() != null &&
                 event.getEntity().getLastDamageCause().getDamage(EntityDamageEvent.DamageModifier.BLOCKING) != 0) return;

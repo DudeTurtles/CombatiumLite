@@ -18,7 +18,7 @@ public class ProjectileThrowListener implements Listener {
         if (event.getEntity().getShooter() == null) return;
 
         if (!(event.getEntity().getShooter() instanceof org.bukkit.entity.Player player)) return;
-        if (event.getEntity() instanceof CraftWindCharge) return;
+        //if (event.getEntity() instanceof CraftWindCharge) return;
 
         Player p = ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle();
         Projectile proj;

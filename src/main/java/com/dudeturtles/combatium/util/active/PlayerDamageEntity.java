@@ -90,8 +90,8 @@ public class PlayerDamageEntity {
         double finalDamage = oldHealth - target.getHealth();
         if (entityDamageByEntityListener.wasHitCancelled(player)) return;
 
-        EnchantmentHelper.doPostAttackEffectsWithItemSource(nmsPlayer.level(), nmsTarget, damageSource, nmsWeapon);
         if (weapon.getType() == Material.MACE) cancelKB = MaceUtil.macePostHit(weapon, player.getFallDistance(), player, target);
+        EnchantmentHelper.doPostAttackEffectsWithItemSource(nmsPlayer.level(), nmsTarget, damageSource, nmsWeapon);
 
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(target, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
 

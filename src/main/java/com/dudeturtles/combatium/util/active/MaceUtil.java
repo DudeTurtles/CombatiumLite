@@ -2,6 +2,7 @@ package com.dudeturtles.combatium.util.active;
 
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -38,8 +39,10 @@ public class MaceUtil {
 
         spawnBlockParticleCircle(target.getLocation(), target.getLocation().subtract(0, 0.1, 0).getBlock().getType(), 3, 25, 0.6);
 
-        attacker.setVelocity(new Vector(0, 0, 0));
-        attacker.setFallDistance(0);
+        if (!mace.containsEnchantment(Enchantment.WIND_BURST)) {
+            attacker.setVelocity(new Vector(0, 0, 0));
+            attacker.setFallDistance(0);
+        }
 
         return true;
     }

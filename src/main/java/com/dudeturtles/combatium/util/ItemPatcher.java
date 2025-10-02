@@ -69,7 +69,7 @@ public class ItemPatcher {
             applyDefaultComponents(size(64).andThen(cooldown(0.2F)), intermediary, Items.SNOWBALL);
             applyDefaultComponents(cooldown(0.2F), id("eggs"), intermediary, Items.EGG, Items.BROWN_EGG, Items.BLUE_EGG);
 
-            applyDefaultComponents(blocksAttacks(5, 0, true, true), intermediary, Items.SHIELD);
+            applyDefaultComponents(blocksAttacks(shieldBaseBlocking, shieldBlockingMultiplier, true, true), intermediary, Items.SHIELD);
 
             applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.WOODEN_SWORD);
             applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.GOLDEN_SWORD);

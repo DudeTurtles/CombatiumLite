@@ -6,10 +6,7 @@ import com.dudeturtles.combatium.util.active.ReachUtil;
 import org.bukkit.Material;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
-import org.bukkit.entity.Trident;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -56,16 +53,19 @@ public class EntityDamageByEntityListener implements Listener {
             double originalDamage = event.getDamage();
             event.setDamage(event.getDamage() - invulDamage);
 
-            if (!(event.getDamager() instanceof Projectile)) { // Ensure i-frames are set when damage is not dealt by a projectile
-                int ticks;
-                if (event.getDamager() instanceof LivingEntity de && de.getActiveItem().getType() != Material.AIR) {
-                    ticks = reachUtil.getCooldown(de);
-                } else {
-                    ticks = 10;
-                }
-
-                invulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage, event.getCause());
+            // Ensure i-frames are set when damage is not dealt by a projectile
+            if ((event.getDamager() instanceof Projectile)) {
+                if ((!(event.getDamager() instanceof EnderPearl e)) || (e.getShooter() instanceof LivingEntity le && le != victim)) return;
             }
+
+            int ticks;
+            if (event.getDamager() instanceof LivingEntity de && de.getActiveItem().getType() != Material.AIR) {
+                ticks = reachUtil.getCooldown(de);
+            } else {
+                ticks = 10;
+            }
+
+            invulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage, event.getCause());
         }
     }
 

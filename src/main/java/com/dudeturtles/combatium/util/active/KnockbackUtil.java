@@ -1,6 +1,7 @@
 package com.dudeturtles.combatium.util.active;
 
 import com.dudeturtles.combatium.CombatiumLite;
+import com.dudeturtles.combatium.scheduler.InvulnerabilityScheduler;
 import com.dudeturtles.combatium.util.ping.PingManager;
 import com.dudeturtles.combatium.util.ping.PlayerPingData;
 import org.bukkit.GameMode;
@@ -20,6 +21,8 @@ public class KnockbackUtil {
         net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) entity).getHandle();
         double knockbackRes = Objects.requireNonNull(entity.getAttribute(Attribute.KNOCKBACK_RESISTANCE)).getValue();
         knockbackRes = Math.min(1.0, knockbackRes + (nmsEntity.isBlocking() ? getBlockingReduction(entity) : 0.0));
+
+        if (CombatiumLite.getScheduler().getInvulnerabilityScheduler().isInvulnerable(entity) > 0) return;
 
         strength *= 1.0 - knockbackRes;
         if (strength <= 0.0F) return;

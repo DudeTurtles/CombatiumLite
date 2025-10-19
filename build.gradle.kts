@@ -25,7 +25,7 @@ dependencies {
     shadow(localGroovy())
     shadow(gradleApi())
 
-    implementation("com.github.retrooper:packetevents-spigot:2.9.4-SNAPSHOT")
+    implementation("com.github.retrooper:packetevents-spigot:2.10.0-SNAPSHOT")
     paperweight.paperDevBundle("${project.property("minecraft_version")}-R0.1-SNAPSHOT")
 }
 

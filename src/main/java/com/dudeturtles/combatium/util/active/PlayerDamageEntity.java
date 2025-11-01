@@ -100,7 +100,7 @@ public class PlayerDamageEntity {
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
             if (isSprinting || player.getAttackCooldown() > 0) {
                 try {nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 4));}
-                catch (Exception ignored) {CombatiumLite.logger.severe("Error Sending Crit Particle Packet");}
+                catch (NoSuchMethodError ignored) {CombatiumLite.logger.severe("Error Sending Crit Particle Packet");}
             }
         } else {
             if (isSprinting) player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
@@ -109,7 +109,7 @@ public class PlayerDamageEntity {
 
         if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target)) {
             try {nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 5));}
-            catch (Exception ignored) {CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");}
+            catch (NoSuchMethodError ignored) {CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");}
         }
 
         if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);

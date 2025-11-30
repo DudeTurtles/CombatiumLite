@@ -32,14 +32,42 @@ import java.util.Map;
 import java.util.Optional;
 
 public class PlayerDamageEntity {
-    private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
     public static final NamespacedKey KNOCKBACK_REDUCTION = new NamespacedKey("combatium", "knockback_reduction");
+    private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
     private static EntityDamageByEntityListener entityDamageByEntityListener;
 
     public static void playerDamageEntityEvent(Player player, LivingEntity target, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
+        ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
+        net.minecraft.world.entity.LivingEntity nmsTarget = ((CraftLivingEntity) target).getHandle();
+
+        //Fix item crit particles and sounds
+        if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
+            if (player.isSprinting() || player.getAttackCooldown() > 0) {
+                try {
+                    nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 4));
+                } catch (NoSuchMethodError ignored) {
+                    CombatiumLite.logger.severe("Error Sending Crit Particle Packet");
+                }
+            }
+        } else {
+            if (player.isSprinting())
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
+            else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
+        }
+
+        if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target)) {
+            try {
+                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 5));
+            } catch (NoSuchMethodError ignored) {
+                CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");
+            }
+        }
+
         if (target.isInvulnerable() || target.isDead()) return;
-        if (target instanceof Player p && p.getGameMode().isInvulnerable()) return;
+        if (target instanceof Player p && (p.getGameMode().isInvulnerable() || !nmsPlayer.canHarmPlayer(((CraftPlayer) p).getHandle())))
+            return;
 
         net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
 
@@ -56,9 +84,6 @@ public class PlayerDamageEntity {
         }
 
         //Calculation for reduced shield blocking arc
-        net.minecraft.world.entity.LivingEntity nmsTarget = ((CraftLivingEntity) target).getHandle();
-        ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
-
         float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause);
         net.minecraft.world.damagesource.DamageSource damageSource = Optional.ofNullable(nmsWeapon.getItem().getDamageSource(nmsPlayer)).orElse(nmsPlayer.damageSources().playerAttack(nmsPlayer));
 
@@ -82,7 +107,6 @@ public class PlayerDamageEntity {
         } else {
             strength = (player.isSprinting() && (player.getAttackCooldown() <= 0.9)) ? 1.0 : 0.0;
         }
-        boolean isSprinting = player.isSprinting();
 
         double oldHealth = target.getHealth();
         Vec3 initialTargetDelta = nmsTarget.getDeltaMovement();
@@ -90,29 +114,23 @@ public class PlayerDamageEntity {
         double finalDamage = oldHealth - target.getHealth();
         if (entityDamageByEntityListener.wasHitCancelled(player)) return;
 
-        if (weapon.getType() == Material.MACE) cancelKB = MaceUtil.macePostHit(weapon, player.getFallDistance(), player, target);
+        if (weapon.getType() == Material.MACE)
+            cancelKB = MaceUtil.macePostHit(weapon, player.getFallDistance(), player, target);
         EnchantmentHelper.doPostAttackEffectsWithItemSource(nmsPlayer.level(), nmsTarget, damageSource, nmsWeapon);
 
-        if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) KnockbackUtil.applyKnockback(target, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
-
-        //Fix item crit particles and sounds
-        if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
-            if (isSprinting || player.getAttackCooldown() > 0) {
-                try {nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 4));}
-                catch (NoSuchMethodError ignored) {CombatiumLite.logger.severe("Error Sending Crit Particle Packet");}
-            }
-        } else {
-            if (isSprinting) player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
-            else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
-        }
+        if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
+            KnockbackUtil.applyKnockback(target, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
 
         if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target)) {
-            try {nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 5));}
-            catch (NoSuchMethodError ignored) {CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");}
+            try {
+                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 5));
+            } catch (NoSuchMethodError ignored) {
+                CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");
+            }
         }
 
-        if (finalDamage > 2) player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
+        if (finalDamage > 2)
+            player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 
         if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
             KnockbackUtil.applyKnockback(target, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
@@ -129,7 +147,8 @@ public class PlayerDamageEntity {
          * retrieve the correct cooldown. If that is disabled, this is definitely inefficient, but not in any significant way.
          */
         // Note: This is literally just how it works in CTS though??
-        if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) CombatiumLite.getReachUtil().resetCooldown(player, false);
+        if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
+            CombatiumLite.getReachUtil().resetCooldown(player, false);
         CombatiumLite.getScheduler().getInvulnerabilityScheduler().setInvulnerable(target, CombatiumLite.getReachUtil().getCooldown(player) - 3, originalDamage, damageCause);
         if (nmsTarget instanceof ServerPlayer targetPlayer && targetPlayer.hurtMarked) {
             targetPlayer.connection.send(new ClientboundSetEntityMotionPacket(targetPlayer));

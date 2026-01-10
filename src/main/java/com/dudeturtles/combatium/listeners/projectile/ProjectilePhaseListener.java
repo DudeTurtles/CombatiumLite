@@ -7,8 +7,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.AbstractProjectile;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.craftbukkit.entity.CraftProjectile;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -31,7 +31,7 @@ public class ProjectilePhaseListener implements Listener {
             Projectile proj = iterator.next();
             World world = proj.getWorld();
 
-            net.minecraft.world.entity.projectile.Projectile nmsProj = ((CraftProjectile) proj).getHandle();
+            net.minecraft.world.entity.projectile.Projectile nmsProj = ((AbstractProjectile) proj).getHandle();
             Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
             if (nmsProj.onGround() ? nmsProj.getDeltaMovement().horizontalDistance() <= 0 : nmsProj.getDeltaMovement().length() <= 0) continue;
 
@@ -39,13 +39,13 @@ public class ProjectilePhaseListener implements Listener {
             AABB projNextBox = nmsProj.getBoundingBox().move(aVelocity);
             CraftPlayer playerShooter = proj.getShooter() instanceof CraftPlayer shooter ? shooter : null;
 
-            for (int cut = 1; cut <= cuts; cut++) {
-                float progress = (float) cut / cuts;
-                BoundingBox arrowBox = lerpBoxes(progress, projCurrentBox, projNextBox);
-                for (Player p : ((CraftWorld) world).getHandle().getEntitiesOfClass(Player.class,
-                        toNMS(arrowBox.clone().expand(5)),
-                        target -> !target.isSpectator()
-                                && (playerShooter == null || target != playerShooter.getHandle()))) {
+            for (Player p : ((CraftWorld) world).getHandle().getEntitiesOfClass(Player.class,
+                    projCurrentBox.expandTowards(aVelocity).inflate(1.5),
+                    target -> !target.isSpectator()
+                            && (playerShooter == null || target != playerShooter.getHandle()))) {
+                for (int cut = 1; cut <= cuts; cut++) {
+                    float progress = (float) cut / cuts;
+                    BoundingBox arrowBox = lerpBoxes(progress, projCurrentBox, projNextBox);
                     Vec3 pVelocity = p.getDeltaMovement().subtract(0, p.getGravity(), 0);
 
                     AABB currentBox = p.getBoundingBox();
@@ -53,10 +53,10 @@ public class ProjectilePhaseListener implements Listener {
 
                     BoundingBox playerBox = lerpBoxes(progress, currentBox, nextBox);
 
-                    if (arrowBox.overlaps(playerBox)) {
-                        iterator.remove();
+                    if (boxesOverlap(arrowBox, playerBox)) {
                         proj.hitEntity(p.getBukkitEntity(), proj.getVelocity());
                         //Bukkit.broadcastMessage("hitting: " + entity.getName());
+                        break;
                     }
                 }
             }
@@ -81,15 +81,15 @@ public class ProjectilePhaseListener implements Listener {
         Player nmsPlayer = ((CraftPlayer) p).getHandle();
         AABB pCurrentBox = nmsPlayer.getBoundingBox();
         AABB pNextBox = nmsPlayer.getBoundingBox().move(new Vec3(pVelocity.getX(), pVelocity.getY(), pVelocity.getZ()));
-        for (int cut = 1; cut <= cuts; cut++) {
-            float progress = (float) cut / cuts;
-            BoundingBox playerBox = lerpBoxes(progress, pCurrentBox, pNextBox);
-            for (net.minecraft.world.entity.projectile.Projectile nmsProj : nmsPlayer.level().getEntitiesOfClass(net.minecraft.world.entity.projectile.Projectile.class,
-                    toNMS(playerBox.clone().expand(5)),
-                    proj -> nmsPlayer != proj.getOwner()
-                            && (proj.onGround() ? proj.getDeltaMovement().horizontalDistance() <= 0 : proj.getDeltaMovement().length() <= 0)
-                            && proj.getBukkitEntity() instanceof Projectile bukkit
-                            && projectiles.contains(bukkit))) {
+        for (net.minecraft.world.entity.projectile.Projectile nmsProj : nmsPlayer.level().getEntitiesOfClass(net.minecraft.world.entity.projectile.Projectile.class,
+                pCurrentBox.expandTowards(pVelocity.getX(), pVelocity.getY(), pVelocity.getZ()).inflate(1.5),
+                proj -> nmsPlayer != proj.getOwner()
+                        && (proj.onGround() ? proj.getDeltaMovement().horizontalDistance() <= 0 : proj.getDeltaMovement().length() <= 0)
+                        && proj.getBukkitEntity() instanceof Projectile bukkit
+                        && projectiles.contains(bukkit))) {
+            for (int cut = 1; cut <= cuts; cut++) {
+                float progress = (float) cut / cuts;
+                BoundingBox playerBox = lerpBoxes(progress, pCurrentBox, pNextBox);
                 Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
 
                 AABB projCurrentBox = nmsProj.getBoundingBox();
@@ -97,16 +97,12 @@ public class ProjectilePhaseListener implements Listener {
 
                 BoundingBox arrowBox = lerpBoxes(progress, projCurrentBox, projNextBox);
 
-                if (arrowBox.overlaps(playerBox)) {
+                if (boxesOverlap(arrowBox, playerBox)) {
                     ((Projectile) nmsProj.getBukkitEntity()).hitEntity(p, nmsProj.getBukkitEntity().getVelocity());
                     //Bukkit.broadcastMessage("hitting: " + entity.getName());
                 }
             }
         }
-    }
-
-    public static AABB toNMS(BoundingBox bb) {
-        return new AABB(bb.getMinX(), bb.getMinY(), bb.getMinZ(), bb.getMaxX(), bb.getMaxY(), bb.getMaxZ());
     }
 
     public static BoundingBox lerpBoxes(float delta, AABB oldBox, AABB newBox) {
@@ -116,6 +112,11 @@ public class ProjectilePhaseListener implements Listener {
                 Mth.lerp(delta, oldBox.maxX, newBox.maxX),
                 Mth.lerp(delta, oldBox.maxY, newBox.maxY),
                 Mth.lerp(delta, oldBox.maxZ, newBox.maxZ));
+    }
+    public static boolean boxesOverlap(BoundingBox a, BoundingBox b) {
+        return (a.getMinX() <= b.getMaxX() && a.getMaxX() >= b.getMinX())
+        && (a.getMinY() <= b.getMaxY() && a.getMaxY() >= b.getMinY())
+        && (a.getMinZ() <= b.getMaxZ() && a.getMaxZ() >= b.getMinZ());
     }
 }
 

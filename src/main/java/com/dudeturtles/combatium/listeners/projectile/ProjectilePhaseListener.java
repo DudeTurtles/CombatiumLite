@@ -27,7 +27,7 @@ import java.util.*;
 
 public class ProjectilePhaseListener implements Listener {
     private static final Set<Projectile> projectiles = Collections.newSetFromMap(new WeakHashMap<>());
-    private static final int cuts = 5;
+    private static final int cuts = 6;
     public static void tick() {
         List<Projectile> toRemove = new ArrayList<>();
         for (Projectile proj : projectiles) {
@@ -35,6 +35,7 @@ public class ProjectilePhaseListener implements Listener {
 
             net.minecraft.world.entity.projectile.Projectile nmsProj = ((AbstractProjectile) proj).getHandle();
             Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
+            int functionalCuts = Math.toIntExact(Math.round(cuts * Math.max(1, aVelocity.length() / 2.5)));
             if (nmsProj.onGround() ? nmsProj.getDeltaMovement().horizontalDistance() <= 0 : nmsProj.getDeltaMovement().length() <= 0)
                 continue;
 
@@ -46,8 +47,8 @@ public class ProjectilePhaseListener implements Listener {
                     projCurrentBox.expandTowards(aVelocity).inflate(1.5),
                     target -> !target.isSpectator()
                             && (playerShooter == null || target != playerShooter.getHandle()))) {
-                for (int cut = 1; cut <= cuts; cut++) {
-                    float progress = (float) cut / cuts;
+                for (int cut = 1; cut <= functionalCuts; cut++) {
+                    float progress = (float) cut / functionalCuts;
                     BoundingBox arrowBox = lerpBoxes(progress, projCurrentBox, projNextBox);
                     Vec3 pVelocity = p.getDeltaMovement().subtract(0, p.getGravity(), 0);
 
@@ -97,10 +98,11 @@ public class ProjectilePhaseListener implements Listener {
                         && (proj.onGround() ? proj.getDeltaMovement().horizontalDistance() <= 0 : proj.getDeltaMovement().length() <= 0)
                         && proj.getBukkitEntity() instanceof Projectile bukkit
                         && projectiles.contains(bukkit))) {
-            for (int cut = 1; cut <= cuts; cut++) {
-                float progress = (float) cut / cuts;
+            Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
+            int functionalCuts = Math.toIntExact(Math.round(cuts * Math.max(1, aVelocity.length() / 2.5)));
+            for (int cut = 1; cut <= functionalCuts; cut++) {
+                float progress = (float) cut / functionalCuts;
                 BoundingBox playerBox = lerpBoxes(progress, pCurrentBox, pNextBox);
-                Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
 
                 AABB projCurrentBox = nmsProj.getBoundingBox();
                 AABB projNextBox = nmsProj.getBoundingBox().move(aVelocity);

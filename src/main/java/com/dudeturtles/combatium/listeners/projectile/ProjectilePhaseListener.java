@@ -12,7 +12,9 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -27,13 +29,14 @@ public class ProjectilePhaseListener implements Listener {
     private static final Set<Projectile> projectiles = Collections.newSetFromMap(new WeakHashMap<>());
     private static final int cuts = 5;
     public static void tick() {
-        for (Iterator<Projectile> iterator = projectiles.iterator(); iterator.hasNext(); ) {
-            Projectile proj = iterator.next();
+        List<Projectile> toRemove = new ArrayList<>();
+        for (Projectile proj : projectiles) {
             World world = proj.getWorld();
 
             net.minecraft.world.entity.projectile.Projectile nmsProj = ((AbstractProjectile) proj).getHandle();
             Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
-            if (nmsProj.onGround() ? nmsProj.getDeltaMovement().horizontalDistance() <= 0 : nmsProj.getDeltaMovement().length() <= 0) continue;
+            if (nmsProj.onGround() ? nmsProj.getDeltaMovement().horizontalDistance() <= 0 : nmsProj.getDeltaMovement().length() <= 0)
+                continue;
 
             AABB projCurrentBox = nmsProj.getBoundingBox();
             AABB projNextBox = nmsProj.getBoundingBox().move(aVelocity);
@@ -54,6 +57,7 @@ public class ProjectilePhaseListener implements Listener {
                     BoundingBox playerBox = lerpBoxes(progress, currentBox, nextBox);
 
                     if (boxesOverlap(arrowBox, playerBox)) {
+                        toRemove.add(proj);
                         proj.hitEntity(p.getBukkitEntity(), proj.getVelocity());
                         //Bukkit.broadcastMessage("hitting: " + entity.getName());
                         break;
@@ -61,6 +65,7 @@ public class ProjectilePhaseListener implements Listener {
                 }
             }
         }
+        toRemove.forEach(projectiles::remove);
     }
 
     public ProjectilePhaseListener() {
@@ -72,6 +77,11 @@ public class ProjectilePhaseListener implements Listener {
         if (event.getEntity() instanceof Projectile proj) {
             projectiles.add(proj);
         }
+    }
+
+    @EventHandler
+    public void onHit(ProjectileHitEvent event) {
+        projectiles.remove(event.getEntity());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -100,9 +110,15 @@ public class ProjectilePhaseListener implements Listener {
                 if (boxesOverlap(arrowBox, playerBox)) {
                     ((Projectile) nmsProj.getBukkitEntity()).hitEntity(p, nmsProj.getBukkitEntity().getVelocity());
                     //Bukkit.broadcastMessage("hitting: " + entity.getName());
+                    break;
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onRemoveEntity(EntityRemoveEvent event) {
+        if (event.getEntity() instanceof Projectile proj) projectiles.remove(proj);
     }
 
     public static BoundingBox lerpBoxes(float delta, AABB oldBox, AABB newBox) {

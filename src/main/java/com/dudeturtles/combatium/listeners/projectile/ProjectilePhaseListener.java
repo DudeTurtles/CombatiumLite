@@ -1,14 +1,18 @@
 package com.dudeturtles.combatium.listeners.projectile;
 
 import com.dudeturtles.combatium.CombatiumLite;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.*;
-import org.bukkit.entity.*;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftProjectile;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -20,34 +24,38 @@ import java.util.*;
  */
 
 public class ProjectilePhaseListener implements Listener {
-    private static final Set<Projectile> projectiles = new HashSet<>();
+    private static final Set<Projectile> projectiles = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final int cuts = 5;
     public static void tick() {
-        //if(true) return;
         for (Iterator<Projectile> iterator = projectiles.iterator(); iterator.hasNext(); ) {
             Projectile proj = iterator.next();
             World world = proj.getWorld();
 
-            Vector arrowVelocity = proj.getVelocity().clone();
-            arrowVelocity.setY(arrowVelocity.getY() - 0.08);
-            BoundingBox arrowBox = proj.getBoundingBox().clone()
-                    .union(proj.getBoundingBox().clone().shift(arrowVelocity));
+            net.minecraft.world.entity.projectile.Projectile nmsProj = ((CraftProjectile) proj).getHandle();
+            Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
+            if (nmsProj.onGround() ? nmsProj.getDeltaMovement().horizontalDistance() <= 0 : nmsProj.getDeltaMovement().length() <= 0) continue;
 
-            for (Entity entity : world.getNearbyEntities(arrowBox.clone().expand(5, 5, 5))) {
-                if (entity instanceof Player p
-                        && !p.getGameMode().equals(GameMode.SPECTATOR)
-                        && p != proj.getShooter()
-                        && proj.getVelocity().getX() != 0
-                        && proj.getVelocity().getZ() != 0
-                ) {
-                    Vector pVelocity = p.getVelocity().clone();
-                    pVelocity.setY(pVelocity.getY() - 0.08);
+            AABB projCurrentBox = nmsProj.getBoundingBox();
+            AABB projNextBox = nmsProj.getBoundingBox().move(aVelocity);
+            CraftPlayer playerShooter = proj.getShooter() instanceof CraftPlayer shooter ? shooter : null;
 
-                    BoundingBox playerBox = p.getBoundingBox().clone()
-                            .union(p.getBoundingBox().clone().shift(p.getVelocity()));
+            for (int cut = 1; cut <= cuts; cut++) {
+                float progress = (float) cut / cuts;
+                BoundingBox arrowBox = lerpBoxes(progress, projCurrentBox, projNextBox);
+                for (Player p : ((CraftWorld) world).getHandle().getEntitiesOfClass(Player.class,
+                        toNMS(arrowBox.clone().expand(5)),
+                        target -> !target.isSpectator()
+                                && (playerShooter == null || target != playerShooter.getHandle()))) {
+                    Vec3 pVelocity = p.getDeltaMovement().subtract(0, p.getGravity(), 0);
+
+                    AABB currentBox = p.getBoundingBox();
+                    AABB nextBox = p.getBoundingBox().move(pVelocity);
+
+                    BoundingBox playerBox = lerpBoxes(progress, currentBox, nextBox);
 
                     if (arrowBox.overlaps(playerBox)) {
                         iterator.remove();
-                        proj.hitEntity(entity, proj.getVelocity());
+                        proj.hitEntity(p.getBukkitEntity(), proj.getVelocity());
                         //Bukkit.broadcastMessage("hitting: " + entity.getName());
                     }
                 }
@@ -59,54 +67,55 @@ public class ProjectilePhaseListener implements Listener {
         CombatiumLite.getScheduler().registerProjectilePhaseListener(this);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onSpawn(EntitySpawnEvent event) {
-        if (event.getEntity() instanceof Projectile proj ) {
+        if (event.getEntity() instanceof Projectile proj) {
             projectiles.add(proj);
-            Bukkit.getScheduler().runTaskLater(CombatiumLite.getInstance(), () -> projectiles.remove(proj), 20L * 30L);
         }
     }
 
-    @EventHandler
-    public void onHit(ProjectileHitEvent event) {
-        //event.setCancelled(true);
-        projectiles.remove(event.getEntity());
-    }
-
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
-        Player p = event.getPlayer();
-        for (Entity entity : p.getNearbyEntities(5,5,5)) {
-            if(!(entity instanceof Projectile proj)) continue;
-            if (!projectiles.contains(entity)) continue;
-            if (p == proj.getShooter()) continue;
-            if (proj.getVelocity().getX() == 0 && proj.getVelocity().getZ() == 0) continue;
+        Vector pVelocity = event.getTo().toVector().subtract(event.getFrom().toVector());
+        org.bukkit.entity.Player p = event.getPlayer();
+        Player nmsPlayer = ((CraftPlayer) p).getHandle();
+        AABB pCurrentBox = nmsPlayer.getBoundingBox();
+        AABB pNextBox = nmsPlayer.getBoundingBox().move(new Vec3(pVelocity.getX(), pVelocity.getY(), pVelocity.getZ()));
+        for (int cut = 1; cut <= cuts; cut++) {
+            float progress = (float) cut / cuts;
+            BoundingBox playerBox = lerpBoxes(progress, pCurrentBox, pNextBox);
+            for (net.minecraft.world.entity.projectile.Projectile nmsProj : nmsPlayer.level().getEntitiesOfClass(net.minecraft.world.entity.projectile.Projectile.class,
+                    toNMS(playerBox.clone().expand(5)),
+                    proj -> nmsPlayer != proj.getOwner()
+                            && (proj.onGround() ? proj.getDeltaMovement().horizontalDistance() <= 0 : proj.getDeltaMovement().length() <= 0)
+                            && proj.getBukkitEntity() instanceof Projectile bukkit
+                            && projectiles.contains(bukkit))) {
+                Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
 
-            Vector arrowVelocity = proj.getVelocity().clone();
-            arrowVelocity.setY(arrowVelocity.getY()-0.08);
+                AABB projCurrentBox = nmsProj.getBoundingBox();
+                AABB projNextBox = nmsProj.getBoundingBox().move(aVelocity);
 
-            Vector pVelocity = event.getTo().toVector().subtract(event.getFrom().toVector());
-            //Vector pVelocity = p.getVelocity().clone();
-            //pVelocity.setY(pVelocity.getY()-0.08);
+                BoundingBox arrowBox = lerpBoxes(progress, projCurrentBox, projNextBox);
 
-            BoundingBox arrowBox = proj.getBoundingBox().clone()
-                    .union(proj.getBoundingBox().clone().shift(arrowVelocity));
-
-            BoundingBox playerBox = p.getBoundingBox().clone()
-                    .union(p.getBoundingBox().clone().shift(pVelocity));
-            if(playerBox.overlaps(arrowBox)) {
-                //Bukkit.broadcastMessage("move hitting: " + entity.getName());
-                proj.hitEntity(p, proj.getVelocity());
-                projectiles.remove(proj);
+                if (arrowBox.overlaps(playerBox)) {
+                    ((Projectile) nmsProj.getBukkitEntity()).hitEntity(p, nmsProj.getBukkitEntity().getVelocity());
+                    //Bukkit.broadcastMessage("hitting: " + entity.getName());
+                }
             }
-            //event.setCancelled(true);
         }
     }
 
+    public static AABB toNMS(BoundingBox bb) {
+        return new AABB(bb.getMinX(), bb.getMinY(), bb.getMinZ(), bb.getMaxX(), bb.getMaxY(), bb.getMaxZ());
+    }
 
-    @EventHandler
-    public void onDeath(EntityDeathEvent event) {
-        if (event.getEntity() instanceof Arrow proj) projectiles.remove(proj);
+    public static BoundingBox lerpBoxes(float delta, AABB oldBox, AABB newBox) {
+        return new BoundingBox(Mth.lerp(delta, oldBox.minX, newBox.minX),
+                Mth.lerp(delta, oldBox.minY, newBox.minY),
+                Mth.lerp(delta, oldBox.minZ, newBox.minZ),
+                Mth.lerp(delta, oldBox.maxX, newBox.maxX),
+                Mth.lerp(delta, oldBox.maxY, newBox.maxY),
+                Mth.lerp(delta, oldBox.maxZ, newBox.maxZ));
     }
 }
 

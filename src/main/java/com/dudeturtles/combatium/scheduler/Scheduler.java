@@ -7,8 +7,6 @@ import com.dudeturtles.combatium.util.active.ReachUtil;
 import com.dudeturtles.combatium.util.active.TridentTracker;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
 import com.dudeturtles.combatium.util.hitThroughTransparent.HitManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.attribute.Attribute;

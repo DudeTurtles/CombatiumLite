@@ -6,10 +6,12 @@ import com.dudeturtles.combatium.listeners.util.AnimationListener;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.component.Weapon;
@@ -42,20 +44,17 @@ public class PlayerDamageEntity {
         net.minecraft.world.entity.LivingEntity nmsTarget = ((CraftLivingEntity) target).getHandle();
 
         //Fix item crit particles and sounds
-        if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
-            if (player.isSprinting() || player.getAttackCooldown() > 0) {
-                try {
-                    nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 4));
-                } catch (NoSuchMethodError ignored) {
-                    CombatiumLite.logger.severe("Error Sending Crit Particle Packet");
-                }
-            }
-        } else {
-            if (player.isSprinting())
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
-            else player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
+        double knockbackStrength = 0;
+        boolean canDoSpecial = !nmsPlayer.onClimbable()
+                && !nmsPlayer.isInWater()
+                && !nmsPlayer.hasEffect(MobEffects.BLINDNESS)
+                && !nmsPlayer.isPassenger();
+        boolean isCrit;
+        if (player.isSprinting() && canDoSpecial) {
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
+            knockbackStrength += 1;
         }
+        isCrit = canDoSpecial && player.getFallDistance() > 0 && !player.isOnGround() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK;
 
         if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target)) {
             try {
@@ -84,7 +83,7 @@ public class PlayerDamageEntity {
         }
 
         //Calculation for reduced shield blocking arc
-        float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause);
+        float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause, isCrit);
         net.minecraft.world.damagesource.DamageSource damageSource = Optional.ofNullable(nmsWeapon.getItem().getDamageSource(nmsPlayer)).orElse(nmsPlayer.damageSources().playerAttack(nmsPlayer));
 
         double invulnerableDamage = CombatiumLite.getScheduler().getInvulnerabilityScheduler().isInvulnerable(target);
@@ -93,19 +92,14 @@ public class PlayerDamageEntity {
         damage -= (float) invulnerableDamage;
         if (damage <= 0) return;
 
-        double strength;
         //Apply Knockback
         if (dealDamage) {
-            strength = player.isSprinting() ? 1.0 : 0.0;
-
             //Increase knockback strength based on knockback enchantment level
             if (weapon.getItemMeta() != null && weapon.getItemMeta().hasEnchant(Enchantment.KNOCKBACK) && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-                strength += getKnockback(((CraftPlayer) player).getHandle(), ((CraftLivingEntity) target).getHandle(),
+                knockbackStrength += getKnockback(((CraftPlayer) player).getHandle(), ((CraftLivingEntity) target).getHandle(),
                         damageSource,
                         (CraftItemStack.unwrap(weapon)));
             }
-        } else {
-            strength = (player.isSprinting() && (player.getAttackCooldown() <= 0.9)) ? 1.0 : 0.0;
         }
 
         double oldHealth = target.getHealth();
@@ -123,17 +117,28 @@ public class PlayerDamageEntity {
 
         if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target)) {
             try {
-                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 5));
+                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new ClientboundAnimatePacket(nmsTarget, 5));
             } catch (NoSuchMethodError ignored) {
                 CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");
             }
         }
+        if (isCrit) {
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
+            try {
+                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new ClientboundAnimatePacket(nmsTarget, 4));
+            } catch (NoSuchMethodError ignored) {
+                CombatiumLite.logger.severe("Error Sending Crit Particle Packet");
+            }
+        }
+
+        if (!isCrit && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK))
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
 
         if (finalDamage > 2)
             player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
 
-        if (!cancelKB && strength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            KnockbackUtil.applyKnockback(target, strength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
+        if (!cancelKB && knockbackStrength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+            KnockbackUtil.applyKnockback(target, knockbackStrength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
         }
 
         if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&

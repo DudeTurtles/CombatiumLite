@@ -40,7 +40,7 @@ public class PlayerHitUtil {
     private static final Map<Player, Double> lastTickDamage = new HashMap<>();
     private static final NamespacedKey enchantedDamageBonus = new NamespacedKey("combatium", "magic_damage_bonus");
 
-    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause) {
+    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean isCrit) {
         float damage = (float) attackDamage(attacker);
         float enchantedDamage;
 
@@ -67,7 +67,7 @@ public class PlayerHitUtil {
             damage += nmsWeapon.getItem().getAttackDamageBonus(nmsEntity, damage, attackerNMS.damageSources().playerAttack((net.minecraft.world.entity.player.Player) attackerNMS));
         }
 
-        if (attacker.getFallDistance() > 0 && !attacker.isInsideVehicle() && !attacker.isOnGround() && !attacker.isFlying() && (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+        if (isCrit) {
             damage *= (CombatiumLite.getReachUtil().isOverCharged(attacker, 0.0F) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;
         }
         if (backShots && wasBackShots(attacker, damagedEntity)) {

@@ -5,6 +5,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -40,32 +41,29 @@ public class PlayerHitUtil {
     private static final Map<Player, Double> lastTickDamage = new HashMap<>();
     private static final NamespacedKey enchantedDamageBonus = new NamespacedKey("combatium", "magic_damage_bonus");
 
-    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean isCrit) {
+    public static float getRawDamage(Player attacker, Entity damagedEntity, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, net.minecraft.world.damagesource.DamageSource nmsDamageSource, boolean isCrit) {
         float damage = (float) attackDamage(attacker);
         float enchantedDamage;
+        ServerPlayer player = ((CraftPlayer)attacker).getHandle();
 
         ItemMeta meta = weapon.getItemMeta();
         if (meta != null && meta.hasEnchants()) {
-            ServerPlayer player = ((CraftPlayer)attacker).getHandle();
             enchantedDamage = EnchantmentHelper.modifyDamage(player.level(), CraftItemStack.asNMSCopy(weapon), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player), damage) - damage;
             enchantedDamage = getImpalingDamage(player, damagedEntity, meta, enchantedDamage);
             if (enchantedDamage != 0) {
                 damage = (float) enchantedDamage(attacker, enchantedDamage);
             }
-            if (meta.hasEnchant(Enchantment.SWEEPING_EDGE) && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-                float sweepLevel = meta.getEnchantLevel(Enchantment.SWEEPING_EDGE);
-                return 1 + (damage * /*player.getAttributeValue(Attributes.SWEEPING_DAMAGE_RATIO)*/(sweepLevel / (2f * (sweepLevel + 1f))));
-            } else if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-                return 0;
-            }
         }
 
-        if (weapon.getType() == Material.MACE) {
-            net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
-            net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) damagedEntity).getHandle();
-            net.minecraft.world.entity.LivingEntity attackerNMS = ((CraftLivingEntity) attacker).getHandle();
-            damage += nmsWeapon.getItem().getAttackDamageBonus(nmsEntity, damage, attackerNMS.damageSources().playerAttack((net.minecraft.world.entity.player.Player) attackerNMS));
-        }
+        float sweepingDamageRatio = (float) player.getAttributeValue(Attributes.SWEEPING_DAMAGE_RATIO);
+        if (sweepingDamageRatio > 0 && damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
+            return 1 + (damage * sweepingDamageRatio);
+        else if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
+            return 0;
+
+        net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
+        net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) damagedEntity).getHandle();
+        damage += nmsWeapon.getItem().getAttackDamageBonus(nmsEntity, damage, nmsDamageSource);
 
         if (isCrit) {
             damage *= (CombatiumLite.getReachUtil().isOverCharged(attacker, 0.0F) || !CombatiumLite.weakerSpamCrits) ? 1.5f : 1.25f;

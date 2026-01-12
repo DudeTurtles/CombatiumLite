@@ -2,6 +2,7 @@ package com.dudeturtles.combatium.listeners.snapshot;
 
 import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.util.active.SweepingEdgeUtil;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -47,12 +48,15 @@ public class CombatifyListener implements Listener, PluginMessageListener {
         if (!channel.equals("combatify:miss_attack")) return;
         //CombatiumLite.logger.info(player.getName() + " has missed");
 
-        CombatiumLite.getReachUtil().resetCooldown(player, true);
-
-        if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F)
-                && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
-            SweepingEdgeUtil.Sweep(player, null);
+        if (CombatiumLite.sweepOnMiss && CombatiumLite.getReachUtil().isOverCharged(player, 1.0F)
+                && SweepingEdgeUtil.hasSweeping(player)) {
+            SweepingEdgeUtil.sweepAttack(player, null);
         }
+        ServerPlayer nmsAttacker = ((CraftPlayer)player).getHandle();
+
+        nmsAttacker.lungeForwardMaybe();
+        CombatiumLite.getReachUtil().resetCooldown(player, true);
+        nmsAttacker.swing(nmsAttacker.swingingArm, true);
     }
 
     public static boolean isCombatifyPlayer(Player player) {

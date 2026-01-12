@@ -32,12 +32,16 @@ import net.minecraft.network.HashedStack;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.HashOps;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ConditionalEffect;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.LevelBasedValue;
 import net.minecraft.world.item.enchantment.effects.AddValue;
+import net.minecraft.world.item.enchantment.effects.EnchantmentAttributeEffect;
 import net.minecraft.world.level.gamerules.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlotGroup;
@@ -47,6 +51,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.logging.Level;
 
+@SuppressWarnings("UnstableApiUsage")
 public class CombatiumLiteBootstrap implements PluginBootstrap {
     public static MemoizingPredicate<ItemStack> shouldFix = new MemoizingPredicate<>(checkStack -> {
         if (ItemPatcher.DEFAULT_PATCHES.stream().noneMatch(itemPatches -> itemPatches.matchItem(checkStack.getItem()))) return false;
@@ -213,6 +218,25 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                     }
                 }
         )));
+        lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.entryAdd().newHandler(event -> {
+            if (event.key().equals(EnchantmentKeys.SWEEPING_EDGE)) {
+                EnchantmentRegistryEntry.Builder b= event.builder();
+                try {
+                    Field effects = PaperEnchantmentRegistryEntry.class.getDeclaredField("effects");
+                    effects.setAccessible(true);
+                    PatchedDataComponentMap patchedEffects = new PatchedDataComponentMap((DataComponentMap) effects.get(b));
+                    patchedEffects.set(EnchantmentEffectComponents.ATTRIBUTES, Collections.singletonList(
+                            new EnchantmentAttributeEffect(Identifier.withDefaultNamespace("sweeping_damage_ratio"),
+                                    Attributes.SWEEPING_DAMAGE_RATIO,
+                                    new LevelBasedValue.Fraction(new LevelBasedValue.Linear(0.5F, 0.5F),
+                                            new LevelBasedValue.Linear(2, 1)),
+                                    AttributeModifier.Operation.ADD_VALUE)));
+                    effects.set(b, patchedEffects);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to set effects! Exception: " + e, e);
+                }
+            }
+        }));
 
         Set<TypedKey<Enchantment>> singleton = Collections.singleton(CLEAVING);
         lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.postFlatten(RegistryKey.ENCHANTMENT), event -> {

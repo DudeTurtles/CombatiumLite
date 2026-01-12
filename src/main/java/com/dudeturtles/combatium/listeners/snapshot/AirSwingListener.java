@@ -5,6 +5,8 @@ import com.dudeturtles.combatium.util.active.SweepingEdgeUtil;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import net.minecraft.server.level.ServerPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 public class AirSwingListener implements PacketListener {
@@ -15,13 +17,15 @@ public class AirSwingListener implements PacketListener {
         InteractPacketWrapper packet = new InteractPacketWrapper(event);
         if (packet.getAction() != InteractPacketWrapper.InteractAction.AIR_SWING) return;
         Player player = event.getPlayer();
-        CombatiumLite.getReachUtil().resetCooldown(player, true);
-
-        if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F)
-                && (SweepingEdgeUtil.getSweepingLevel(player) > 0)) {
-            SweepingEdgeUtil.Sweep(player, null);
+        if (CombatiumLite.sweepOnMiss && CombatiumLite.getReachUtil().isOverCharged(player, 1.0F)
+                && SweepingEdgeUtil.hasSweeping(player)) {
+            SweepingEdgeUtil.sweepAttack(player, null);
         }
+        ServerPlayer nmsAttacker = ((CraftPlayer)player).getHandle();
 
+        nmsAttacker.lungeForwardMaybe();
+        CombatiumLite.getReachUtil().resetCooldown(player, true);
+        nmsAttacker.swing(nmsAttacker.swingingArm, true);
         event.setCancelled(true);
     }
 }

@@ -24,11 +24,10 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.*;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -66,16 +65,19 @@ public class PlayerDamageEntity {
         if (target instanceof Player p && (p.getGameMode().isInvulnerable() || !nmsPlayer.canHarmPlayer(((CraftPlayer) p).getHandle())))
             return false;
 
-        net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
+        net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.unwrap(weapon);
 
         //Calculation for reduced shield blocking arc
-        float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause, isCrit);
         net.minecraft.world.damagesource.DamageSource damageSource = nmsWeapon.getDamageSource(nmsPlayer, () -> nmsPlayer.damageSources().playerAttack(nmsPlayer));
+        float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause, damageSource, isCrit);
 
         double invulnerableDamage = CombatiumLite.getScheduler().getInvulnerabilityScheduler().isInvulnerable(target);
         float originalDamage = damage;
         damage -= (float) invulnerableDamage;
-        if (damage <= 0) return false;
+        if (damage <= 0) {
+            nmsPlayer.lungeForwardMaybe();
+            return false;
+        }
 
         //Apply Knockback
         if (dealDamage) {
@@ -89,8 +91,11 @@ public class PlayerDamageEntity {
 
         double oldHealth = target.getHealth();
         Vec3 initialTargetDelta = nmsTarget.getDeltaMovement();
-        if (dealDamage) dealDamage(target, damage, player);
-        if (entityDamageByEntityListener.wasHitCancelled(player)) return false;
+        if (dealDamage) dealDamage(target, damage, player, damageSource);
+        if (entityDamageByEntityListener.wasHitCancelled(player)) {
+            nmsPlayer.lungeForwardMaybe();
+            return false;
+        }
         causeExtraKnockback(nmsPlayer, nmsTarget, initialTargetDelta, false, knockbackStrength, damageCause);
         attackVisualEffects(nmsPlayer, nmsTarget, isCrit, damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target));
         nmsPlayer.setLastHurtMob(nmsTarget);
@@ -101,9 +106,9 @@ public class PlayerDamageEntity {
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
             KnockbackUtil.applyKnockback(target, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
 
-        if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
+        if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F) && SweepingEdgeUtil.hasSweeping(player) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
-            SweepingEdgeUtil.Sweep(player, target);
+            SweepingEdgeUtil.sweepAttack(player, target);
         }
 
         /*
@@ -115,7 +120,7 @@ public class PlayerDamageEntity {
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
             CombatiumLite.getReachUtil().resetCooldown(player, false);
         CombatiumLite.getScheduler().getInvulnerabilityScheduler().setInvulnerable(target, CombatiumLite.getReachUtil().getCooldown(player) - 3, originalDamage, damageCause);
-
+        nmsPlayer.lungeForwardMaybe();
         return true;
     }
 
@@ -140,10 +145,9 @@ public class PlayerDamageEntity {
         }
     }
 
-    public static void dealDamage(LivingEntity entity, float damage, Player cause) {
+    public static void dealDamage(LivingEntity entity, float damage, Player cause, net.minecraft.world.damagesource.DamageSource damageSource) {
         try {
-            DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
-            entity.damage(damage, damageSource);
+            entity.damage(damage, new CraftDamageSource(damageSource));
         } catch (Exception e) {
             CombatiumLite.getPluginLogger().warning("Failed to deal damage to entity: " + entity.getName());
             CombatiumLite.getPluginLogger().warning("Error Message: " + e.getMessage());

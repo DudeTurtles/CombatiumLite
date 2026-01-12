@@ -1,7 +1,8 @@
 package com.dudeturtles.combatium.util.active;
 
 import net.minecraft.util.Mth;
-import org.bukkit.enchantments.Enchantment;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -9,7 +10,7 @@ import org.bukkit.util.BoundingBox;
 import javax.annotation.Nullable;
 
 public class SweepingEdgeUtil {
-    public static void Sweep(Player player, @Nullable LivingEntity hit) {
+    public static void sweepAttack(Player player, @Nullable LivingEntity hit) {
         if (player == null) return;
         if (hit != null && player.isSprinting() && !player.isInsideVehicle() && !player.isUnderWater()) return;
         if (player.getFallDistance() > 0 && !player.isInsideVehicle() && !player.isOnGround() && !player.isFlying()) return;
@@ -31,8 +32,8 @@ public class SweepingEdgeUtil {
         }
     }
 
-    public static int getSweepingLevel(Player player) {
-        return player.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SWEEPING_EDGE);
+    public static boolean hasSweeping(Player player) {
+        return ((CraftPlayer)player).getHandle().getAttributeValue(Attributes.SWEEPING_DAMAGE_RATIO) > 0;
     }
 
     public static void addParticle(Player player) {

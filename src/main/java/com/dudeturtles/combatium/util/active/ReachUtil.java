@@ -137,11 +137,6 @@ public class ReachUtil {
         return ((CraftAttribute)attribute).getHandle().sanitizeValue(attributeInstanceFinalValue);
     }
 
-    public double getReach(Player bukkit) {
-        net.minecraft.world.entity.player.Player nmsPlayer = ((CraftPlayer) bukkit).getHandle();
-        return nmsPlayer.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-    }
-
     public double getChargedReach(Player bukkit) {
         net.minecraft.world.entity.player.Player nmsPlayer = ((CraftPlayer) bukkit).getHandle();
         CustomData data = nmsPlayer.getActiveItem().getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);

@@ -74,6 +74,7 @@ public class ItemPatcher {
             applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.WOODEN_SWORD);
             applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.GOLDEN_SWORD);
             applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.STONE_SWORD);
+            applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.COPPER_SWORD);
             applyDefaultComponents(weapon(3.0F, 0.5F, 0.5F), intermediary, Items.IRON_SWORD);
             applyDefaultComponents(weapon(4.0F, 0.5F, 0.5F), intermediary, Items.DIAMOND_SWORD);
             applyDefaultComponents(weapon(5.0F, 0.5F, 0.5F), intermediary, Items.NETHERITE_SWORD);
@@ -81,6 +82,7 @@ public class ItemPatcher {
             applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(3.0F, -0.5F, 0.0F)), intermediary, Items.WOODEN_AXE);
             applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(3.0F, -0.5F, 0.0F)), intermediary, Items.GOLDEN_AXE);
             applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(3.0F, -0.5F, 0.0F)), intermediary, Items.STONE_AXE);
+            applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(3.0F, -0.5F, 0.0F)), intermediary, Items.COPPER_AXE);
             applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(4.0F, -0.5F, 0.0F)), intermediary, Items.IRON_AXE);
             applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(5.0F, -0.5F, 0.0F)), intermediary, Items.DIAMOND_AXE);
             applyDefaultComponents(weaponComponent(1, 1.6F).andThen(weapon(6.0F, -0.5F, 0.0F)), intermediary, Items.NETHERITE_AXE);
@@ -88,6 +90,7 @@ public class ItemPatcher {
             applyDefaultComponents(weapon(0.0F, -0.5F, 1.0F), intermediary, Items.WOODEN_HOE);
             applyDefaultComponents(weapon(0.0F, 1.0F, 1.0F), intermediary, Items.GOLDEN_HOE);
             applyDefaultComponents(weapon(0.0F, 0.0F, 1.0F), intermediary, Items.STONE_HOE);
+            applyDefaultComponents(weapon(0.0F, 0.0F, 1.0F), intermediary, Items.COPPER_HOE);
             applyDefaultComponents(weapon(1.0F, 0.5F, 1.0F), intermediary, Items.IRON_HOE);
             applyDefaultComponents(weapon(1.0F, 1.0F, 1.0F), intermediary, Items.DIAMOND_HOE);
             applyDefaultComponents(weapon(2.0F, 1.0F, 1.0F), intermediary, Items.NETHERITE_HOE);
@@ -95,6 +98,7 @@ public class ItemPatcher {
             applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), intermediary, Items.WOODEN_SHOVEL);
             applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), intermediary, Items.GOLDEN_SHOVEL);
             applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), intermediary, Items.STONE_SHOVEL);
+            applyDefaultComponents(weapon(0.0F, -0.5F, 0.0F), intermediary, Items.COPPER_SHOVEL);
             applyDefaultComponents(weapon(1.0F, -0.5F, 0.0F), intermediary, Items.IRON_SHOVEL);
             applyDefaultComponents(weapon(2.0F, -0.5F, 0.0F), intermediary, Items.DIAMOND_SHOVEL);
             applyDefaultComponents(weapon(3.0F, -0.5F, 0.0F), intermediary, Items.NETHERITE_SHOVEL);
@@ -102,6 +106,7 @@ public class ItemPatcher {
             applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), intermediary, Items.WOODEN_PICKAXE);
             applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), intermediary, Items.GOLDEN_PICKAXE);
             applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), intermediary, Items.STONE_PICKAXE);
+            applyDefaultComponents(weapon(1.0F, 0.0F, 0.0F), intermediary, Items.COPPER_PICKAXE);
             applyDefaultComponents(weapon(2.0F, 0.0F, 0.0F), intermediary, Items.IRON_PICKAXE);
             applyDefaultComponents(weapon(3.0F, 0.0F, 0.0F), intermediary, Items.DIAMOND_PICKAXE);
             applyDefaultComponents(weapon(4.0F, 0.0F, 0.0F), intermediary, Items.NETHERITE_PICKAXE);

@@ -27,7 +27,7 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import net.atlas.defaulted.networking.ClientboundDefaultComponentsSyncPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
@@ -66,7 +66,6 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean sweepOnMiss;
     public static boolean fixSweepOnThrow;
     public static double shieldProtectionArc;
-    public static boolean sprintFix;
     public static boolean combatifySupport;
     public static float shieldBaseBlocking;
     public static float shieldBlockingMultiplier;
@@ -82,10 +81,10 @@ public final class CombatiumLite extends JavaPlugin {
         INSTANCE = this;
         pluginManager = getServer().getPluginManager();
         MobEffects.STRENGTH.value().addAttributeModifier(Attributes.ATTACK_DAMAGE,
-                ResourceLocation.withDefaultNamespace("effect.strength"),
+                Identifier.withDefaultNamespace("effect.strength"),
                 0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
         MobEffects.WEAKNESS.value().addAttributeModifier(Attributes.ATTACK_DAMAGE,
-                ResourceLocation.withDefaultNamespace("effect.weakness"),
+                Identifier.withDefaultNamespace("effect.weakness"),
                 -0.2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 
         this.reachUtil = new ReachUtil();
@@ -95,7 +94,6 @@ public final class CombatiumLite extends JavaPlugin {
         weakerSpamCrits = getConfig().getBoolean("weakerSpamCrits", false);
         hasteFix = getConfig().getBoolean("hasteFix", false);
         hitThroughTransparent = getConfig().getBoolean("hitThroughTransparent", false);
-        sprintFix = getConfig().getBoolean("sprintFix", false);
         combatifySupport = getConfig().getBoolean("combatifySupport", true);
         saturationChanges = getConfig().getBoolean("saturationChanges", true);
         gracePeriod = getConfig().getBoolean("gracePeriod", true);
@@ -204,7 +202,6 @@ public final class CombatiumLite extends JavaPlugin {
         logger.log(java.util.logging.Level.INFO, "Shield Base Blocking: " + shieldBaseBlocking);
         logger.log(java.util.logging.Level.INFO, "Shield Blocking Multiplier: " + shieldBlockingMultiplier);
         logger.log(java.util.logging.Level.INFO, "Haste Fix: " + hasteFix);
-        logger.log(java.util.logging.Level.INFO, "Sprint Fix: " + sprintFix);
         logger.log(java.util.logging.Level.INFO, "Anti Projectile Ghosting: " + antiProjectileGhosting);
         logger.log(java.util.logging.Level.INFO, "Combatify Support: " + combatifySupport);
         logger.log(java.util.logging.Level.INFO, "Entity Movement Optimizations: " + entityMovementOptimizations);

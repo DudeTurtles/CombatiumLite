@@ -29,7 +29,7 @@ public class CombatifyListener implements Listener, PluginMessageListener {
         CombatiumLite.getPluginLogger().info(player.getName() + " has joined with Combatify");
         combatifyPlayers.add(player.getUniqueId());
         net.minecraft.world.entity.player.Player nmsPlayer = ((CraftPlayer) player).getHandle();
-        nmsPlayer.hasImpulse = true;
+        nmsPlayer.needsSync = true;
         try {
             Method setDirty = AttributeInstance.class.getDeclaredMethod("setDirty");
             setDirty.setAccessible(true);

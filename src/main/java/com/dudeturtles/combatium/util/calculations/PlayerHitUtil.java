@@ -3,7 +3,7 @@ package com.dudeturtles.combatium.util.calculations;
 import com.dudeturtles.combatium.CombatiumLite;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -87,7 +87,7 @@ public class PlayerHitUtil {
     }
 
     private static float getImpalingDamage(ServerPlayer player, Entity damagedEntity, ItemMeta meta, float enchantedDamage) {
-        Holder.Reference<net.minecraft.world.item.enchantment.Enchantment> impaling = player.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(ResourceLocation.withDefaultNamespace("impaling")).orElse(null);
+        Holder.Reference<net.minecraft.world.item.enchantment.Enchantment> impaling = player.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(Identifier.withDefaultNamespace("impaling")).orElse(null);
         if (meta.hasEnchant(Enchantment.IMPALING) && damagedEntity.isInWaterOrRain() && (impaling == null || impaling.value()
                 .getEffects(EnchantmentEffectComponents.DAMAGE).stream().noneMatch(conditionalEffect -> {
                     LootContext context = net.minecraft.world.item.enchantment.Enchantment.damageContext(player.level(), meta.getEnchantLevel(Enchantment.IMPALING), ((CraftEntity)damagedEntity).getHandle(), player.damageSources().playerAttack(player));

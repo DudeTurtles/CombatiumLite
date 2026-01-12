@@ -1,7 +1,6 @@
 package com.dudeturtles.combatium.util.active;
 
 import com.dudeturtles.combatium.CombatiumLite;
-import com.dudeturtles.combatium.scheduler.InvulnerabilityScheduler;
 import com.dudeturtles.combatium.util.ping.PingManager;
 import com.dudeturtles.combatium.util.ping.PlayerPingData;
 import org.bukkit.GameMode;
@@ -43,7 +42,7 @@ public class KnockbackUtil {
             }
 
             Vector velocity = new Vector(delta.getX() / 2.0 - diff.getX(), (onGround ? Math.min(0.4, strength * 0.75) : (Math.min(0.4, vertical + (strength * 0.5)))), delta.getZ() / 2.0 - diff.getZ());
-            nmsEntity.hasImpulse = true;
+            nmsEntity.needsSync = true;
             entity.setVelocity(velocity);
         } catch (Exception e) {
             Logger logger = CombatiumLite.getPluginLogger();

@@ -8,7 +8,7 @@ import com.dudeturtles.combatium.util.active.TridentTracker;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
 import com.dudeturtles.combatium.util.hitThroughTransparent.HitManager;
 import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
+import org.bukkit.GameRules;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
@@ -27,6 +27,7 @@ public class Scheduler {
     private final ArrayList<ScheduledHit> toRemove;
     private InvulnerabilityScheduler invulnerabilityScheduler;
     private ProjectilePhaseListener projectilePhaseListener;
+    private boolean disabledAlready;
 
     public Scheduler(Plugin plugin, int regenTickDelay) {
         this.plugin = plugin;
@@ -55,6 +56,11 @@ public class Scheduler {
     }
 
     public void tick() {
+        if (!disabledAlready && CombatiumLite.antiProjectileGhosting) {
+            Plugin consistentArrows = Bukkit.getPluginManager().getPlugin("ConsistentArrows");
+            if (consistentArrows != null) Bukkit.getPluginManager().disablePlugin(consistentArrows);
+            disabledAlready = true;
+        }
         //Update the reach of each player
         ReachUtil reachUtil = CombatiumLite.getReachUtil();
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -85,7 +91,7 @@ public class Scheduler {
             regenTick = 0;
             for (Player player : Bukkit.getOnlinePlayers()) {
                 net.minecraft.world.entity.player.Player nmsPlayer = ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle();
-                if ((Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION)) || !nmsPlayer.isHurt() || player.getFoodLevel() <= 7)) continue;
+                if ((Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRules.NATURAL_HEALTH_REGENERATION)) || !nmsPlayer.isHurt() || player.getFoodLevel() <= 7)) continue;
 
                 nmsPlayer.heal(1.0F, EntityRegainHealthEvent.RegainReason.CUSTOM);
 

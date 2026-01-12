@@ -1,7 +1,6 @@
 package com.dudeturtles.combatium.listeners.util;
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent;
-import com.destroystokyo.paper.event.server.ServerTickStartEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ChunkMap;
@@ -49,13 +48,13 @@ public class EntityMovementOptimization implements Listener {
         for (int i = 0, len = trackerEntities.size(); i < len; ++i) {
             final Entity entity = trackerEntitiesRaw[i];
             if (entityIds.contains(entity.getId())) {
-                entity.hasImpulse = true;
+                entity.needsSync = true;
             }
 
             final ChunkMap.TrackedEntity tracker = ((ca.spottedleaf.moonrise.patches.entity_tracker.EntityTrackerEntity)entity).moonrise$getTrackedEntity();
 
-            ((ca.spottedleaf.moonrise.patches.entity_tracker.EntityTrackerTrackedEntity)tracker).moonrise$tick(((ca.spottedleaf.moonrise.patches.chunk_system.entity.ChunkSystemEntity)entity).moonrise$getChunkData().nearbyPlayers);
-            if (((ca.spottedleaf.moonrise.patches.entity_tracker.EntityTrackerTrackedEntity)tracker).moonrise$hasPlayers()
+            tracker.moonrise$tick(((ca.spottedleaf.moonrise.patches.chunk_system.entity.ChunkSystemEntity)entity).moonrise$getChunkData().nearbyPlayers);
+            if (tracker.moonrise$hasPlayers()
                     || ((ca.spottedleaf.moonrise.patches.chunk_system.entity.ChunkSystemEntity)entity).moonrise$getChunkStatus().isOrAfter(FullChunkStatus.ENTITY_TICKING)) {
                 try {
                     Field tickCount = ServerEntity.class.getDeclaredField("tickCount");

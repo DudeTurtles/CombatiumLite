@@ -12,7 +12,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageType;
@@ -38,12 +38,13 @@ import java.util.logging.Level;
 
 public class ItemPatcher {
     public static final String MOD_ID = "combatium";
+    public static final String CHARGED_REACH_KEY = "combatium_weapon_charged_reach";
     public static List<ItemPatches> DEFAULT_PATCHES = new ArrayList<>();
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
-    public static final ResourceLocation BASE_ATTACK_SPEED_CTS_ID = ResourceLocation.withDefaultNamespace("base_attack_speed_cts");
-    public static final ResourceLocation BASE_ATTACK_REACH_ID = ResourceLocation.withDefaultNamespace("base_attack_reach");
+    public static final Identifier BASE_ATTACK_SPEED_CTS_ID = Identifier.withDefaultNamespace("base_attack_speed_cts");
+    public static final Identifier BASE_ATTACK_REACH_ID = Identifier.withDefaultNamespace("base_attack_reach");
     public static final TriFunction<CraftItemMetas.ItemMetaData<?>, ItemStack, Set<DataComponentType<?>>, ?> WRAPPER = (meta, stack, extra) -> {
         if (!stack.isEmpty()) {
             DataComponentMap prototype = stack.getPrototype();
@@ -61,7 +62,7 @@ public class ItemPatcher {
 
     public static void patch(float shieldBaseBlocking, float shieldBlockingMultiplier) {
         try {
-            Map<ResourceLocation, ItemPatches> intermediary = new HashMap<>();
+            Map<Identifier, ItemPatches> intermediary = new HashMap<>();
             // Patch components here
             applyDefaultComponents(useDuration(1), id("drinkables"), intermediary, Items.MUSHROOM_STEW, Items.RABBIT_STEW, Items.BEETROOT_SOUP,
                     Items.SUSPICIOUS_STEW, Items.SPLASH_POTION, Items.LINGERING_POTION, Items.MILK_BUCKET, Items.HONEY_BOTTLE, Items.OMINOUS_BOTTLE);
@@ -111,6 +112,14 @@ public class ItemPatcher {
             applyDefaultComponents(weapon(3.0F, 0.0F, 0.0F), intermediary, Items.DIAMOND_PICKAXE);
             applyDefaultComponents(weapon(4.0F, 0.0F, 0.0F), intermediary, Items.NETHERITE_PICKAXE);
 
+            applyDefaultComponents(weapon(0.0F, 0.5F, 2.0F, 0.0F), intermediary, Items.WOODEN_SPEAR);
+            applyDefaultComponents(weapon(0.0F, -0.25F, 2.0F, 0.0F), intermediary, Items.GOLDEN_SPEAR);
+            applyDefaultComponents(weapon(0.0F, 0.25F, 2.0F, 0.0F), intermediary, Items.STONE_SPEAR);
+            applyDefaultComponents(weapon(0.0F, 0.0F, 2.0F, 0.0F), intermediary, Items.COPPER_SPEAR);
+            applyDefaultComponents(weapon(1.0F, -0.25F, 2.0F, 0.0F), intermediary, Items.IRON_SPEAR);
+            applyDefaultComponents(weapon(2.0F, -0.5F, 2.0F, 0.0F), intermediary, Items.DIAMOND_SPEAR);
+            applyDefaultComponents(weapon(3.0F, -0.75F, 2.0F, 0.0F), intermediary, Items.NETHERITE_SPEAR);
+
             applyDefaultComponents(weapon(5.0F, -0.5F, 1.0F), intermediary, Items.TRIDENT);
             applyDefaultComponents(weapon(4.0F, -1.50F, 0.0F), intermediary, Items.MACE);
             DEFAULT_PATCHES = new ArrayList<>(intermediary.entrySet().stream().map(entry -> new ItemPatchesEntry(entry.getKey(), entry.getValue())).sorted(Comparator.naturalOrder()).map(ItemPatchesEntry::itemPatches).toList());
@@ -119,7 +128,7 @@ public class ItemPatcher {
         }
     }
 
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Map<ResourceLocation, ItemPatches> intermediary, Item item) throws NoSuchFieldException, IllegalAccessException {
+    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Map<Identifier, ItemPatches> intermediary, Item item) throws NoSuchFieldException, IllegalAccessException {
         Field components = Item.class.getDeclaredField("components");
         components.setAccessible(true);
         PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
@@ -131,12 +140,12 @@ public class ItemPatcher {
             metaData.setAccessible(true);
             metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
         }
-        intermediary.put(id(item.builtInRegistryHolder().key().location().getPath()), new ItemPatches(HolderSet.direct(item.builtInRegistryHolder()), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
+        intermediary.put(id(item.builtInRegistryHolder().key().identifier().getPath()), new ItemPatches(HolderSet.direct(item.builtInRegistryHolder()), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
     }
     public static <I extends ItemMeta> CraftItemMetas.ItemMetaData<I> generate(CraftItemMetas.ItemMetaData<I> meta) {
         return new CraftItemMetas.ItemMetaData<>(meta.metaClass(), (stack, extra) -> (I) WRAPPER.apply(meta, stack, extra), meta.fromItemMeta());
     }
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, ResourceLocation patchName, Map<ResourceLocation, ItemPatches> intermediary, Item... items) throws NoSuchFieldException, IllegalAccessException {
+    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Identifier patchName, Map<Identifier, ItemPatches> intermediary, Item... items) throws NoSuchFieldException, IllegalAccessException {
         Field components = Item.class.getDeclaredField("components");
         components.setAccessible(true);
 
@@ -177,7 +186,12 @@ public class ItemPatcher {
             }
         };
     }
+
     public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach) {
+        return weapon(damage, speed, reach, 1.0F);
+    }
+
+    public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach, float chargedReach) {
         return patchedDataComponentMap -> {
             ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
             builder.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
@@ -191,9 +205,13 @@ public class ItemPatcher {
             lore.add(CommonComponents.space().append(Component.literal(format(damage + 2) + " Attack Damage").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
             lore.add(CommonComponents.space().append(Component.literal(format(speed + 2.5) + " Attack Speed").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
             if (reach != 0) lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(reach + 2.5) + " Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
+            if (chargedReach != 1) lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(chargedReach) + " Charged Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
 
             patchedDataComponentMap.set(DataComponents.LORE, new ItemLore(lore));
             patchedDataComponentMap.set(DataComponents.TOOLTIP_DISPLAY, patchedDataComponentMap.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
+            if (chargedReach != 1)
+                patchedDataComponentMap.set(DataComponents.CUSTOM_DATA, patchedDataComponentMap.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
+                        .update(custom -> custom.putFloat(CHARGED_REACH_KEY, chargedReach)));
         };
     }
     public static Consumer<PatchedDataComponentMap> size(int stackSize) {
@@ -209,7 +227,7 @@ public class ItemPatcher {
         DecimalFormat df = new DecimalFormat("0.#");
         return df.format(value);
     }
-    public record ItemPatchesEntry(ResourceLocation id, ItemPatches itemPatches) implements Comparable<ItemPatchesEntry> {
+    public record ItemPatchesEntry(Identifier id, ItemPatches itemPatches) implements Comparable<ItemPatchesEntry> {
         @Override
         public int compareTo(ItemPatchesEntry other) {
             int priority = itemPatches.compareTo(other.itemPatches);

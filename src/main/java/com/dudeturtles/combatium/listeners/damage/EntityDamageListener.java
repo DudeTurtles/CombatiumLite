@@ -35,7 +35,7 @@ public class EntityDamageListener implements Listener {
             ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
             if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {
                 ServerLevel level = (ServerLevel) ((CraftLivingEntity) e).getHandle().level();
-                if (level.getGameRules().getBoolean(CombatiumLiteBootstrap.RULE_EATINGINTERRUPTIONS)) e.clearActiveItem();
+                if (level.getGameRules().get(CombatiumLiteBootstrap.EATING_INTERRUPTION_GAME_RULE)) e.clearActiveItem();
             }
         }
 

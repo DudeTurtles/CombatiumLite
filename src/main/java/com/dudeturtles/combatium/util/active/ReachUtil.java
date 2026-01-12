@@ -2,12 +2,15 @@ package com.dudeturtles.combatium.util.active;
 
 import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.listeners.snapshot.CombatifyListener;
+import com.dudeturtles.combatium.util.ItemPatcher;
 import com.dudeturtles.combatium.util.ping.PingManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import org.bukkit.Material;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -26,7 +29,6 @@ public class ReachUtil {
     private int missTime = 4;
     private int rateLimitTicks = 4;
     public final NamespacedKey chargedReach = new NamespacedKey("combatify", "charged_reach");
-    public final AttributeModifier chargedReachModifier = new AttributeModifier(chargedReach, 1, AttributeModifier.Operation.ADD_NUMBER);
 
     public void resetCooldown(Player player, boolean wasMiss) {
         rateLimit(player);
@@ -51,8 +53,11 @@ public class ReachUtil {
     }
 
     public boolean isCharged(Player player, float baseTime) {
-        if (getChargePercent(player, baseTime) < 1.0) {
-            if (!playerCooldowns.containsKey(player)) return false;
+        ItemStack weapon = ((CraftPlayer) player).getHandle().getActiveItem();
+        float minAttackCharge = weapon.getOrDefault(DataComponents.MINIMUM_ATTACK_CHARGE, 0.5F) * 2;
+        float strengthScale = (float) getChargePercent(player, baseTime);
+        if (minAttackCharge > 0.0F && strengthScale < minAttackCharge) {
+            if (weapon.has(DataComponents.MINIMUM_ATTACK_CHARGE) || !playerCooldowns.containsKey(player)) return false; // Don't allow weapons with custom minimum attack charge to use missed attack recovery
             return playersWhoMissed.contains(player) &&
                     (CombatiumLite.getScheduler().getCurrentTick() - playerCooldowns.get(player) + baseTime) > ((CombatifyListener.isCombatifyPlayer(player)) ? missTime - 1 : missTime);
         }
@@ -64,12 +69,12 @@ public class ReachUtil {
         ServerPlayer nms = ((CraftPlayer)player).getHandle();
         net.minecraft.world.entity.ai.attributes.AttributeInstance blockIntRange = nms.getAttribute(Attributes.BLOCK_INTERACTION_RANGE);
         if (blockIntRange != null) {
-            blockIntRange.removeModifier(ResourceLocation.withDefaultNamespace("creative_mode_block_range"));
+            blockIntRange.removeModifier(Identifier.withDefaultNamespace("creative_mode_block_range"));
         }
 
         net.minecraft.world.entity.ai.attributes.AttributeInstance entityIntRange = nms.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
         if (entityIntRange != null) {
-            entityIntRange.removeModifier(ResourceLocation.withDefaultNamespace("creative_mode_entity_range"));
+            entityIntRange.removeModifier(Identifier.withDefaultNamespace("creative_mode_entity_range"));
         }
         if (CombatifyListener.isCombatifyPlayer(player)) {
             return;
@@ -84,7 +89,8 @@ public class ReachUtil {
         if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) * 2 : 0.0F)) && !player.isSneaking()) {
             AttributeInstance attribute = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
             assert attribute != null;
-            if (attribute.getModifier(chargedReach) == null) attribute.addModifier(chargedReachModifier);
+            if (attribute.getModifier(chargedReach) == null)
+                attribute.addModifier(new AttributeModifier(chargedReach, getChargedReach(player), AttributeModifier.Operation.ADD_NUMBER));
         } else {
             Objects.requireNonNull(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).removeModifier(chargedReach);
         }
@@ -131,16 +137,17 @@ public class ReachUtil {
         return ((CraftAttribute)attribute).getHandle().sanitizeValue(attributeInstanceFinalValue);
     }
 
-    public double getReach(Material material) {
-        return switch (material) {
-            case WOODEN_SWORD, STONE_SWORD, IRON_SWORD, DIAMOND_SWORD, NETHERITE_SWORD -> 3.0;
-            case TRIDENT, WOODEN_HOE, STONE_HOE, IRON_HOE, GOLDEN_HOE, DIAMOND_HOE, NETHERITE_HOE -> 3.5;
-            default -> 2.5;
-        };
+    public double getReach(Player bukkit) {
+        net.minecraft.world.entity.player.Player nmsPlayer = ((CraftPlayer) bukkit).getHandle();
+        return nmsPlayer.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
     }
 
-    public double getReach(Player player) {
-        return getReach(player.getInventory().getItemInMainHand().getType()) + (isOverCharged(player, 1.0F) ? 1 : 0);
+    public double getChargedReach(Player bukkit) {
+        net.minecraft.world.entity.player.Player nmsPlayer = ((CraftPlayer) bukkit).getHandle();
+        CustomData data = nmsPlayer.getActiveItem().getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        if (!data.isEmpty())
+            return data.copyTag().getFloatOr(ItemPatcher.CHARGED_REACH_KEY, 1.0F);
+        return 1.0F;
     }
 
     public boolean isRateLimited(Player player) {

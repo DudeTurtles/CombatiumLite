@@ -21,11 +21,6 @@ hasteFix: false
 # Default: false
 hitThroughTransparent: false
 
-# A bug fix which removes the need for w tapping.
-# This is false by default as it is generally not used, especially in competitive settings.
-# Default: false
-sprintFix: false
-
 # If enabled, players with higher ping will take more accurate knockback.
 # Based off of the Knockback Sync plugin.
 # After further testing, 8c servers, for what ever reason, appears to not properly take velocity into account.

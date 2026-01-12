@@ -73,7 +73,7 @@ public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> 
             this.writeVarInt(this.entityID);
             this.writeVarInt(this.interactAction.ordinal());
             if (this.interactAction == InteractPacketWrapper.InteractAction.INTERACT_AT) {
-                Vector3f targetVec = (Vector3f) this.target.orElse(new Vector3f(0.0F, 0.0F, 0.0F));
+                Vector3f targetVec = this.target.orElse(new Vector3f(0.0F, 0.0F, 0.0F));
                 this.writeFloat(targetVec.x);
                 this.writeFloat(targetVec.y);
                 this.writeFloat(targetVec.z);

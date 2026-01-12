@@ -4,18 +4,24 @@ import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.listeners.damage.EntityDamageByEntityListener;
 import com.dudeturtles.combatium.listeners.util.AnimationListener;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.component.Weapon;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
@@ -27,18 +33,18 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class PlayerDamageEntity {
     public static final NamespacedKey KNOCKBACK_REDUCTION = new NamespacedKey("combatium", "knockback_reduction");
     private static final Map<Player, ItemStack> lastTickWeapon = new HashMap<>();
     private static EntityDamageByEntityListener entityDamageByEntityListener;
 
-    public static void playerDamageEntityEvent(Player player, LivingEntity target, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
+    public static boolean playerDamageEntityEvent(Player player, LivingEntity target, ItemStack weapon, EntityDamageEvent.DamageCause damageCause, boolean dealDamage) {
         AnimationListener.validHit(player);
         ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
         net.minecraft.world.entity.LivingEntity nmsTarget = ((CraftLivingEntity) target).getHandle();
@@ -56,41 +62,20 @@ public class PlayerDamageEntity {
         }
         isCrit = canDoSpecial && player.getFallDistance() > 0 && !player.isOnGround() && damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK;
 
-        if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target)) {
-            try {
-                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new net.minecraft.network.protocol.game.ClientboundAnimatePacket(nmsTarget, 5));
-            } catch (NoSuchMethodError ignored) {
-                CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");
-            }
-        }
-
-        if (target.isInvulnerable() || target.isDead()) return;
+        if (target.isInvulnerable() || target.isDead()) return false;
         if (target instanceof Player p && (p.getGameMode().isInvulnerable() || !nmsPlayer.canHarmPlayer(((CraftPlayer) p).getHandle())))
-            return;
+            return false;
 
         net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.asNMSCopy(weapon);
 
-        // For some reason this would occasionally cause issues when dealing with players hitting bot players created by other plugins
-        if (weapon != null && weapon.getType() != Material.AIR && !player.getGameMode().isInvulnerable()) {
-            try {
-                DataComponentMap map = nmsWeapon.getComponents();
-                Weapon component = map.has(DataComponents.WEAPON) ? map.get(DataComponents.WEAPON) : null;
-                weapon.damage((component == null) ? 0 : component.itemDamagePerAttack(), target);
-            } catch (Exception ignored) {
-                CombatiumLite.getPluginLogger().warning("Failed to damage weapon");
-                CombatiumLite.getPluginLogger().warning("Error Message: " + ignored.getMessage());
-            }
-        }
-
         //Calculation for reduced shield blocking arc
         float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause, isCrit);
-        net.minecraft.world.damagesource.DamageSource damageSource = Optional.ofNullable(nmsWeapon.getItem().getDamageSource(nmsPlayer)).orElse(nmsPlayer.damageSources().playerAttack(nmsPlayer));
+        net.minecraft.world.damagesource.DamageSource damageSource = nmsWeapon.getDamageSource(nmsPlayer, () -> nmsPlayer.damageSources().playerAttack(nmsPlayer));
 
         double invulnerableDamage = CombatiumLite.getScheduler().getInvulnerabilityScheduler().isInvulnerable(target);
         float originalDamage = damage;
-        boolean cancelKB = false;
         damage -= (float) invulnerableDamage;
-        if (damage <= 0) return;
+        if (damage <= 0) return false;
 
         //Apply Knockback
         if (dealDamage) {
@@ -105,41 +90,16 @@ public class PlayerDamageEntity {
         double oldHealth = target.getHealth();
         Vec3 initialTargetDelta = nmsTarget.getDeltaMovement();
         if (dealDamage) dealDamage(target, damage, player);
-        double finalDamage = oldHealth - target.getHealth();
-        if (entityDamageByEntityListener.wasHitCancelled(player)) return;
-
-        if (weapon.getType() == Material.MACE)
-            cancelKB = MaceUtil.macePostHit(weapon, player.getFallDistance(), player, target);
-        EnchantmentHelper.doPostAttackEffectsWithItemSource(nmsPlayer.level(), nmsTarget, damageSource, nmsWeapon);
+        if (entityDamageByEntityListener.wasHitCancelled(player)) return false;
+        causeExtraKnockback(nmsPlayer, nmsTarget, initialTargetDelta, false, knockbackStrength, damageCause);
+        attackVisualEffects(nmsPlayer, nmsTarget, isCrit, damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target));
+        nmsPlayer.setLastHurtMob(nmsTarget);
+        itemAttackInteraction(nmsPlayer, nmsTarget, nmsWeapon, damageSource, true);
+        damageStatsAndHearts(nmsPlayer, nmsTarget, (float) oldHealth);
+        nmsPlayer.causeFoodExhaustion(nmsPlayer.level().spigotConfig.combatExhaustion, EntityExhaustionEvent.ExhaustionReason.ATTACK);
 
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
             KnockbackUtil.applyKnockback(target, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
-
-        if (PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target)) {
-            try {
-                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new ClientboundAnimatePacket(nmsTarget, 5));
-            } catch (NoSuchMethodError ignored) {
-                CombatiumLite.logger.severe("Error Sending Enchant Damage Particle Packet");
-            }
-        }
-        if (isCrit) {
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1, 1);
-            try {
-                nmsPlayer.level().getChunkSource().sendToTrackingPlayers(nmsTarget, new ClientboundAnimatePacket(nmsTarget, 4));
-            } catch (NoSuchMethodError ignored) {
-                CombatiumLite.logger.severe("Error Sending Crit Particle Packet");
-            }
-        }
-
-        if (!isCrit && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK))
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1, 1);
-
-        if (finalDamage > 2)
-            player.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getEyeLocation().add(0, -0.5, 0), (int) (finalDamage / 2), 0.1, 0.0, 0.1, 0.2);
-
-        if (!cancelKB && knockbackStrength > 0 && !(damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
-            KnockbackUtil.applyKnockback(target, knockbackStrength * 0.5, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
-        }
 
         if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F) && weapon.containsEnchantment(Enchantment.SWEEPING_EDGE) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
@@ -155,6 +115,24 @@ public class PlayerDamageEntity {
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
             CombatiumLite.getReachUtil().resetCooldown(player, false);
         CombatiumLite.getScheduler().getInvulnerabilityScheduler().setInvulnerable(target, CombatiumLite.getReachUtil().getCooldown(player) - 3, originalDamage, damageCause);
+
+        return true;
+    }
+
+    public static void causeExtraKnockback(net.minecraft.world.entity.player.Player nmsPlayer, net.minecraft.world.entity.Entity nmsTarget, Vec3 initialTargetDelta, boolean cancelKB, double strength, EntityDamageEvent.DamageCause damageCause) {
+        if (!cancelKB && strength > 0.0F) {
+            if (nmsTarget.getBukkitEntity() instanceof LivingEntity livingEntity) {
+                KnockbackUtil.applyKnockback(livingEntity, strength, Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), -Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), false);
+            } else {
+                nmsTarget.push(-Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)) * strength, 0.1, Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)) * strength, nmsPlayer);
+            }
+
+            nmsPlayer.setDeltaMovement(nmsPlayer.getDeltaMovement().multiply(0.6, 1.0F, 0.6));
+            if (!nmsPlayer.level().paperConfig().misc.disableSprintInterruptionOnAttack) {
+                nmsPlayer.setSprinting(false);
+            }
+        }
+
         if (nmsTarget instanceof ServerPlayer targetPlayer && targetPlayer.hurtMarked) {
             targetPlayer.connection.send(new ClientboundSetEntityMotionPacket(targetPlayer));
             targetPlayer.hurtMarked = false;
@@ -162,20 +140,10 @@ public class PlayerDamageEntity {
         }
     }
 
-    private static void dealDamage(LivingEntity entity, float damage, Player cause) {
+    public static void dealDamage(LivingEntity entity, float damage, Player cause) {
         try {
-            ServerPlayer nmsPlayer = ((CraftPlayer) cause).getHandle();
-            boolean sprinting = nmsPlayer.isSprinting();
             DamageSource damageSource = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(cause).withDirectEntity(cause).withDamageLocation(cause.getLocation()).build();
             entity.damage(damage, damageSource);
-
-            if (!CombatiumLite.sprintFix) {
-                nmsPlayer.setSprinting(false);
-            } else {
-                nmsPlayer.setSprinting(sprinting);
-            }
-
-            cause.incrementStatistic(Statistic.DAMAGE_DEALT, Math.round(damage * 10));
         } catch (Exception e) {
             CombatiumLite.getPluginLogger().warning("Failed to deal damage to entity: " + entity.getName());
             CombatiumLite.getPluginLogger().warning("Error Message: " + e.getMessage());
@@ -183,12 +151,12 @@ public class PlayerDamageEntity {
     }
 
     protected static float getKnockback(net.minecraft.world.entity.LivingEntity attacker, Entity target, net.minecraft.world.damagesource.DamageSource damageSource, net.minecraft.world.item.ItemStack item) {
-        float f = (float) attacker.getAttributeValue(Attributes.ATTACK_KNOCKBACK);
+        float knockback = (float) attacker.getAttributeValue(Attributes.ATTACK_KNOCKBACK);
 
-        return EnchantmentHelper.modifyKnockback((ServerLevel) attacker.level(), item, target, damageSource, f);
+        return EnchantmentHelper.modifyKnockback((ServerLevel) attacker.level(), item, target, damageSource, knockback);
     }
 
-    private static ItemStack getWeaponType(ItemStack itemStack, Player player) {
+    public static ItemStack getWeaponType(ItemStack itemStack, Player player) {
         if (CombatiumLite.swapAccuracy && lastTickWeapon.containsKey(player)) {
             return lastTickWeapon.get(player);
         }
@@ -201,5 +169,65 @@ public class PlayerDamageEntity {
 
     public static void setEntityDamageByEntityListener(EntityDamageByEntityListener entityDamageByEntityListener) {
         PlayerDamageEntity.entityDamageByEntityListener = entityDamageByEntityListener;
+    }
+
+    public static void attackVisualEffects(net.minecraft.world.entity.player.Player nmsPlayer, Entity nmsTarget, boolean isCrit, boolean isSweep, boolean dealsEnchantDamage) {
+        if (dealsEnchantDamage)
+            nmsPlayer.magicCrit(nmsTarget);
+        if (isCrit) {
+            playServerSideSound(nmsPlayer, SoundEvents.PLAYER_ATTACK_CRIT);
+            nmsPlayer.crit(nmsTarget);
+        }
+
+        if (!isCrit && !isSweep)
+            playServerSideSound(nmsPlayer, SoundEvents.PLAYER_ATTACK_STRONG);
+    }
+
+    public static void itemAttackInteraction(net.minecraft.world.entity.player.Player nmsPlayer, Entity target, net.minecraft.world.item.ItemStack stack, net.minecraft.world.damagesource.DamageSource damageSource, boolean postAttackEffects) {
+        Entity entity = target;
+        if (target instanceof EnderDragonPart) {
+            entity = ((EnderDragonPart)target).parentMob;
+        }
+
+        boolean canGoToPost = false;
+        Level var8 = nmsPlayer.level();
+        if (var8 instanceof ServerLevel serverLevel) {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity livingEntity)
+                canGoToPost = stack.hurtEnemy(livingEntity, nmsPlayer);
+
+            if (postAttackEffects)
+                EnchantmentHelper.doPostAttackEffectsWithItemSource(serverLevel, target, damageSource, stack);
+        }
+
+        if (!nmsPlayer.level().isClientSide() && !stack.isEmpty() && entity instanceof net.minecraft.world.entity.LivingEntity) {
+            if (canGoToPost) stack.postHurtEnemy((net.minecraft.world.entity.LivingEntity)entity, nmsPlayer);
+
+            if (stack.isEmpty()) {
+                if (stack == nmsPlayer.getMainHandItem())
+                    nmsPlayer.setItemInHand(InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
+                else
+                    nmsPlayer.setItemInHand(InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
+            }
+        }
+    }
+    public static void playServerSideSound(net.minecraft.world.entity.player.Player fromEntity, SoundEvent soundEvent) {
+        sendSoundEffect(fromEntity, fromEntity.getX(), fromEntity.getY(), fromEntity.getZ(), soundEvent, fromEntity.getSoundSource(), 1.0F, 1.0F);
+    }
+    public static void sendSoundEffect(net.minecraft.world.entity.player.Player fromEntity, double x, double y, double z, SoundEvent soundEffect, SoundSource soundCategory, float volume, float pitch) {
+        fromEntity.level().playSound(fromEntity, x, y, z, soundEffect, soundCategory, volume, pitch);
+        if (fromEntity instanceof ServerPlayer serverPlayer) {
+            serverPlayer.connection.send(new ClientboundSoundPacket(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(soundEffect), soundCategory, x, y, z, volume, pitch, fromEntity.random.nextLong()));
+        }
+    }
+
+    public static void damageStatsAndHearts(net.minecraft.world.entity.player.Player nmsPlayer, Entity target, float previousHealth) {
+        if (target instanceof net.minecraft.world.entity.LivingEntity) {
+            float dealtDamage = previousHealth - ((net.minecraft.world.entity.LivingEntity)target).getHealth();
+            nmsPlayer.awardStat(Stats.DAMAGE_DEALT, Math.round(dealtDamage * 10.0F));
+            if (nmsPlayer.level() instanceof ServerLevel && dealtDamage > 2.0F) {
+                int count = (int)((double)dealtDamage * (double)0.5F);
+                ((ServerLevel)nmsPlayer.level()).sendParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), target.getY(0.5F), target.getZ(), count, 0.1, (double)0.0F, 0.1, 0.2);
+            }
+        }
     }
 }

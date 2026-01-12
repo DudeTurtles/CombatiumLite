@@ -1,15 +1,15 @@
 package com.dudeturtles.combatium.util.hitThroughTransparent;
 
-import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.util.ping.PingManager;
-import org.bukkit.FluidCollisionMode;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
-import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Vector;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,13 +39,12 @@ public class HitManager {
         int ticks = PingManager.getPingTicks(player);
         PlayerData playerData = data.get(player);
         Location eyeLocation = playerData.getNearestEyeLocation(ticks);
-        Vector direction = eyeLocation.getDirection();
+        ServerPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
 
         // Check entities that may be hit
-        World world = player.getWorld();
-        RayTraceResult result = RayTraceUtil.rayTrace(world, eyeLocation, direction, CombatiumLite.getReachUtil().getReach(player) + 1, FluidCollisionMode.NEVER, true, 0, entity -> entity instanceof LivingEntity && entity != player, ticks);
+        HitResult result = RayTraceUtil.raycastHitResult(nmsPlayer, nmsPlayer.getCamera(), eyeLocation);
 
-        if (result != null && result.getHitEntity() != null && result.getHitEntity() instanceof LivingEntity entity &&
+        if (result instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof LivingEntity entity &&
                 isValidHit(player, entity, 0.5)) return entity;
         return null;
     }

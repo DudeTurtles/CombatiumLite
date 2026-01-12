@@ -1,18 +1,8 @@
 package com.dudeturtles.combatium.listeners.snapshot;
 
-import com.dudeturtles.combatium.CombatiumLite;
-import com.dudeturtles.combatium.util.ItemPatcher;
-import io.netty.buffer.Unpooled;
-import net.atlas.defaulted.component.ItemPatches;
-import net.atlas.defaulted.networking.ClientboundDefaultComponentsSyncPacket;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class DefaultedListener implements Listener {
     @EventHandler

@@ -127,7 +127,7 @@ public class PlayerDamageEntity {
     public static void causeExtraKnockback(net.minecraft.world.entity.player.Player nmsPlayer, net.minecraft.world.entity.Entity nmsTarget, Vec3 initialTargetDelta, boolean cancelKB, double strength, EntityDamageEvent.DamageCause damageCause) {
         if (!cancelKB && strength > 0.0F) {
             if (nmsTarget.getBukkitEntity() instanceof LivingEntity livingEntity) {
-                KnockbackUtil.applyKnockback(livingEntity, strength, Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), -Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), false);
+                KnockbackUtil.applyKnockback(livingEntity, strength * 0.5, Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), -Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), false);
             } else {
                 nmsTarget.push(-Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)) * strength, 0.1, Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)) * strength, nmsPlayer);
             }

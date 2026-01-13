@@ -72,8 +72,8 @@ public class ItemPatcher {
 
             applyDefaultComponents(blocksAttacks(shieldBaseBlocking, shieldBlockingMultiplier, true, true), intermediary, Items.SHIELD);
 
-            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.WOODEN_SWORD);
-            applyDefaultComponents(weapon(1.0F, 0.5F, 0.5F), intermediary, Items.GOLDEN_SWORD);
+            applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.WOODEN_SWORD);
+            applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.GOLDEN_SWORD);
             applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.STONE_SWORD);
             applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.COPPER_SWORD);
             applyDefaultComponents(weapon(3.0F, 0.5F, 0.5F), intermediary, Items.IRON_SWORD);

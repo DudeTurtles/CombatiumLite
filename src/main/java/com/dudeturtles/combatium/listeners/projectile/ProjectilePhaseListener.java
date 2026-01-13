@@ -29,8 +29,9 @@ public class ProjectilePhaseListener implements Listener {
     private static final Set<Projectile> projectiles = Collections.newSetFromMap(new WeakHashMap<>());
     private static final int cuts = 6;
     public static void tick() {
-        List<Projectile> toRemove = new ArrayList<>();
-        for (Projectile proj : projectiles) {
+        Iterator<Projectile> iterator = projectiles.iterator();
+        while (iterator.hasNext()) {
+            Projectile proj = iterator.next();
             World world = proj.getWorld();
 
             net.minecraft.world.entity.projectile.Projectile nmsProj = ((AbstractProjectile) proj).getHandle();
@@ -58,7 +59,7 @@ public class ProjectilePhaseListener implements Listener {
                     BoundingBox playerBox = lerpBoxes(progress, currentBox, nextBox);
 
                     if (boxesOverlap(arrowBox, playerBox)) {
-                        toRemove.add(proj);
+                        iterator.remove();
                         proj.hitEntity(p.getBukkitEntity(), proj.getVelocity());
                         //Bukkit.broadcastMessage("hitting: " + entity.getName());
                         break;
@@ -66,7 +67,6 @@ public class ProjectilePhaseListener implements Listener {
                 }
             }
         }
-        toRemove.forEach(projectiles::remove);
     }
 
     public ProjectilePhaseListener() {

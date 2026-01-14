@@ -174,6 +174,7 @@ public final class CombatiumLite extends JavaPlugin {
         CombatifyListener combatifyListener = new CombatifyListener();
         pluginManager.registerEvents(combatifyListener, this);
         getServer().getMessenger().registerIncomingPluginChannel(this, "combatify:miss_attack", combatifyListener);
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "combatify:remaining_use_ticks");
         pluginManager.registerEvents(new DefaultedListener(), this);
         getServer().getMessenger().registerOutgoingPluginChannel(this, ClientboundDefaultComponentsSyncPacket.TYPE.id().toString());
     }

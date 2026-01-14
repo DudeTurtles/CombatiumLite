@@ -66,7 +66,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         return false;
     });
     public static TypedKey<Enchantment> CLEAVING;
-    public static final GameRule<Boolean> EATING_INTERRUPTION_GAME_RULE = GameRuleUtils.registerBoolean("combatium:eating_interruptions", GameRuleCategory.UPDATES, true);
+    public static final GameRule<Integer> EATING_INTERRUPTION_GAME_RULE = GameRuleUtils.registerInteger("combatium:eating_interruptions", GameRuleCategory.UPDATES, 1, 0, 2);
 
     static {
         try {

@@ -1,19 +1,14 @@
 package com.dudeturtles.combatium.listeners.damage;
 
 import com.dudeturtles.combatium.CombatiumLite;
-import com.dudeturtles.combatium.CombatiumLiteBootstrap;
 import com.dudeturtles.combatium.scheduler.InvulnerabilityScheduler;
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.ItemUseAnimation;
 import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -31,18 +26,7 @@ public class EntityDamageListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof LivingEntity e && event instanceof EntityDamageByEntityEvent && !event.isCancelled() && event.getDamage() > 0) {
-            ItemUseAnimation anim = CraftItemStack.unwrap(e.getActiveItem()).getUseAnimation();
-            if (anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK) {
-                ServerLevel level = (ServerLevel) ((CraftLivingEntity) e).getHandle().level();
-                if (level.getGameRules().get(CombatiumLiteBootstrap.EATING_INTERRUPTION_GAME_RULE)) e.clearActiveItem();
-            }
-        }
-
-        if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK || event.getCause() == EntityDamageEvent.DamageCause.PROJECTILE ||
-                event instanceof EntityDamageByEntityEvent || event.getDamageSource().getDamageType() == DamageType.MOB_PROJECTILE ||
-                event.getDamageSource().getDamageType() == DamageType.GENERIC_KILL || event.getDamageSource().getDamageType() == DamageType.GENERIC) return;
-
+        if (event instanceof EntityDamageByEntityEvent) return;
         if (!(event.getEntity() instanceof LivingEntity livingEntity)) return;
 
         double invulDamage = invulnerabilityScheduler.isInvulnerable(livingEntity);
@@ -66,15 +50,16 @@ public class EntityDamageListener implements Listener {
             event.setDamage(event.getDamage() * .125);
         }
 
+        if (event.isCancelled()) return;
+        DamageSource damageSource = ((CraftDamageSource) event.getDamageSource()).getHandle();
+
         // If the damage is not from an entity, set the entity to be invulnerable for 10 ticks
         if (!(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK))
-            invulnerabilityScheduler.setInvulnerable(livingEntity, 10, originalDamage, event.getCause());
-
-        if (event.isCancelled()) return;
+            invulnerabilityScheduler.setInvulnerable(damageSource.getEntity(), livingEntity,
+                    damageSource.is(DamageTypeTags.IS_PROJECTILE) ? 0 : 10, originalDamage, event.getCause());
 
         if (event.getEntity() instanceof LivingEntity e && computeAmountFromEntityDamageEvent(event) > 0) {
             net.minecraft.world.entity.LivingEntity nms = ((CraftLivingEntity) e).getHandle();
-            DamageSource damageSource = ((CraftDamageSource) event.getDamageSource()).getHandle();
             if (!damageSource.is(DamageTypeTags.NO_IMPACT)) nms.hurtMarked = true;
             if (!damageSource.is(DamageTypeTags.NO_KNOCKBACK)) {
                 double d = 0.0F;

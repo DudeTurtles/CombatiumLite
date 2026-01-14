@@ -2,8 +2,9 @@ package com.dudeturtles.combatium.listeners.damage;
 
 import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.scheduler.InvulnerabilityScheduler;
-import com.dudeturtles.combatium.util.active.ReachUtil;
-import org.bukkit.Material;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -16,11 +17,9 @@ import java.util.HashMap;
 public class EntityDamageByEntityListener implements Listener {
     private final InvulnerabilityScheduler invulnerabilityScheduler;
     private final HashMap<Player, Boolean> wasHitCancelled = new HashMap<>();
-    private final ReachUtil reachUtil;
 
     public EntityDamageByEntityListener() {
         this.invulnerabilityScheduler = CombatiumLite.getScheduler().getInvulnerabilityScheduler();
-        this.reachUtil = CombatiumLite.getReachUtil();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -41,7 +40,8 @@ public class EntityDamageByEntityListener implements Listener {
                 damage += trident.getItemStack().getEnchantmentLevel(Enchantment.IMPALING) * 2.5;
             }
             event.setDamage(damage);
-        } else if (event.getEntity() instanceof LivingEntity victim && !(event.getDamager() instanceof Player)) { // Ensure replacement i-frames work for other cases
+        }
+        if (event.getEntity() instanceof LivingEntity victim && !(event.getDamager() instanceof Player)) { // Ensure replacement i-frames work for other cases
             double invulDamage = invulnerabilityScheduler.isInvulnerable(victim);
 
             if (invulDamage >= event.getDamage() && invulDamage != 0) {
@@ -50,22 +50,19 @@ public class EntityDamageByEntityListener implements Listener {
                 return;
             }
 
+            if (event.isCancelled()) return;
+
             double originalDamage = event.getDamage();
             event.setDamage(event.getDamage() - invulDamage);
 
-            // Ensure i-frames are set when damage is not dealt by a projectile
-            if ((event.getDamager() instanceof Projectile)) {
-                if ((!(event.getDamager() instanceof EnderPearl e)) || (e.getShooter() instanceof LivingEntity le && le != victim)) return;
-            }
+            DamageSource damageSource = ((CraftDamageSource)event.getDamageSource()).getHandle();
 
-            int ticks;
-            if (event.getDamager() instanceof LivingEntity de && de.getActiveItem().getType() != Material.AIR) {
-                ticks = reachUtil.getCooldown(de);
-            } else {
-                ticks = 10;
-            }
+            int ticks = 10;
 
-            invulnerabilityScheduler.setInvulnerable(victim, ticks, originalDamage, event.getCause());
+            if (damageSource.is(DamageTypeTags.IS_PROJECTILE))
+                ticks = 0;
+
+            invulnerabilityScheduler.setInvulnerable(damageSource.getEntity(), victim, ticks, originalDamage, event.getCause());
         }
     }
 

@@ -14,6 +14,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
@@ -119,7 +120,7 @@ public class PlayerDamageEntity {
         // Note: This is literally just how it works in CTS though??
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
             CombatiumLite.getReachUtil().resetCooldown(player, false);
-        CombatiumLite.getScheduler().getInvulnerabilityScheduler().setInvulnerable(target, CombatiumLite.getReachUtil().getCooldown(player) - 3, originalDamage, damageCause);
+        CombatiumLite.getScheduler().getInvulnerabilityScheduler().setInvulnerable(nmsPlayer, target, damageSource.is(DamageTypeTags.IS_PROJECTILE) ? 0 : Mth.clamp(CombatiumLite.getReachUtil().getCooldown(player) - 3, 0, 10), originalDamage, damageCause);
         nmsPlayer.lungeForwardMaybe();
         return true;
     }

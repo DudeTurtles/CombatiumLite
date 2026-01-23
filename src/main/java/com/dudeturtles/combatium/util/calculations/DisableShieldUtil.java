@@ -1,21 +1,16 @@
 package com.dudeturtles.combatium.util.calculations;
 
-import io.papermc.paper.registry.RegistryAccess;
-import io.papermc.paper.registry.RegistryKey;
-import org.bukkit.NamespacedKey;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import org.jetbrains.annotations.NotNull;
 
 public class DisableShieldUtil {
-    public static int getCleavingLevel(ItemStack weapon) {
-        Enchantment cleaving = getCleaving();
-        ItemMeta itemMeta = weapon.getItemMeta();
-        if (itemMeta.hasEnchant(cleaving)) return itemMeta.getEnchantLevel(cleaving);
-        return 0;
-    }
-
-    public static Enchantment getCleaving() {
-        return RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).getOrThrow(NamespacedKey.minecraft("cleaving"));
+    public static final ResourceKey<@NotNull Enchantment> CLEAVING = ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("cleaving"));
+    public static int getCleavingLevel(ItemEnchantments enchantments, RegistryAccess registryAccess) {
+        return enchantments.getLevel(registryAccess.lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(CLEAVING));
     }
 }

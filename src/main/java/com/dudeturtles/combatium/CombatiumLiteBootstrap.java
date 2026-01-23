@@ -143,13 +143,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
         return new StreamCodec<>() {
             @Override
             public ItemStack decode(RegistryFriendlyByteBuf buffer) {
-                ItemStack stack = original.decode(buffer);
-                DataComponentPatch patch = stack.getComponentsPatch();
-                if (stack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
-                    patchedDataComponentMap.clearPatch();
-                    patchedDataComponentMap.applyPatch(patch);
-                }
-                return stack;
+                return original.decode(buffer);
             }
 
             @Override

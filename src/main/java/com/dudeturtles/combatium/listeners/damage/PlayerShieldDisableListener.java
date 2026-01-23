@@ -1,11 +1,13 @@
 package com.dudeturtles.combatium.listeners.damage;
 
+import com.dudeturtles.combatium.CombatiumLite;
 import io.papermc.paper.event.player.PlayerShieldDisableEvent;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlocksAttacks;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.event.EventHandler;
@@ -28,7 +30,8 @@ public class PlayerShieldDisableListener implements Listener {
 
     }
     public static void disable(ServerLevel serverLevel, Player target, ItemStack item, BlocksAttacks blocksAttacks, int ticks) {
-        int cleavingLevel = getCleavingLevel(item.getBukkitStack());
+        int cleavingLevel = getCleavingLevel(item.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY), serverLevel.registryAccess());
+        CombatiumLite.getPluginLogger().info("Cleaving Level: " + cleavingLevel);
         if (cleavingLevel > 0) {
             ticks += 10 * cleavingLevel;
         }

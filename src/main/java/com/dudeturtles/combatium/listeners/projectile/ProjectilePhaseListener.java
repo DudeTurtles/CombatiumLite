@@ -97,7 +97,7 @@ public class ProjectilePhaseListener implements Listener {
                         && projectiles.contains(bukkit)
                         && proj.isAlive()
                         && !proj.onGround()
-                        && (proj instanceof ThrownTrident trident && trident.dealtDamage))) {
+                        && (!(proj instanceof ThrownTrident trident) || !trident.dealtDamage))) {
             Vec3 aVelocity = nmsProj.getDeltaMovement().subtract(0, nmsProj.getGravity(), 0);
 
             AABB projOldBox = nmsProj.getBoundingBoxAt(nmsProj.xOld, nmsProj.yOld, nmsProj.zOld).inflate(computeMargin(nmsProj, -1));

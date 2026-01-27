@@ -100,10 +100,10 @@ public class Scheduler {
                 if ((Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRules.NATURAL_HEALTH_REGENERATION)) || !nmsPlayer.isHurt() || player.getFoodLevel() <= 7)) continue;
 
                 if (entityRegainHealthListener != null) entityRegainHealthListener.ignoreEventCall = true;
-                nmsPlayer.heal(1.0F, EntityRegainHealthEvent.RegainReason.SATIATED);
+                boolean didHeal = heal(nmsPlayer, 1.0F, EntityRegainHealthEvent.RegainReason.SATIATED);
                 if (entityRegainHealthListener != null) entityRegainHealthListener.ignoreEventCall = false;
 
-                if (!nmsPlayer.getRandom().nextBoolean()) continue;
+                if (!nmsPlayer.getRandom().nextBoolean() || didHeal) continue;
                 FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1, null);
                 Bukkit.getPluginManager().callEvent(event);
                 if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));
@@ -140,5 +140,17 @@ public class Scheduler {
 
     public InvulnerabilityScheduler getInvulnerabilityScheduler() {
         return invulnerabilityScheduler;
+    }
+
+    public boolean heal(net.minecraft.world.entity.player.Player nmsPlayer, float amount, EntityRegainHealthEvent.RegainReason regainReason) {
+        float health = nmsPlayer.getHealth();
+        if (health > 0.0F) {
+            EntityRegainHealthEvent event = new EntityRegainHealthEvent(nmsPlayer.getBukkitEntity(), amount, regainReason);
+            if (nmsPlayer.valid) nmsPlayer.level().getCraftServer().getPluginManager().callEvent(event);
+
+            if (event.isCancelled()) return false;
+            nmsPlayer.setHealth((float) (nmsPlayer.getHealth() + event.getAmount()));
+        }
+        return true;
     }
 }

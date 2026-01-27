@@ -29,7 +29,7 @@ public class ProjectilePhaseListener implements Listener {
     private static final int cuts = 6;
 
     public static void tick() {
-        for (Projectile proj : projectiles) {
+        for (Projectile proj : projectiles.stream().toList()) {
             World world = proj.getWorld();
 
             net.minecraft.world.entity.projectile.Projectile nmsProj = ((AbstractProjectile) proj).getHandle();

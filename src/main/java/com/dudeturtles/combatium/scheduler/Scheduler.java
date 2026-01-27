@@ -103,7 +103,7 @@ public class Scheduler {
                 boolean didHeal = heal(nmsPlayer, 1.0F, EntityRegainHealthEvent.RegainReason.SATIATED);
                 if (entityRegainHealthListener != null) entityRegainHealthListener.ignoreEventCall = false;
 
-                if (!nmsPlayer.getRandom().nextBoolean() || didHeal) continue;
+                if (!nmsPlayer.getRandom().nextBoolean() || !didHeal) continue;
                 FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1, null);
                 Bukkit.getPluginManager().callEvent(event);
                 if (!event.isCancelled()) player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1));

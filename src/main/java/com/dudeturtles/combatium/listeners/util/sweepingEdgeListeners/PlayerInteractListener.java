@@ -41,7 +41,7 @@ public class PlayerInteractListener implements Listener {
             }
         }
     
-        if (event.getAction().isLeftClick()) {
+        if (event.getAction() == Action.LEFT_CLICK_AIR) {
             if (reachUtil.isCharged(player, 0.0F)) {
                 if (CombatiumLite.fixSweepOnThrow) {
                     CombatiumLite.getScheduler().scheduleSweep(player);
@@ -55,7 +55,6 @@ public class PlayerInteractListener implements Listener {
                     CombatiumLite.getReachUtil().resetCooldown(player, true);
                     net.minecraft.world.entity.LivingEntity nmsAttacker = ((CraftLivingEntity) player).getHandle();
                     nmsAttacker.lungeForwardMaybe();
-                    nmsAttacker.swing(nmsAttacker.swingingArm, true);
                 }
     
                 if (!(reachUtil.isRateLimited(player))) {

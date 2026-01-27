@@ -13,7 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.craftbukkit.attribute.CraftAttribute;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -28,7 +27,8 @@ public class ReachUtil {
     private final Map<Player, Integer> rateLimit = new HashMap<>();
     private int missTime = 4;
     private int rateLimitTicks = 4;
-    public final NamespacedKey chargedReach = new NamespacedKey("combatify", "charged_reach");
+    public final NamespacedKey bukkitChargedReach = new NamespacedKey("combatify", "charged_reach");
+    public final Identifier chargedReach = Identifier.fromNamespaceAndPath("combatify", "charged_reach");
 
     public void resetCooldown(Player player, boolean wasMiss) {
         rateLimit(player);
@@ -86,13 +86,12 @@ public class ReachUtil {
             cooldownTime.put(player, 0);
         }
 
+        double chargedReachBonus = getChargedReach(player);
+        net.minecraft.world.entity.ai.attributes.AttributeModifier modifier = new net.minecraft.world.entity.ai.attributes.AttributeModifier(chargedReach, chargedReachBonus, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE);
         if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) * 2 : 0.0F)) && !player.isSneaking()) {
-            AttributeInstance attribute = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
-            assert attribute != null;
-            if (attribute.getModifier(chargedReach) == null)
-                attribute.addModifier(new AttributeModifier(chargedReach, getChargedReach(player), AttributeModifier.Operation.ADD_NUMBER));
+            entityIntRange.addOrUpdateTransientModifier(modifier);
         } else {
-            Objects.requireNonNull(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).removeModifier(chargedReach);
+            entityIntRange.removeModifier(modifier);
         }
     }
 

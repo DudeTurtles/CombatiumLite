@@ -19,6 +19,6 @@ public class DisconnectListener implements Listener {
         Objects.requireNonNull(event.getPlayer().getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(1.0);
         Objects.requireNonNull(event.getPlayer().getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).setBaseValue(3);
         Objects.requireNonNull(event.getPlayer().getAttribute(Attribute.ATTACK_SPEED)).setBaseValue(4.0);
-        Objects.requireNonNull(event.getPlayer().getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).removeModifier(CombatiumLite.getReachUtil().chargedReach);
+        Objects.requireNonNull(event.getPlayer().getAttribute(Attribute.ENTITY_INTERACTION_RANGE)).removeModifier(CombatiumLite.getReachUtil().bukkitChargedReach);
     }
 }

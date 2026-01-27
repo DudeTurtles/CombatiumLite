@@ -11,7 +11,6 @@ import com.dudeturtles.combatium.util.hitThroughTransparent.HitManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRules;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;

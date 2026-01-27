@@ -2,6 +2,7 @@ package com.dudeturtles.combatium.scheduler;
 
 import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.listeners.projectile.ProjectilePhaseListener;
+import com.dudeturtles.combatium.listeners.regen.EntityRegainHealthListener;
 import com.dudeturtles.combatium.util.active.PlayerDamageEntity;
 import com.dudeturtles.combatium.util.active.ReachUtil;
 import com.dudeturtles.combatium.util.active.TridentTracker;
@@ -10,6 +11,7 @@ import com.dudeturtles.combatium.util.hitThroughTransparent.HitManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRules;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
@@ -27,6 +29,7 @@ public class Scheduler {
     private final ArrayList<ScheduledHit> toRemove;
     private InvulnerabilityScheduler invulnerabilityScheduler;
     private ProjectilePhaseListener projectilePhaseListener;
+    private EntityRegainHealthListener entityRegainHealthListener = null;
     private boolean disabledAlready;
 
     public Scheduler(Plugin plugin, int regenTickDelay) {
@@ -41,6 +44,10 @@ public class Scheduler {
 
     public void registerProjectilePhaseListener(ProjectilePhaseListener listener) {
         this.projectilePhaseListener = listener;
+    }
+
+    public void registerEntityRegainHealthListener(EntityRegainHealthListener listener) {
+        this.entityRegainHealthListener = listener;
     }
 
     public int getCurrentTick() {
@@ -93,7 +100,9 @@ public class Scheduler {
                 net.minecraft.world.entity.player.Player nmsPlayer = ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle();
                 if ((Boolean.FALSE.equals(player.getWorld().getGameRuleValue(GameRules.NATURAL_HEALTH_REGENERATION)) || !nmsPlayer.isHurt() || player.getFoodLevel() <= 7)) continue;
 
-                nmsPlayer.heal(1.0F, EntityRegainHealthEvent.RegainReason.CUSTOM);
+                if (entityRegainHealthListener != null) entityRegainHealthListener.ignoreEventCall = true;
+                nmsPlayer.heal(1.0F, EntityRegainHealthEvent.RegainReason.SATIATED);
+                if (entityRegainHealthListener != null) entityRegainHealthListener.ignoreEventCall = false;
 
                 if (!nmsPlayer.getRandom().nextBoolean()) continue;
                 FoodLevelChangeEvent event = new FoodLevelChangeEvent(player, player.getFoodLevel() - 1, null);

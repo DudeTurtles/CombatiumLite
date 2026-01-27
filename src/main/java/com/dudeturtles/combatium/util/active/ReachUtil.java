@@ -88,7 +88,7 @@ public class ReachUtil {
 
         double chargedReachBonus = getChargedReach(player);
         net.minecraft.world.entity.ai.attributes.AttributeModifier modifier = new net.minecraft.world.entity.ai.attributes.AttributeModifier(chargedReach, chargedReachBonus, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE);
-        if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) * 2 : 0.0F)) && !player.isSneaking()) {
+        if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) * 2 : 0.0F)) && !((CraftPlayer) player).getHandle().isCrouching()) {
             entityIntRange.addOrUpdateTransientModifier(modifier);
         } else {
             entityIntRange.removeModifier(modifier);

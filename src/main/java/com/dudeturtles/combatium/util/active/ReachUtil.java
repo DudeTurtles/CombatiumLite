@@ -76,19 +76,16 @@ public class ReachUtil {
         if (entityIntRange != null) {
             entityIntRange.removeModifier(Identifier.withDefaultNamespace("creative_mode_entity_range"));
         }
-        if (CombatifyListener.isCombatifyPlayer(player)) {
-            return;
-        }
 
         //Makes it so players can hit immediately after shielding, but attack isn't fully charged
-        if (player.isBlocking() && isCharged(player, 0.0F)) {
+        if (player.isBlocking() && isCharged(player, 0.0F) && !CombatifyListener.isCombatifyPlayer(player)) {
             playerCooldowns.put(player, CombatiumLite.getScheduler().getCurrentTick());
             cooldownTime.put(player, 0);
         }
 
         double chargedReachBonus = getChargedReach(player);
         net.minecraft.world.entity.ai.attributes.AttributeModifier modifier = new net.minecraft.world.entity.ai.attributes.AttributeModifier(chargedReach, chargedReachBonus, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE);
-        if (isOverCharged(player, (CombatiumLite.improvedChargedHits ? PingManager.getPingTicks(player) * 2 : 0.0F)) && !((CraftPlayer) player).getHandle().isCrouching()) {
+        if (isOverCharged(player, (CombatiumLite.improvedChargedHits && !CombatifyListener.isCombatifyPlayer(player) ? PingManager.getPingTicks(player) * 2 : 0.0F)) && !((CraftPlayer) player).getHandle().isCrouching()) {
             entityIntRange.addOrUpdateTransientModifier(modifier);
         } else {
             entityIntRange.removeModifier(modifier);

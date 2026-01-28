@@ -54,7 +54,6 @@ public class ProjectilePhaseListener implements Listener {
                     BoundingBox targetBox = lerpBoxes(progress, oldBox, currentBox);
 
                     if (boxesOverlap(arrowBox, targetBox) && nmsProj.canHitEntityPublic(e)) {
-                        nmsProj.setPos(new Vec3(arrowBox.getCenterX(), arrowBox.getCenterY(), arrowBox.getCenterZ()));
                         nmsProj.preHitTargetOrDeflectSelf(new EntityHitResult(e, nmsProj.position()));
                         nmsProj.needsSync = true;
                         break;
@@ -102,7 +101,6 @@ public class ProjectilePhaseListener implements Listener {
                 BoundingBox arrowBox = lerpBoxes(progress, projOldBox, projCurrentBox);
 
                 if (boxesOverlap(arrowBox, playerBox) && nmsProj.canHitEntityPublic(nmsPlayer)) {
-                    nmsProj.setPos(new Vec3(arrowBox.getCenterX(), arrowBox.getCenterY(), arrowBox.getCenterZ()));
                     nmsProj.preHitTargetOrDeflectSelf(new EntityHitResult(nmsPlayer, nmsProj.position()));
                     nmsProj.needsSync = true;
                     break;

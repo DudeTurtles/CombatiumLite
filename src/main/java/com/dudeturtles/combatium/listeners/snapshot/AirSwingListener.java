@@ -25,7 +25,6 @@ public class AirSwingListener implements PacketListener {
 
         nmsAttacker.lungeForwardMaybe();
         CombatiumLite.getReachUtil().resetCooldown(player, true);
-        nmsAttacker.swing(nmsAttacker.swingingArm, true);
         event.setCancelled(true);
     }
 }

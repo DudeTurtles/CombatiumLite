@@ -56,7 +56,6 @@ public class CombatifyListener implements Listener, PluginMessageListener {
 
         nmsAttacker.lungeForwardMaybe();
         CombatiumLite.getReachUtil().resetCooldown(player, true);
-        nmsAttacker.swing(nmsAttacker.swingingArm, true);
     }
 
     public static boolean isCombatifyPlayer(Player player) {

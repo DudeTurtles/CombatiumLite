@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DisableShieldUtil {
     public static final ResourceKey<@NotNull Enchantment> CLEAVING = ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("cleaving"));
+
     public static int getCleavingLevel(ItemEnchantments enchantments, RegistryAccess registryAccess) {
         return enchantments.getLevel(registryAccess.lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(CLEAVING));
     }

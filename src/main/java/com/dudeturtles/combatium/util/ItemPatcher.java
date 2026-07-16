@@ -165,17 +165,18 @@ public class ItemPatcher {
         intermediary.put(patchName, new ItemPatches(HolderSet.direct(Item::builtInRegistryHolder, items), Collections.emptyList(), Collections.emptyList(), generic.asPatch(), 1000));
     }
     public static Consumer<PatchedDataComponentMap> blocksAttacks(float baseProt, float factor, boolean negateProjectiles, boolean useShieldSounds) {
-        return patchedDataComponentMap -> {
-            List<BlocksAttacks.DamageReduction> reductions = new ArrayList<>();
-            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), baseProt, factor));
-            if (negateProjectiles) {
-                Registry<DamageType> damageRegistry = CraftRegistry.getMinecraftRegistry(Registries.DAMAGE_TYPE);
-                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
-                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
-            }
-            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(DamageTypeTags.BYPASSES_SHIELD), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
-            patchedDataComponentMap.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
-        };
+//        return patchedDataComponentMap -> {
+//            List<BlocksAttacks.DamageReduction> reductions = new ArrayList<>();
+//            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), baseProt, factor));
+//            if (negateProjectiles) {
+//                Registry<DamageType> damageRegistry = CraftRegistry.getMinecraftRegistry(Registries.DAMAGE_TYPE);
+//                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
+//                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
+//            }
+//            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(DamageTypeTags.BYPASSES_SHIELD), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
+//            patchedDataComponentMap.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
+//        };
+        return null;
     }
     public static Consumer<PatchedDataComponentMap> useDuration(float useSeconds) {
         return patchedDataComponentMap -> {

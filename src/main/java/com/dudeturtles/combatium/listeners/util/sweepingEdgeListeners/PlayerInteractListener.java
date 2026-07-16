@@ -54,7 +54,7 @@ public class PlayerInteractListener implements Listener {
                     }
                     CombatiumLite.getReachUtil().resetCooldown(player, true);
                     net.minecraft.world.entity.LivingEntity nmsAttacker = ((CraftLivingEntity) player).getHandle();
-                    nmsAttacker.lungeForwardMaybe();
+                    nmsAttacker.postPiercingAttack();
                 }
     
                 if (!(reachUtil.isRateLimited(player))) {

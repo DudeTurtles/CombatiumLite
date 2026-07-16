@@ -17,6 +17,6 @@ public record ScheduledSweep(Player player) {
         }
         CombatiumLite.getReachUtil().resetCooldown(player, true);
         net.minecraft.world.entity.LivingEntity nmsAttacker = ((CraftLivingEntity) player).getHandle();
-        nmsAttacker.lungeForwardMaybe();
+        nmsAttacker.postPiercingAttack();
     }
 }

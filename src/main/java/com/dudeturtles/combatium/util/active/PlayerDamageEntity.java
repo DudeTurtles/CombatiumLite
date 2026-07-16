@@ -76,7 +76,7 @@ public class PlayerDamageEntity {
         float originalDamage = damage;
         damage -= (float) invulnerableDamage;
         if (damage <= 0) {
-            nmsPlayer.lungeForwardMaybe();
+            nmsPlayer.postPiercingAttack();
             return false;
         }
 
@@ -94,7 +94,7 @@ public class PlayerDamageEntity {
         Vec3 initialTargetDelta = nmsTarget.getDeltaMovement();
         if (dealDamage) dealDamage(target, damage, player, damageSource);
         if (entityDamageByEntityListener.wasHitCancelled(player)) {
-            nmsPlayer.lungeForwardMaybe();
+            nmsPlayer.postPiercingAttack();
             return false;
         }
         causeExtraKnockback(nmsPlayer, nmsTarget, initialTargetDelta, false, knockbackStrength, damageCause);
@@ -121,7 +121,7 @@ public class PlayerDamageEntity {
         if (damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
             CombatiumLite.getReachUtil().resetCooldown(player, false);
         CombatiumLite.getScheduler().getInvulnerabilityScheduler().setInvulnerable(nmsPlayer, target, damageSource.is(DamageTypeTags.IS_PROJECTILE) ? 0 : Mth.clamp(CombatiumLite.getReachUtil().getCooldown(player) - 3, 0, 10), originalDamage, damageCause);
-        nmsPlayer.lungeForwardMaybe();
+        nmsPlayer.postPiercingAttack();
         return true;
     }
 

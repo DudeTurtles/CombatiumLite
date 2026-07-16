@@ -54,7 +54,7 @@ public class CombatifyListener implements Listener, PluginMessageListener {
         }
         ServerPlayer nmsAttacker = ((CraftPlayer)player).getHandle();
 
-        nmsAttacker.lungeForwardMaybe();
+        nmsAttacker.postPiercingAttack();
         CombatiumLite.getReachUtil().resetCooldown(player, true);
     }
 

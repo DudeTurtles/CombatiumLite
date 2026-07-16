@@ -23,7 +23,7 @@ public class AirSwingListener implements PacketListener {
         }
         ServerPlayer nmsAttacker = ((CraftPlayer)player).getHandle();
 
-        nmsAttacker.lungeForwardMaybe();
+        nmsAttacker.postPiercingAttack();
         CombatiumLite.getReachUtil().resetCooldown(player, true);
         event.setCancelled(true);
     }

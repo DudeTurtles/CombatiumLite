@@ -17,7 +17,7 @@ public class ValidHitChecks {
             PlayerPingData playerPingData = PingManager.getPlayerData(attacker.getUniqueId());
             double distance = (playerPingData != null) ? (playerPingData.getEstimatedPing() / 200.0) + 0.25 : 0;
 
-            return nmsPlayer.isWithinAttackRange(nmsVictim.getBoundingBox(), Math.min(distance, 2));
+            return nmsPlayer.isWithinAttackRange(nmsPlayer.getWeaponItem(), nmsVictim.getBoundingBox(), Math.min(distance, 2));
         } catch (Exception e) {
             CombatiumLite.getPluginLogger().warning("Failed to check if " + attacker.getName() + " can interact with " + victim.getName());
             CombatiumLite.getPluginLogger().warning("Could not obtain Server Player");
@@ -31,7 +31,7 @@ public class ValidHitChecks {
             ServerPlayer nmsPlayer = ((org.bukkit.craftbukkit.entity.CraftPlayer) attacker).getHandle();
             Entity nmsVictim = ((org.bukkit.craftbukkit.entity.CraftLivingEntity) victim).getHandle();
 
-            return nmsPlayer.isWithinAttackRange(nmsVictim.getBoundingBox(), leeway);
+            return nmsPlayer.isWithinAttackRange(nmsPlayer.getWeaponItem(), nmsVictim.getBoundingBox(), leeway);
         } catch (Exception e) {
             CombatiumLite.getPluginLogger().warning("Failed to check if " + attacker.getName() + " can interact with " + victim.getName());
             CombatiumLite.getPluginLogger().warning("Could not obtain Server Player");

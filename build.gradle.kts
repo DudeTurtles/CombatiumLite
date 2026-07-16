@@ -2,7 +2,7 @@ plugins {
     id ("com.gradleup.shadow") version "9.0.0-beta15"
     id("java")
     id("xyz.jpenilla.run-paper") version "2.3.1"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.18"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
 }
 
 version = "${project.property("main_version")}.${project.property("sub_version")}"
@@ -25,8 +25,8 @@ dependencies {
     shadow(localGroovy())
     shadow(gradleApi())
 
-    implementation("com.github.retrooper:packetevents-spigot:2.11.1-SNAPSHOT")
-    paperweight.paperDevBundle("${project.property("minecraft_version")}-R0.1-SNAPSHOT")
+    implementation("com.github.retrooper:packetevents-spigot:2.13.0")
+    paperweight.paperDevBundle("${project.property("minecraft_version")}.build.+")
 }
 
 tasks {
@@ -47,5 +47,5 @@ tasks.processResources {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
 }

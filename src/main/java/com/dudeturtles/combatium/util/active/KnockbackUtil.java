@@ -3,6 +3,8 @@ package com.dudeturtles.combatium.util.active;
 import com.dudeturtles.combatium.CombatiumLite;
 import com.dudeturtles.combatium.util.ping.PingManager;
 import com.dudeturtles.combatium.util.ping.PlayerPingData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.monster.cubemob.SulfurCube;
 import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
@@ -14,7 +16,11 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 public class KnockbackUtil {
-    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean first) {
+    public static void applyKnockback(LivingEntity entity, double strength, double x, double z, boolean first, DamageSource damageSource, float damage, boolean comesFromEffect) {
+        if (entity instanceof SulfurCube sulfurCube && sulfurCube.hasBodyItem()) {
+            if (damageSource != null) sulfurCube.knockback(strength, x, z, damageSource, damage, comesFromEffect);
+            return;
+        }
         if (entity instanceof Player p && (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR))
             return;
         net.minecraft.world.entity.LivingEntity nmsEntity = ((CraftLivingEntity) entity).getHandle();

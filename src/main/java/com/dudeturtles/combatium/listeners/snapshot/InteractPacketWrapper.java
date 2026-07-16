@@ -3,15 +3,19 @@ package com.dudeturtles.combatium.listeners.snapshot;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.player.InteractionHand;
+import com.github.retrooper.packetevents.protocol.util.LpVector3d;
+import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.util.Vector3f;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+
 import java.util.Optional;
 
 public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> {
     private int entityID;
     private InteractPacketWrapper.InteractAction interactAction;
-    private Optional<Vector3f> target;
+    private Optional<Vector3d> target;
     private InteractionHand interactionHand;
     private Optional<Boolean> sneaking;
 
@@ -19,7 +23,7 @@ public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> 
         super(event);
     }
 
-    public InteractPacketWrapper(int entityID, InteractPacketWrapper.InteractAction interactAction, InteractionHand interactionHand, Optional<Vector3f> target, Optional<Boolean> sneaking) {
+    public InteractPacketWrapper(int entityID, InteractPacketWrapper.InteractAction interactAction, InteractionHand interactionHand, Optional<Vector3d> target, Optional<Boolean> sneaking) {
         super(PacketType.Play.Client.INTERACT_ENTITY);
         this.entityID = entityID;
         this.interactAction = interactAction;
@@ -29,31 +33,25 @@ public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> 
     }
 
     public void read() {
-        if (this.serverVersion == ServerVersion.V_1_7_10) {
-            this.entityID = this.readInt();
-            byte typeIndex = this.readByte();
-            this.interactAction = InteractPacketWrapper.InteractAction.VALUES[typeIndex];
-            this.target = Optional.empty();
-            this.interactionHand = InteractionHand.MAIN_HAND;
-            this.sneaking = Optional.empty();
-        } else {
+        if (this.clientVersion.isNewerThanOrEquals(ClientVersion.V_26_1)) {
             this.entityID = this.readVarInt();
-            int typeIndex = this.readVarInt();
-            this.interactAction = InteractPacketWrapper.InteractAction.VALUES[typeIndex];
-            if (this.interactAction == InteractPacketWrapper.InteractAction.INTERACT_AT) {
-                float x = this.readFloat();
-                float y = this.readFloat();
-                float z = this.readFloat();
-                this.target = Optional.of(new Vector3f(x, y, z));
+            this.interactionHand = this.readEnum(InteractionHand.values());
+            this.target = Optional.of(LpVector3d.read(this));
+            this.sneaking = Optional.of(this.readBoolean());
+            this.interactAction = InteractAction.INTERACT_AT; // compat
+        } else if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_8)) {
+            this.entityID = this.readVarInt();
+            this.interactAction = this.readEnum(InteractAction.values());
+            if (this.interactAction == InteractAction.INTERACT_AT) {
+                this.target = Optional.of(new Vector3d(Vector3f.read(this)));
             } else {
                 this.target = Optional.empty();
             }
 
-            if (!this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_9) || this.interactAction != InteractPacketWrapper.InteractAction.INTERACT && this.interactAction != InteractPacketWrapper.InteractAction.INTERACT_AT) {
+            if (!this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_9) || this.interactAction != InteractAction.INTERACT && this.interactAction != InteractAction.INTERACT_AT) {
                 this.interactionHand = InteractionHand.MAIN_HAND;
             } else {
-                int handID = this.readVarInt();
-                this.interactionHand = InteractionHand.getById(handID);
+                this.interactionHand = this.readEnum(InteractionHand.values());
             }
 
             if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_16)) {
@@ -61,6 +59,12 @@ public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> 
             } else {
                 this.sneaking = Optional.empty();
             }
+        } else {
+            this.entityID = this.readInt();
+            this.interactAction = this.readEnum(InteractAction.values());
+            this.target = Optional.empty();
+            this.interactionHand = InteractionHand.MAIN_HAND;
+            this.sneaking = Optional.empty();
         }
 
     }
@@ -71,16 +75,22 @@ public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> 
             this.writeByte(this.interactAction.ordinal());
         } else {
             this.writeVarInt(this.entityID);
-            this.writeVarInt(this.interactAction.ordinal());
-            if (this.interactAction == InteractPacketWrapper.InteractAction.INTERACT_AT) {
-                Vector3f targetVec = this.target.orElse(new Vector3f(0.0F, 0.0F, 0.0F));
-                this.writeFloat(targetVec.x);
-                this.writeFloat(targetVec.y);
-                this.writeFloat(targetVec.z);
+            if (this.serverVersion.isOlderThan(ServerVersion.V_26_1)) {
+                this.writeVarInt(this.interactAction.ordinal());
+                if (this.interactAction == InteractPacketWrapper.InteractAction.INTERACT_AT) {
+                    Vector3d targetVec = this.target.orElse(new Vector3d(0.0F, 0.0F, 0.0F));
+                    this.writeDouble(targetVec.x);
+                    this.writeDouble(targetVec.y);
+                    this.writeDouble(targetVec.z);
+                }
             }
 
             if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_9) && (this.interactAction == InteractPacketWrapper.InteractAction.INTERACT || this.interactAction == InteractPacketWrapper.InteractAction.INTERACT_AT)) {
                 this.writeVarInt(this.interactionHand.getId());
+            }
+
+            if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_26_1)) {
+                LpVector3d.write(this, this.target.orElse(new Vector3d(0.0F, 0.0F, 0.0F)));
             }
 
             if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_16)) {
@@ -88,6 +98,18 @@ public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> 
             }
         }
 
+    }
+
+    private static double sanitize(double value) {
+        return Double.isNaN(value) ? (double)0.0F : Math.clamp(value, -1.7179869183E10, 1.7179869183E10);
+    }
+
+    private static long pack(double value) {
+        return Math.round((value * (double)0.5F + (double)0.5F) * (double)32766.0F);
+    }
+
+    private static double unpack(long value) {
+        return Math.min((double)(value & 32767L), (double)32766.0F) * (double)2.0F / (double)32766.0F - (double)1.0F;
     }
 
     public void copy(InteractPacketWrapper wrapper) {
@@ -122,11 +144,11 @@ public class InteractPacketWrapper extends PacketWrapper<InteractPacketWrapper> 
         this.interactionHand = interactionHand;
     }
 
-    public Optional<Vector3f> getTarget() {
+    public Optional<Vector3d> getTarget() {
         return this.target;
     }
 
-    public void setTarget(Optional<Vector3f> target) {
+    public void setTarget(Optional<Vector3d> target) {
         this.target = target;
     }
 

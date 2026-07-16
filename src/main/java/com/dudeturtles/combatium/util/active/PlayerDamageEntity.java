@@ -17,6 +17,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -69,7 +70,7 @@ public class PlayerDamageEntity {
         net.minecraft.world.item.ItemStack nmsWeapon = CraftItemStack.unwrap(weapon);
 
         //Calculation for reduced shield blocking arc
-        net.minecraft.world.damagesource.DamageSource damageSource = nmsWeapon.getDamageSource(nmsPlayer, () -> nmsPlayer.damageSources().playerAttack(nmsPlayer));
+        net.minecraft.world.damagesource.DamageSource damageSource = nmsWeapon.getDamageSource(nmsPlayer);
         float damage = PlayerHitUtil.getRawDamage(player, target, weapon, damageCause, damageSource, isCrit);
 
         double invulnerableDamage = CombatiumLite.getScheduler().getInvulnerabilityScheduler().isInvulnerable(target);
@@ -97,7 +98,7 @@ public class PlayerDamageEntity {
             nmsPlayer.postPiercingAttack();
             return false;
         }
-        causeExtraKnockback(nmsPlayer, nmsTarget, initialTargetDelta, false, knockbackStrength, damageCause);
+        causeExtraKnockback(nmsPlayer, nmsTarget, initialTargetDelta, false, knockbackStrength, damageSource, damage, true);
         attackVisualEffects(nmsPlayer, nmsTarget, isCrit, damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK, PlayerHitUtil.dealsEnchantDamage(weapon, nmsPlayer, target));
         nmsPlayer.setLastHurtMob(nmsTarget);
         itemAttackInteraction(nmsPlayer, nmsTarget, nmsWeapon, damageSource, true);
@@ -105,7 +106,7 @@ public class PlayerDamageEntity {
         nmsPlayer.causeFoodExhaustion(nmsPlayer.level().spigotConfig.combatExhaustion, EntityExhaustionEvent.ExhaustionReason.ATTACK);
 
         if (damageCause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
-            KnockbackUtil.applyKnockback(target, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false);
+            KnockbackUtil.applyKnockback(target, 0.4f, Mth.sin(player.getLocation().getYaw() * 0.017453292F), -Mth.cos(player.getLocation().getYaw() * 0.017453292F), false, damageSource, damage, false);
 
         if (CombatiumLite.getReachUtil().isOverCharged(player, 1.0F) && SweepingEdgeUtil.hasSweeping(player) &&
                 damageCause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
@@ -125,10 +126,10 @@ public class PlayerDamageEntity {
         return true;
     }
 
-    public static void causeExtraKnockback(net.minecraft.world.entity.player.Player nmsPlayer, net.minecraft.world.entity.Entity nmsTarget, Vec3 initialTargetDelta, boolean cancelKB, double strength, EntityDamageEvent.DamageCause damageCause) {
+    public static void causeExtraKnockback(net.minecraft.world.entity.player.Player nmsPlayer, net.minecraft.world.entity.Entity nmsTarget, Vec3 initialTargetDelta, boolean cancelKB, double strength, DamageSource damageSource, float damage, boolean comesFromEffect) {
         if (!cancelKB && strength > 0.0F) {
             if (nmsTarget.getBukkitEntity() instanceof LivingEntity livingEntity) {
-                KnockbackUtil.applyKnockback(livingEntity, strength * 0.5, Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), -Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), false);
+                KnockbackUtil.applyKnockback(livingEntity, strength * 0.5, Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), -Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)), false, damageSource, damage, comesFromEffect);
             } else {
                 nmsTarget.push(-Mth.sin(nmsPlayer.getYRot() * ((float)Math.PI / 180F)) * strength, 0.1, Mth.cos(nmsPlayer.getYRot() * ((float)Math.PI / 180F)) * strength, nmsPlayer);
             }
@@ -221,7 +222,7 @@ public class PlayerDamageEntity {
     public static void sendSoundEffect(net.minecraft.world.entity.player.Player fromEntity, double x, double y, double z, SoundEvent soundEffect, SoundSource soundCategory, float volume, float pitch) {
         fromEntity.level().playSound(fromEntity, x, y, z, soundEffect, soundCategory, volume, pitch);
         if (fromEntity instanceof ServerPlayer serverPlayer) {
-            serverPlayer.connection.send(new ClientboundSoundPacket(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(soundEffect), soundCategory, x, y, z, volume, pitch, fromEntity.random.nextLong()));
+            serverPlayer.connection.send(new ClientboundSoundPacket(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(soundEffect), soundCategory, x, y, z, volume, pitch, fromEntity.getRandom().nextLong()));
         }
     }
 

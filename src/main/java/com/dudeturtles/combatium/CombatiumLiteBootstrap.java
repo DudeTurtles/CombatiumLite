@@ -231,6 +231,9 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                     CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to set effects! Exception: " + e, e);
                 }
             }
+
+            // We just need an early time when we can do this
+            ItemPatcher.patch();
         }));
 
         lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.preFlatten(RegistryKey.ENCHANTMENT), event -> {
@@ -255,13 +258,11 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                 })
                 .filter(EnchantmentKeys.SWEEPING_EDGE));
 
-        ItemPatcher.patch();
-
         /*
          * The reason why fire aspect isn't in the loop is that you can enchant maces with fire aspect too
          * but the tag enchantable/sharp_weapon doesn't include maces
          */
-        context.getLifecycleManager().registerEventHandler(RegistryEvents.ENCHANTMENT.entryAdd()
+        lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.entryAdd()
                 .newHandler(event -> event.builder().supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_WEAPON)))
                 .filter(EnchantmentKeys.FIRE_ASPECT)
         );

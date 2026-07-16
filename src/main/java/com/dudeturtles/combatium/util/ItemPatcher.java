@@ -145,7 +145,7 @@ public class ItemPatcher {
             Holder.Reference<Item> itemHolder = item.builtInRegistryHolder();
             BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(itemHolder.key(),
                     (builder, provider, resourceKey) -> {
-                        PatchedDataComponentMap newMap = new PatchedDataComponentMap(itemHolder.components());
+                        PatchedDataComponentMap newMap = new PatchedDataComponentMap(builder.build());
                         patcher.accept(new DataComponentTypeSetter(newMap, builder), provider);
                         intermediary.put(id(itemHolder.key().identifier().getPath()), new ItemPatches(HolderSet.direct(itemHolder), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
                     });

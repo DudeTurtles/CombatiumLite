@@ -1,22 +1,19 @@
 package com.dudeturtles.combatium.util;
 
 import com.dudeturtles.combatium.CombatiumLite;
-import com.google.common.base.Suppliers;
 import net.atlas.defaulted.component.ItemPatches;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
-import net.minecraft.core.Registry;
 import net.minecraft.core.component.*;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -25,15 +22,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.*;
 import org.apache.commons.lang3.function.TriFunction;
-import org.bukkit.craftbukkit.CraftRegistry;
 import org.bukkit.craftbukkit.inventory.CraftItemMetas;
-import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jspecify.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -61,7 +56,7 @@ public class ItemPatcher {
         return meta.fromItemStack().apply(stack, extra);
     };
 
-    public static void patch(float shieldBaseBlocking, float shieldBlockingMultiplier) {
+    public static void patch() {
         try {
             Map<Identifier, ItemPatches> intermediary = new HashMap<>();
             // Patch components here
@@ -71,7 +66,7 @@ public class ItemPatcher {
             applyDefaultComponents(size(64).andThen(cooldown(0.2F)), intermediary, Items.SNOWBALL);
             applyDefaultComponents(cooldown(0.2F), id("eggs"), intermediary, Items.EGG, Items.BROWN_EGG, Items.BLUE_EGG);
 
-            applyDefaultComponents(blocksAttacks(shieldBaseBlocking, shieldBlockingMultiplier, true, true), intermediary, Items.SHIELD);
+            applyDefaultComponents(blocksAttacks(true, true), intermediary, Items.SHIELD);
 
             applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.WOODEN_SWORD);
             applyDefaultComponents(weapon(2.0F, 0.5F, 0.5F), intermediary, Items.GOLDEN_SWORD);
@@ -129,73 +124,66 @@ public class ItemPatcher {
         }
     }
 
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Map<Identifier, ItemPatches> intermediary, Item item) throws NoSuchFieldException, IllegalAccessException {
-        Holder.Reference<Item> itemHolder = item.builtInRegistryHolder();
-        PatchedDataComponentMap newMap = new PatchedDataComponentMap(itemHolder.components());
-        patcher.accept(newMap);
-        itemHolder.bindComponents(newMap);
+    public static <T> void set(DataComponentMap.Builder builder, TypedDataComponent<T> typed) {
+        builder.set(typed.type(), typed.value());
+    }
 
-        if (CraftItemType.minecraftToBukkitNew(item) instanceof CraftItemType<?> craftItemType) {
-            Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
-            metaData.setAccessible(true);
-            metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
-        }
-        intermediary.put(id(item.builtInRegistryHolder().key().identifier().getPath()), new ItemPatches(HolderSet.direct(itemHolder), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
+    public static void applyDefaultComponents(BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> patcher, Map<Identifier, ItemPatches> intermediary, Item item) throws NoSuchFieldException, IllegalAccessException {
+        Holder.Reference<Item> itemHolder = item.builtInRegistryHolder();
+        BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(itemHolder.key(),
+                (builder, provider, resourceKey) -> {
+                    PatchedDataComponentMap newMap = new PatchedDataComponentMap(builder.build());
+                    patcher.accept(new DataComponentTypeSetter(newMap, builder), provider);
+                    intermediary.put(id(itemHolder.key().identifier().getPath()), new ItemPatches(HolderSet.direct(itemHolder), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
+                });
     }
     public static <I extends ItemMeta> CraftItemMetas.ItemMetaData<I> generate(CraftItemMetas.ItemMetaData<I> meta) {
         return new CraftItemMetas.ItemMetaData<>(meta.metaClass(), (stack, extra) -> (I) WRAPPER.apply(meta, stack, extra), meta.fromItemMeta());
     }
-    public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Identifier patchName, Map<Identifier, ItemPatches> intermediary, Item... items) throws NoSuchFieldException, IllegalAccessException {
-        Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
-        metaData.setAccessible(true);
-        PatchedDataComponentMap generic = new PatchedDataComponentMap(DataComponentMap.builder().build());
-        patcher.accept(generic);
+    public static void applyDefaultComponents(BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> patcher, Identifier patchName, Map<Identifier, ItemPatches> intermediary, Item... items) throws NoSuchFieldException, IllegalAccessException {
         for (Item item : items) {
             Holder.Reference<Item> itemHolder = item.builtInRegistryHolder();
-            PatchedDataComponentMap newMap = new PatchedDataComponentMap(itemHolder.components());
-            patcher.accept(newMap);
-            itemHolder.bindComponents(newMap);
-
-            if (CraftItemType.minecraftToBukkitNew(item) instanceof CraftItemType<?> craftItemType) {
-                metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
-            }
+            BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(itemHolder.key(),
+                    (builder, provider, resourceKey) -> {
+                        PatchedDataComponentMap newMap = new PatchedDataComponentMap(itemHolder.components());
+                        patcher.accept(new DataComponentTypeSetter(newMap, builder), provider);
+                        intermediary.put(id(itemHolder.key().identifier().getPath()), new ItemPatches(HolderSet.direct(itemHolder), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
+                    });
         }
-        intermediary.put(patchName, new ItemPatches(HolderSet.direct(Item::builtInRegistryHolder, items), Collections.emptyList(), Collections.emptyList(), generic.asPatch(), 1000));
     }
-    public static Consumer<PatchedDataComponentMap> blocksAttacks(float baseProt, float factor, boolean negateProjectiles, boolean useShieldSounds) {
-        return patchedDataComponentMap -> {
+    public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> blocksAttacks(boolean negateProjectiles, boolean useShieldSounds) {
+        return (setter, provider) -> {
             List<BlocksAttacks.DamageReduction> reductions = new ArrayList<>();
-            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), baseProt, factor));
-            Registry<DamageType> damageRegistry = CraftRegistry.getMinecraftRegistry(Registries.DAMAGE_TYPE);
+            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), CombatiumLite.shieldBaseBlocking, CombatiumLite.shieldBlockingMultiplier));
             if (negateProjectiles) {
-                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
-                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
+                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, provider.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
+                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, provider.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
             }
-            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(damageRegistry.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
-            patchedDataComponentMap.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
+            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
+            setter.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
         };
     }
-    public static Consumer<PatchedDataComponentMap> useDuration(float useSeconds) {
-        return patchedDataComponentMap -> {
-            Consumable consumable = patchedDataComponentMap.get(DataComponents.CONSUMABLE);
+    public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> useDuration(float useSeconds) {
+        return (setter, provider) -> {
+            Consumable consumable = setter.get(DataComponents.CONSUMABLE);
             if (consumable != null) {
                 Consumable newConsumable = new Consumable(useSeconds, consumable.animation(), consumable.sound(), consumable.hasConsumeParticles(), consumable.onConsumeEffects());
-                patchedDataComponentMap.set(DataComponents.CONSUMABLE, newConsumable);
+                setter.set(DataComponents.CONSUMABLE, newConsumable);
             }
         };
     }
 
-    public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach) {
+    public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> weapon(float damage, float speed, float reach) {
         return weapon(damage, speed, reach, 1.0F);
     }
 
-    public static Consumer<PatchedDataComponentMap> weapon(float damage, float speed, float reach, float chargedReach) {
-        return patchedDataComponentMap -> {
+    public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> weapon(float damage, float speed, float reach, float chargedReach) {
+        return (setter, provider) -> {
             ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
             builder.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             builder.add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_CTS_ID, speed, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
             if (reach != 0) builder.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(BASE_ATTACK_REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-            patchedDataComponentMap.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build());
+            setter.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build());
             List<Component> lore = new ArrayList<>();
             Style commonStyle = CommonComponents.space().getStyle().withItalic(false).withColor(ChatFormatting.GRAY);
             lore.add(CommonComponents.space());
@@ -205,21 +193,21 @@ public class ItemPatcher {
             if (reach != 0) lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(reach + 2.5) + " Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
             if (chargedReach != 1) lore.add(CommonComponents.space().setStyle(Style.EMPTY).append(Component.literal(format(chargedReach) + " Charged Attack Reach").setStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN)));
 
-            patchedDataComponentMap.set(DataComponents.LORE, new ItemLore(lore));
-            patchedDataComponentMap.set(DataComponents.TOOLTIP_DISPLAY, patchedDataComponentMap.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
+            setter.set(DataComponents.LORE, new ItemLore(lore));
+            setter.set(DataComponents.TOOLTIP_DISPLAY, setter.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
             if (chargedReach != 1)
-                patchedDataComponentMap.set(DataComponents.CUSTOM_DATA, patchedDataComponentMap.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
+                setter.set(DataComponents.CUSTOM_DATA, setter.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
                         .update(custom -> custom.putFloat(CHARGED_REACH_KEY, chargedReach)));
         };
     }
-    public static Consumer<PatchedDataComponentMap> size(int stackSize) {
-        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.MAX_STACK_SIZE, stackSize);
+    public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> size(int stackSize) {
+        return (setter, provider) -> setter.set(DataComponents.MAX_STACK_SIZE, stackSize);
     }
-    public static Consumer<PatchedDataComponentMap> cooldown(float seconds) {
-        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.USE_COOLDOWN, new UseCooldown(seconds));
+    public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> cooldown(float seconds) {
+        return (setter, provider) -> setter.set(DataComponents.USE_COOLDOWN, new UseCooldown(seconds));
     }
-    public static Consumer<PatchedDataComponentMap> weaponComponent(int itemDamagePerAttack, float disableTime) {
-        return patchedDataComponentMap -> patchedDataComponentMap.set(DataComponents.WEAPON, new Weapon(itemDamagePerAttack, disableTime));
+    public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> weaponComponent(int itemDamagePerAttack, float disableTime) {
+        return (setter, provider) -> setter.set(DataComponents.WEAPON, new Weapon(itemDamagePerAttack, disableTime));
     }
     private static String format(double value) {
         DecimalFormat df = new DecimalFormat("0.##");
@@ -230,6 +218,25 @@ public class ItemPatcher {
         public int compareTo(ItemPatchesEntry other) {
             int priority = itemPatches.compareTo(other.itemPatches);
             return priority == 0 ? id.compareTo(other.id) : priority;
+        }
+    }
+
+    public record DataComponentTypeSetter(PatchedDataComponentMap built, DataComponentMap.Builder builder) {
+        public <T> void set(DataComponentType<T> type, T value) {
+            set(new TypedDataComponent<>(type, value));
+        }
+
+        public void set(TypedDataComponent<?> dataComponent) {
+            built.set(dataComponent);
+            ItemPatcher.set(builder, dataComponent);
+        }
+
+        public <T> @Nullable T get(DataComponentType<T> type) {
+            return built.get(type);
+        }
+
+        public <T> T getOrDefault(DataComponentType<T> type, T defaultValue) {
+            return built.getOrDefault(type, defaultValue);
         }
     }
 }

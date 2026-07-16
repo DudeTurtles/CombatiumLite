@@ -255,9 +255,7 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                 })
                 .filter(EnchantmentKeys.SWEEPING_EDGE));
 
-        lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.postFlatten(RegistryKey.ZOMBIE_NAUTILUS_VARIANT), event -> {
-            ItemPatcher.patch(CombatiumLite.shieldBaseBlocking, CombatiumLite.shieldBlockingMultiplier);
-        });
+        ItemPatcher.patch();
 
         /*
          * The reason why fire aspect isn't in the loop is that you can enchant maces with fire aspect too

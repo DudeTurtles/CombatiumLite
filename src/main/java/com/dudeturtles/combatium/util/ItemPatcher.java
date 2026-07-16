@@ -4,6 +4,7 @@ import com.dudeturtles.combatium.CombatiumLite;
 import com.google.common.base.Suppliers;
 import net.atlas.defaulted.component.ItemPatches;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.*;
@@ -129,34 +130,31 @@ public class ItemPatcher {
     }
 
     public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Map<Identifier, ItemPatches> intermediary, Item item) throws NoSuchFieldException, IllegalAccessException {
-        Field components = Item.class.getDeclaredField("components");
-        components.setAccessible(true);
-        PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
+        Holder.Reference<Item> itemHolder = item.builtInRegistryHolder();
+        PatchedDataComponentMap newMap = new PatchedDataComponentMap(itemHolder.components());
         patcher.accept(newMap);
-        components.set(item, newMap);
+        itemHolder.bindComponents(newMap);
 
         if (CraftItemType.minecraftToBukkitNew(item) instanceof CraftItemType<?> craftItemType) {
             Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
             metaData.setAccessible(true);
             metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
         }
-        intermediary.put(id(item.builtInRegistryHolder().key().identifier().getPath()), new ItemPatches(HolderSet.direct(item.builtInRegistryHolder()), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
+        intermediary.put(id(item.builtInRegistryHolder().key().identifier().getPath()), new ItemPatches(HolderSet.direct(itemHolder), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
     }
     public static <I extends ItemMeta> CraftItemMetas.ItemMetaData<I> generate(CraftItemMetas.ItemMetaData<I> meta) {
         return new CraftItemMetas.ItemMetaData<>(meta.metaClass(), (stack, extra) -> (I) WRAPPER.apply(meta, stack, extra), meta.fromItemMeta());
     }
     public static void applyDefaultComponents(Consumer<PatchedDataComponentMap> patcher, Identifier patchName, Map<Identifier, ItemPatches> intermediary, Item... items) throws NoSuchFieldException, IllegalAccessException {
-        Field components = Item.class.getDeclaredField("components");
-        components.setAccessible(true);
-
         Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
         metaData.setAccessible(true);
         PatchedDataComponentMap generic = new PatchedDataComponentMap(DataComponentMap.builder().build());
         patcher.accept(generic);
         for (Item item : items) {
-            PatchedDataComponentMap newMap = new PatchedDataComponentMap(item.components());
+            Holder.Reference<Item> itemHolder = item.builtInRegistryHolder();
+            PatchedDataComponentMap newMap = new PatchedDataComponentMap(itemHolder.components());
             patcher.accept(newMap);
-            components.set(item, newMap);
+            itemHolder.bindComponents(newMap);
 
             if (CraftItemType.minecraftToBukkitNew(item) instanceof CraftItemType<?> craftItemType) {
                 metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
@@ -165,18 +163,17 @@ public class ItemPatcher {
         intermediary.put(patchName, new ItemPatches(HolderSet.direct(Item::builtInRegistryHolder, items), Collections.emptyList(), Collections.emptyList(), generic.asPatch(), 1000));
     }
     public static Consumer<PatchedDataComponentMap> blocksAttacks(float baseProt, float factor, boolean negateProjectiles, boolean useShieldSounds) {
-//        return patchedDataComponentMap -> {
-//            List<BlocksAttacks.DamageReduction> reductions = new ArrayList<>();
-//            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), baseProt, factor));
-//            if (negateProjectiles) {
-//                Registry<DamageType> damageRegistry = CraftRegistry.getMinecraftRegistry(Registries.DAMAGE_TYPE);
-//                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
-//                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
-//            }
-//            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(DamageTypeTags.BYPASSES_SHIELD), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
-//            patchedDataComponentMap.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
-//        };
-        return null;
+        return patchedDataComponentMap -> {
+            List<BlocksAttacks.DamageReduction> reductions = new ArrayList<>();
+            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), baseProt, factor));
+            Registry<DamageType> damageRegistry = CraftRegistry.getMinecraftRegistry(Registries.DAMAGE_TYPE);
+            if (negateProjectiles) {
+                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
+                reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, damageRegistry.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
+            }
+            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(damageRegistry.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
+            patchedDataComponentMap.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
+        };
     }
     public static Consumer<PatchedDataComponentMap> useDuration(float useSeconds) {
         return patchedDataComponentMap -> {

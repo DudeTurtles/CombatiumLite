@@ -18,7 +18,6 @@ import com.dudeturtles.combatium.listeners.util.sweepingEdgeListeners.ItemDropLi
 import com.dudeturtles.combatium.listeners.util.sweepingEdgeListeners.PlayerInteractListener;
 import com.dudeturtles.combatium.scheduler.InvulnerabilityScheduler;
 import com.dudeturtles.combatium.scheduler.Scheduler;
-import com.dudeturtles.combatium.util.ItemPatcher;
 import com.dudeturtles.combatium.util.active.PlayerDamageEntity;
 import com.dudeturtles.combatium.util.active.ReachUtil;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
@@ -114,7 +113,6 @@ public final class CombatiumLite extends JavaPlugin {
         antiProjectileGhosting = getConfig().getBoolean("antiProjectileGhosting", true);
         entityMovementOptimizations = getConfig().getBoolean("entityMovementOptimizations", true);
 
-        ItemPatcher.patch(shieldBaseBlocking, shieldBlockingMultiplier);
         printConfig();
 
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));

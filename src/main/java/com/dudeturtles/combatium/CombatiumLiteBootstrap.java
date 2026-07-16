@@ -23,6 +23,7 @@ import io.papermc.paper.registry.keys.EnchantmentKeys;
 import io.papermc.paper.registry.keys.tags.EnchantmentTagKeys;
 import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys;
 import io.papermc.paper.registry.set.RegistrySet;
+import io.papermc.paper.tag.TagEntry;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.NonNullList;
@@ -232,20 +233,31 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             }
         }));
 
-        Set<TypedKey<Enchantment>> singleton = Collections.singleton(CLEAVING);
-        lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.postFlatten(RegistryKey.ENCHANTMENT), event -> {
+        lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.preFlatten(RegistryKey.ENCHANTMENT), event -> {
             var registrar = event.registrar();
-            registrar.addToTag(EnchantmentTagKeys.TREASURE, singleton);
-            registrar.addToTag(EnchantmentTagKeys.TRADEABLE, singleton);
-            registrar.addToTag(EnchantmentTagKeys.IN_ENCHANTING_TABLE, singleton);
+            registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, List.of(TagEntry.valueEntry(CLEAVING)));
         });
 
-        for (TypedKey<Enchantment> enchantmentTypedKey : Arrays.asList(EnchantmentKeys.KNOCKBACK, EnchantmentKeys.SWEEPING_EDGE, EnchantmentKeys.LOOTING)) {
-            context.getLifecycleManager().registerEventHandler(RegistryEvents.ENCHANTMENT.entryAdd()
-                    .newHandler(event -> event.builder().supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_SHARP_WEAPON)))
+        for (TypedKey<Enchantment> enchantmentTypedKey : Arrays.asList(EnchantmentKeys.KNOCKBACK, EnchantmentKeys.LOOTING)) {
+            lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.entryAdd()
+                    .newHandler(event -> {
+                        event.builder().primaryItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MELEE_WEAPON));
+                        event.builder().supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_SHARP_WEAPON));
+                    })
                     .filter(enchantmentTypedKey)
             );
         }
+
+        lifecycleManager.registerEventHandler(RegistryEvents.ENCHANTMENT.entryAdd()
+                .newHandler(event -> {
+                    event.builder().primaryItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_SWEEPING));
+                    event.builder().supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_SHARP_WEAPON));
+                })
+                .filter(EnchantmentKeys.SWEEPING_EDGE));
+
+        lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.postFlatten(RegistryKey.ZOMBIE_NAUTILUS_VARIANT), event -> {
+            ItemPatcher.patch(CombatiumLite.shieldBaseBlocking, CombatiumLite.shieldBlockingMultiplier);
+        });
 
         /*
          * The reason why fire aspect isn't in the loop is that you can enchant maces with fire aspect too

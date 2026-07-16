@@ -2,7 +2,6 @@ package com.dudeturtles.combatium;
 
 import com.dudeturtles.combatium.util.GameRuleUtils;
 import com.dudeturtles.combatium.util.ItemPatcher;
-import com.dudeturtles.combatium.util.MemoizingPredicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -52,20 +51,10 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.logging.Level;
 
+import static com.dudeturtles.combatium.util.ItemPatcher.PATCHED_COMPONENTS;
+
 @SuppressWarnings("UnstableApiUsage")
 public class CombatiumLiteBootstrap implements PluginBootstrap {
-    public static MemoizingPredicate<ItemStack> shouldFix = new MemoizingPredicate<>(checkStack -> {
-        if (ItemPatcher.DEFAULT_PATCHES.stream().noneMatch(itemPatches -> itemPatches.matchItem(checkStack.getItem()))) return false;
-        Field prototype;
-        try {
-            prototype = PatchedDataComponentMap.class.getDeclaredField("prototype");
-            prototype.setAccessible(true);
-            if (checkStack.getComponents() instanceof PatchedDataComponentMap current && !(prototype.get(current) instanceof PatchedDataComponentMap)) return true;
-        } catch (NoSuchFieldException | IllegalAccessException ignored) {
-
-        }
-        return false;
-    });
     public static TypedKey<Enchantment> CLEAVING;
     public static final GameRule<Integer> EATING_INTERRUPTION_GAME_RULE = GameRuleUtils.registerInteger("combatium:eating_interruptions", GameRuleCategory.UPDATES, 1, 0, 2);
 
@@ -149,21 +138,10 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
 
             @Override
             public void encode(RegistryFriendlyByteBuf buffer, ItemStack stack) {
-                if (shouldFix.apply(stack)) {
-                    DataComponentPatch patch = stack.getComponentsPatch();
-                    try {
-                        Field components = ItemStack.class.getDeclaredField("components");
-                        components.setAccessible(true);
-                        PatchedDataComponentMap patchedDataComponentMap = PatchedDataComponentMap.fromPatch(stack.getPrototype(), patch);
-                        components.set(stack, patchedDataComponentMap);
-                    } catch (NoSuchFieldException | IllegalAccessException ignored) {
-
-                    }
-                }
                 ItemStack newStack = stack.copy();
                 if (!stack.isEmpty()) {
-                    DataComponentMap prototype = stack.getPrototype();
-                    if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+                    if (PATCHED_COMPONENTS.containsKey(stack.getItem())) {
+                        PatchedDataComponentMap prototypeDataComponentMap = PATCHED_COMPONENTS.get(stack.getItem());
                         if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
                             patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
                             patchedDataComponentMap.applyPatch(stack.getComponentsPatch());
@@ -230,10 +208,10 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
                 } catch (NoSuchFieldException | IllegalAccessException e) {
                     CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to set effects! Exception: " + e, e);
                 }
-            }
 
-            // We just need an early time when we can do this
-            ItemPatcher.patch();
+                // We just need an early time when we can do this
+                ItemPatcher.patch();
+            }
         }));
 
         lifecycleManager.registerEventHandler(LifecycleEvents.TAGS.preFlatten(RegistryKey.ENCHANTMENT), event -> {
@@ -290,8 +268,8 @@ public class CombatiumLiteBootstrap implements PluginBootstrap {
             this.registryHashOps = buffer.registryAccess().createSerializationContext(HashOps.CRC32C_INSTANCE);
             HashedStack.ActualItem stack = original.decode(buffer);
             HashedPatchMap components = stack.components();
-            DataComponentMap prototype = stack.item().value().components();
-            if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+            if (PATCHED_COMPONENTS.containsKey(stack.item().value())) {
+                PatchedDataComponentMap prototypeDataComponentMap = PATCHED_COMPONENTS.get(stack.item().value());
                 DataComponentPatch.SplitResult splitResult = prototypeDataComponentMap.asPatch().split();
                 Map<DataComponentType<?>, Integer> added = new IdentityHashMap<>(splitResult.added().size());
                 added.putAll(components.addedComponents());

@@ -1,6 +1,7 @@
 package com.dudeturtles.combatium.util;
 
 import com.dudeturtles.combatium.CombatiumLite;
+import com.google.common.base.Suppliers;
 import net.atlas.defaulted.component.ItemPatches;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -23,28 +24,33 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.*;
 import org.apache.commons.lang3.function.TriFunction;
 import org.bukkit.craftbukkit.inventory.CraftItemMetas;
+import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class ItemPatcher {
     public static final String MOD_ID = "combatium";
     public static final String CHARGED_REACH_KEY = "combatium_weapon_charged_reach";
-    public static List<ItemPatches> DEFAULT_PATCHES = new ArrayList<>();
+    public static Supplier<List<ItemPatches>> DEFAULT_PATCHES = ArrayList::new;
+    public static List<Item> PATCHED = new ArrayList<>();
     public static Identifier id(String path) {
         return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
     public static final Identifier BASE_ATTACK_SPEED_CTS_ID = Identifier.withDefaultNamespace("base_attack_speed_cts");
     public static final Identifier BASE_ATTACK_REACH_ID = Identifier.withDefaultNamespace("base_attack_reach");
+    public static final Map<Item, PatchedDataComponentMap> PATCHED_COMPONENTS = new HashMap<>();
     public static final TriFunction<CraftItemMetas.ItemMetaData<?>, ItemStack, Set<DataComponentType<?>>, ?> WRAPPER = (meta, stack, extra) -> {
         if (!stack.isEmpty()) {
-            DataComponentMap prototype = stack.getPrototype();
-            if (prototype instanceof PatchedDataComponentMap prototypeDataComponentMap) {
+            if (PATCHED_COMPONENTS.containsKey(stack.getItem())) {
+                PatchedDataComponentMap prototypeDataComponentMap = PATCHED_COMPONENTS.get(stack.getItem());
                 ItemStack newStack = stack.copy();
                 if (newStack.getComponents() instanceof PatchedDataComponentMap patchedDataComponentMap) {
                     patchedDataComponentMap.restorePatch(prototypeDataComponentMap.asPatch());
@@ -55,6 +61,12 @@ public class ItemPatcher {
         }
         return meta.fromItemStack().apply(stack, extra);
     };
+
+    public static void forceUpdateItemMetaDatas() {
+        PATCHED.forEach(ItemPatcher::forceItemMetaDataUpdate);
+        PATCHED.clear();
+        PATCHED = null;
+    }
 
     public static void patch() {
         try {
@@ -118,7 +130,7 @@ public class ItemPatcher {
 
             applyDefaultComponents(weapon(5.0F, -0.5F, 1.0F), intermediary, Items.TRIDENT);
             applyDefaultComponents(weapon(4.0F, -1.50F, 0.0F), intermediary, Items.MACE);
-            DEFAULT_PATCHES = new ArrayList<>(intermediary.entrySet().stream().map(entry -> new ItemPatchesEntry(entry.getKey(), entry.getValue())).sorted(Comparator.naturalOrder()).map(ItemPatchesEntry::itemPatches).toList());
+            DEFAULT_PATCHES = () -> intermediary.entrySet().stream().map(entry -> new ItemPatchesEntry(entry.getKey(), entry.getValue())).sorted(Comparator.naturalOrder()).map(ItemPatchesEntry::itemPatches).toList();
         } catch (NoSuchFieldException | IllegalAccessException e) {
             CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to update default components!" + e);
         }
@@ -128,17 +140,31 @@ public class ItemPatcher {
         builder.set(typed.type(), typed.value());
     }
 
+    public static void forceItemMetaDataUpdate(Item item) {
+        try {
+            if (CraftItemType.minecraftToBukkitNew(item) instanceof CraftItemType<?> craftItemType) {
+                Field metaData = CraftItemType.class.getDeclaredField("itemMetaData");
+                metaData.setAccessible(true);
+                metaData.set(craftItemType, Suppliers.memoize(() -> generate(CraftItemMetas.getItemMetaData(craftItemType))));
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            CombatiumLite.getPluginLogger().log(Level.SEVERE, "Failed to update default components!" + e);
+        }
+    }
+    public static <I extends ItemMeta> CraftItemMetas.ItemMetaData<I> generate(CraftItemMetas.ItemMetaData<I> meta) {
+        return new CraftItemMetas.ItemMetaData<>(meta.metaClass(), (stack, extra) -> (I) WRAPPER.apply(meta, stack, extra), meta.fromItemMeta());
+    }
+
     public static void applyDefaultComponents(BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> patcher, Map<Identifier, ItemPatches> intermediary, Item item) throws NoSuchFieldException, IllegalAccessException {
         Holder.Reference<Item> itemHolder = item.builtInRegistryHolder();
         BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(itemHolder.key(),
                 (builder, provider, resourceKey) -> {
                     PatchedDataComponentMap newMap = new PatchedDataComponentMap(builder.build());
                     patcher.accept(new DataComponentTypeSetter(newMap, builder), provider);
+                    PATCHED_COMPONENTS.put(item, newMap);
                     intermediary.put(id(itemHolder.key().identifier().getPath()), new ItemPatches(HolderSet.direct(itemHolder), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
                 });
-    }
-    public static <I extends ItemMeta> CraftItemMetas.ItemMetaData<I> generate(CraftItemMetas.ItemMetaData<I> meta) {
-        return new CraftItemMetas.ItemMetaData<>(meta.metaClass(), (stack, extra) -> (I) WRAPPER.apply(meta, stack, extra), meta.fromItemMeta());
+        PATCHED.add(item);
     }
     public static void applyDefaultComponents(BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> patcher, Identifier patchName, Map<Identifier, ItemPatches> intermediary, Item... items) throws NoSuchFieldException, IllegalAccessException {
         for (Item item : items) {
@@ -147,8 +173,10 @@ public class ItemPatcher {
                     (builder, provider, resourceKey) -> {
                         PatchedDataComponentMap newMap = new PatchedDataComponentMap(builder.build());
                         patcher.accept(new DataComponentTypeSetter(newMap, builder), provider);
+                        PATCHED_COMPONENTS.put(item, newMap);
                         intermediary.put(id(itemHolder.key().identifier().getPath()), new ItemPatches(HolderSet.direct(itemHolder), Collections.emptyList(), Collections.emptyList(), newMap.asPatch(), 1000));
                     });
+            PATCHED.add(item);
         }
     }
     public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> blocksAttacks(boolean negateProjectiles, boolean useShieldSounds) {

@@ -18,6 +18,7 @@ import com.dudeturtles.combatium.listeners.util.sweepingEdgeListeners.ItemDropLi
 import com.dudeturtles.combatium.listeners.util.sweepingEdgeListeners.PlayerInteractListener;
 import com.dudeturtles.combatium.scheduler.InvulnerabilityScheduler;
 import com.dudeturtles.combatium.scheduler.Scheduler;
+import com.dudeturtles.combatium.util.ItemPatcher;
 import com.dudeturtles.combatium.util.active.PlayerDamageEntity;
 import com.dudeturtles.combatium.util.active.ReachUtil;
 import com.dudeturtles.combatium.util.calculations.PlayerHitUtil;
@@ -161,6 +162,8 @@ public final class CombatiumLite extends JavaPlugin {
         pluginManager.registerEvents(new ExhaustListener(), this);
         DispenserBlock.registerProjectileBehavior(Items.TRIDENT);
         if (antiProjectileGhosting) pluginManager.registerEvents(new ProjectilePhaseListener(), this);
+
+        ItemPatcher.forceUpdateItemMetaDatas();
 
         if (entityMovementOptimizations) {
             if (!(Bukkit.getServer() instanceof CraftServer cs)) return;

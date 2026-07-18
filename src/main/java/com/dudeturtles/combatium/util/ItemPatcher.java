@@ -190,7 +190,7 @@ public class ItemPatcher {
                 reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, provider.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
                 reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, provider.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
             }
-            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
+            BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, new BlocksAttacks.ItemDamageFunction(3.0F, 1.0F, 1.0F), Optional.of(provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
             setter.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
             List<Component> lore = new ArrayList<>();
             Style commonStyle = CommonComponents.space().getStyle().withItalic(false).withColor(ChatFormatting.GRAY);

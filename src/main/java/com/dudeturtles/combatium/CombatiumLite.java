@@ -69,7 +69,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean combatifySupport;
     public static float shieldBaseBlocking = 5;
     public static float shieldBlockingMultiplier;
-    public static double defaultShieldKnockbackMultiplier;
+    public static double defaultShieldKnockbackMultiplier = 0.5;
     public static boolean antiProjectileGhosting;
     public static boolean entityMovementOptimizations;
     BukkitTask pingTask;

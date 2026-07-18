@@ -65,9 +65,9 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean saturationChanges;
     public static boolean sweepOnMiss;
     public static boolean fixSweepOnThrow;
-    public static double shieldProtectionArc;
+    public static double shieldProtectionArc = 73.8723797F;
     public static boolean combatifySupport;
-    public static float shieldBaseBlocking;
+    public static float shieldBaseBlocking = 5;
     public static float shieldBlockingMultiplier;
     public static double defaultShieldKnockbackMultiplier;
     public static boolean antiProjectileGhosting;

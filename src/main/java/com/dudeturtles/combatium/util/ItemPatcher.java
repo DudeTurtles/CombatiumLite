@@ -181,14 +181,23 @@ public class ItemPatcher {
     }
     public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> blocksAttacks(boolean negateProjectiles, boolean useShieldSounds) {
         return (setter, provider) -> {
+            float base = CombatiumLite.shieldBaseBlocking;
+            float factor = CombatiumLite.shieldBlockingMultiplier;
+            double knockback = CombatiumLite.defaultShieldKnockbackMultiplier;
             List<BlocksAttacks.DamageReduction> reductions = new ArrayList<>();
-            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), CombatiumLite.shieldBaseBlocking, CombatiumLite.shieldBlockingMultiplier));
+            reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, Optional.empty(), base, factor));
             if (negateProjectiles) {
                 reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, provider.get(DamageTypeTags.IS_PROJECTILE).map(Function.identity()), 0, 1));
                 reductions.add(new BlocksAttacks.DamageReduction((float) CombatiumLite.shieldProtectionArc, provider.get(DamageTypeTags.IS_EXPLOSION).map(Function.identity()), 0, 1));
             }
             BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
             setter.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.translatableWithFallback("item.modifiers.use", "When used:").withStyle(ChatFormatting.GRAY));
+            if (base > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_VALUE, format(base), Component.translatableWithFallback("attribute.name.shield_strength", "Shield Strength"))).withStyle(ChatFormatting.DARK_GREEN));
+            if (factor > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, format((double) factor * 100), Component.translatableWithFallback("attribute.name.shield_reduction", "Shield Damage Reduction"))).withStyle(ChatFormatting.DARK_GREEN));
+            if (knockback > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_VALUE, format(knockback * 10.0), Component.translatableWithFallback("attribute.name.knockback_resistance", "Knockback Resistance"))).withStyle(ChatFormatting.DARK_GREEN));
+            setter.set(DataComponents.LORE, new ItemLore(lore));
         };
     }
     public static BiConsumer<DataComponentTypeSetter, HolderLookup.Provider> useDuration(float useSeconds) {

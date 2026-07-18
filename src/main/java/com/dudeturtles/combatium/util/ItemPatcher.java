@@ -193,10 +193,11 @@ public class ItemPatcher {
             BlocksAttacks blocksAttacks = new BlocksAttacks(0, 1, reductions, BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.of(provider.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BLOCK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)), useShieldSounds ? Optional.of(SoundEvents.SHIELD_BREAK) : Optional.of(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.PLAYER_HURT)));
             setter.set(DataComponents.BLOCKS_ATTACKS, blocksAttacks);
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.translatableWithFallback("item.modifiers.use", "When used:").withStyle(ChatFormatting.GRAY));
-            if (base > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_VALUE, format(base), Component.translatableWithFallback("attribute.name.shield_strength", "Shield Strength"))).withStyle(ChatFormatting.DARK_GREEN));
-            if (factor > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, format((double) factor * 100), Component.translatableWithFallback("attribute.name.shield_reduction", "Shield Damage Reduction"))).withStyle(ChatFormatting.DARK_GREEN));
-            if (knockback > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_VALUE, format(knockback * 10.0), Component.translatableWithFallback("attribute.name.knockback_resistance", "Knockback Resistance"))).withStyle(ChatFormatting.DARK_GREEN));
+            Style commonStyle = CommonComponents.space().getStyle().withItalic(false).withColor(ChatFormatting.GRAY);
+            lore.add(Component.translatableWithFallback("item.modifiers.use", "When used:").withStyle(commonStyle));
+            if (base > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_VALUE.id(), format(base), Component.translatableWithFallback("attribute.name.shield_strength", "Shield Strength"))).withStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN));
+            if (factor > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL.id(), format((double) factor * 100), Component.translatableWithFallback("attribute.name.shield_reduction", "Shield Damage Reduction"))).withStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN));
+            if (knockback > 0.0) lore.add(CommonComponents.space().append(Component.translatable("attribute.modifier.equals." + AttributeModifier.Operation.ADD_VALUE.id(), format(knockback * 10.0), Component.translatableWithFallback("attribute.name.knockback_resistance", "Knockback Resistance"))).withStyle(commonStyle).withStyle(ChatFormatting.DARK_GREEN));
             setter.set(DataComponents.LORE, new ItemLore(lore));
         };
     }

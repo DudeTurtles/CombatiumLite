@@ -65,6 +65,7 @@ public final class CombatiumLite extends JavaPlugin {
     public static boolean saturationChanges;
     public static boolean sweepOnMiss;
     public static boolean fixSweepOnThrow;
+    public static boolean ctsHungerBuff;
     public static double shieldProtectionArc = 73.8723797F;
     public static boolean combatifySupport;
     public static float shieldBaseBlocking = 5;
@@ -104,6 +105,7 @@ public final class CombatiumLite extends JavaPlugin {
         swapAccuracy = getConfig().getBoolean("swapAccuracy", true);
         sweepOnMiss = getConfig().getBoolean("sweepOnMiss", true);
         fixSweepOnThrow = getConfig().getBoolean("fixSweepOnThrow", true);
+        ctsHungerBuff = getConfig().getBoolean("ctsHungerBuff", true);
         shieldProtectionArc = Mth.clamp(getConfig().getDouble("shieldProtectionArc", 73.8723797), 0, 180);
         getReachUtil().setRateLimitTicks(getConfig().getInt("rateLimitTicks", 4));
         reachUtil.setMissTime(getConfig().getInt("missTime", 4));

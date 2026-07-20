@@ -99,6 +99,11 @@ sweepOnMiss: true
 # Default: true
 fixSweepOnThrow: true
 
+# This causes the hunger mob effect to apply exhaustion the same as in 8c
+# 0.005 * (amplifier + 1) -> 0.005 * (amplifier * amplifier * 5 + 1)
+# Default: true
+ctsHungerBuff: true
+
 # The number of ticks between regen ticks. (20 ticks = 1 second)
 # 40 by default, meaning regen ticks every 40 ticks, or 2 seconds.
 # In vanilla, this is 80 ticks, or 4 seconds, but in CTS, it is 40 ticks.

@@ -33,13 +33,12 @@ public class PrePlayerAttackEvent implements Listener {
     public void prePlayerAttack(PrePlayerAttackEntityEvent event) {
         Player attacker = event.getPlayer();
 
-
         net.minecraft.world.entity.player.Player nmsAttacker = ((CraftPlayer) attacker).getHandle();
         net.minecraft.world.item.ItemStack nmsWeapon = nmsAttacker.getActiveItem();
         boolean isUsingKineticWeapon = nmsWeapon.has(DataComponents.KINETIC_WEAPON) && nmsAttacker.isUsingItem() && nmsWeapon == nmsAttacker.getUseItem();
         boolean isUsingPiercingWeapon = nmsWeapon.has(DataComponents.PIERCING_WEAPON) && !nmsAttacker.isUsingItem() && nmsWeapon == nmsAttacker.getMainHandItem();
-        if (isUsingKineticWeapon || isUsingPiercingWeapon)
-            return;
+        if (isUsingKineticWeapon || isUsingPiercingWeapon) return;
+
         if (!(event.getAttacked() instanceof LivingEntity victim)) {
             if (reachUtil.isCharged(attacker, 0.0F)) {
                 CombatiumLite.getReachUtil().resetCooldown(attacker, false);

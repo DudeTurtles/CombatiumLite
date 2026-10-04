@@ -56,7 +56,7 @@ import static com.dudeturtles.combatium.util.ItemPatcher.PATCHED_COMPONENTS;
 @SuppressWarnings("UnstableApiUsage")
 public class CombatiumLiteBootstrap implements PluginBootstrap {
     public static TypedKey<Enchantment> CLEAVING;
-    public static final GameRule<Integer> EATING_INTERRUPTION_GAME_RULE = GameRuleUtils.registerInteger("combatium:eating_interruptions", GameRuleCategory.UPDATES, 1, 0, 2);
+    public static final GameRule<Integer> EATING_INTERRUPTION_GAME_RULE = GameRuleUtils.registerInteger("combatium:eating_interruptions", GameRuleCategory.UPDATES, 1, 0, 3);
 
     static {
         try {

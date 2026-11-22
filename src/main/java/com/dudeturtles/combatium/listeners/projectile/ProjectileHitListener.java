@@ -8,13 +8,14 @@ import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftProjectile;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
 import java.util.logging.Logger;
 
 public class ProjectileHitListener implements Listener {
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSnowball(ProjectileHitEvent event) {
         if (!(event.getHitEntity() instanceof LivingEntity entity)) return;
         if (!(event.getHitEntity() instanceof Player)) entity.setMaximumNoDamageTicks(0);
